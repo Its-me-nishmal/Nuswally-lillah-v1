@@ -1,4 +1,4 @@
-package com.example.namaz_app
+package com.nuswallylillah
 
 import io.flutter.embedding.android.FlutterActivity
 

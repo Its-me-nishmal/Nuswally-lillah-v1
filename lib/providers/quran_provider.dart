@@ -1,11 +1,15 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/quran_model.dart';
+import '../services/notification_service.dart';
 
 class QuranProvider with ChangeNotifier {
+  static AudioPlayer? activeQuranPlayer;
   List<Surah> _surahs = [];
   bool _isLoadingSurahs = false;
   final AudioPlayer _audioPlayer = AudioPlayer();
@@ -22,6 +26,14 @@ class QuranProvider with ChangeNotifier {
   String _selectedQari = 'Alafasy_128kbps';
   int? _currentViewingSurahNumber;
   Set<int> _bookmarkedSurahNumbers = {};
+
+  // Hifz & Playback Speed Enhancements
+  int _hifzLoopCount = 1;
+  int _currentHifzRepetition = 1;
+  int _hifzDelaySeconds = 0;
+  double _playbackSpeed = 1.0;
+  bool _isDelayActive = false;
+  Timer? _delayTimer;
 
   static const Map<String, String> availableQaris = {
     'Alafasy_128kbps': 'Mishary Rashid Alafasy',
@@ -48,19 +60,48 @@ class QuranProvider with ChangeNotifier {
   double get autoScrollSpeed => _autoScrollSpeed;
   String get selectedQari => _selectedQari;
   Set<int> get bookmarkedSurahNumbers => _bookmarkedSurahNumbers;
+  int? get currentViewingSurahNumber => _currentViewingSurahNumber;
   int? get lastReadSurahNumber => _lastReadSurahNumber;
   String? get lastReadSurahName => _lastReadSurahName;
   int get lastReadAyahIndex => _lastReadAyahIndex;
 
+  // Hifz & Speed Getters
+  int get hifzLoopCount => _hifzLoopCount;
+  int get currentHifzRepetition => _currentHifzRepetition;
+  int get hifzDelaySeconds => _hifzDelaySeconds;
+  double get playbackSpeed => _playbackSpeed;
+  bool get isDelayActive => _isDelayActive;
+
   QuranProvider() {
+    activeQuranPlayer = _audioPlayer;
     _loadSettings();
     _audioPlayer.playerStateStream.listen((state) {
       _playerState = state;
       if (state.processingState == ProcessingState.completed) {
-        playNextAyah();
+        _handleAyahCompletion();
       }
+      _updateSystemNotification();
       notifyListeners();
     });
+  }
+
+  void _updateSystemNotification() {
+    if (_currentViewingSurahNumber != null && _ayahs.isNotEmpty && _currentPlayingIndex != null) {
+      final surah = _surahs.firstWhere(
+        (s) => s.number == _currentViewingSurahNumber, 
+        orElse: () => _surahs.first
+      );
+      final verseNum = _ayahs[_currentPlayingIndex!].numberInSurah;
+      final isPlaying = _audioPlayer.playing;
+      
+      NotificationService.showQuranPlaybackNotification(
+        surahName: surah.englishName,
+        verseNum: verseNum,
+        isPlaying: isPlaying,
+      );
+    } else {
+      NotificationService.cancelQuranNotification();
+    }
   }
 
   Future<void> _loadSettings() async {
@@ -73,6 +114,13 @@ class QuranProvider with ChangeNotifier {
     _lastReadSurahNumber = prefs.getInt('last_read_surah');
     _lastReadSurahName = prefs.getString('last_read_surah_name');
     _lastReadAyahIndex = prefs.getInt('last_read_ayah') ?? 0;
+
+    // Hifz & Speed Settings
+    _hifzLoopCount = prefs.getInt('quran_hifz_loop_count') ?? 1;
+    _hifzDelaySeconds = prefs.getInt('quran_hifz_delay_seconds') ?? 0;
+    _playbackSpeed = prefs.getDouble('quran_playback_speed') ?? 1.0;
+    await _audioPlayer.setSpeed(_playbackSpeed);
+
     notifyListeners();
   }
 
@@ -123,6 +171,29 @@ class QuranProvider with ChangeNotifier {
     if (_currentViewingSurahNumber != null) {
       await fetchSurahDetails(_currentViewingSurahNumber!);
     }
+  }
+
+  // Hifz State Modifiers
+  Future<void> updateHifzLoopCount(int count) async {
+    _hifzLoopCount = count;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('quran_hifz_loop_count', count);
+  }
+
+  Future<void> updateHifzDelaySeconds(int seconds) async {
+    _hifzDelaySeconds = seconds;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('quran_hifz_delay_seconds', seconds);
+  }
+
+  Future<void> updatePlaybackSpeed(double speed) async {
+    _playbackSpeed = speed;
+    await _audioPlayer.setSpeed(speed);
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('quran_playback_speed', speed);
   }
 
   final Map<int, List<Ayah>> _cachedAyahs = {};
@@ -201,7 +272,7 @@ class QuranProvider with ChangeNotifier {
         );
       }).toList();
 
-      // Chunked loading to UI (3 by 3) for "streaming" effect
+      // Chunked loading to UI (5 by 5) for "streaming" effect
       for (int i = 0; i < allAyahs.length; i += 5) {
         int end = (i + 5 < allAyahs.length) ? i + 5 : allAyahs.length;
         _ayahs.addAll(allAyahs.sublist(i, end));
@@ -211,6 +282,25 @@ class QuranProvider with ChangeNotifier {
       }
 
       _cachedAyahs[surahNumber] = allAyahs;
+
+      // Auto initialize current playing index to last read verse index or verse 1
+      if (_currentPlayingIndex == null || _currentPlayingIndex! >= allAyahs.length) {
+        _currentPlayingIndex = (_lastReadSurahNumber == surahNumber) ? _lastReadAyahIndex.clamp(0, allAyahs.length - 1) : 0;
+        _highlightedAyahIndex = _currentPlayingIndex;
+      }
+
+      // Preload current audio in player for zero buffering feel
+      if (_currentPlayingIndex != null && _currentPlayingIndex! < allAyahs.length) {
+        final startUrl = allAyahs[_currentPlayingIndex!].audio;
+        await _audioPlayer.setSpeed(_playbackSpeed);
+        _audioPlayer.setUrl(startUrl, preload: true).catchError((e) {
+          debugPrint('Preload error: $e');
+          return null;
+        });
+        
+        // Background prefetch next 2-3 verses
+        _prefetchNextAyahs(_currentPlayingIndex!);
+      }
     } catch (e) {
       debugPrint('Error loading ayah details from assets: $e');
     } finally {
@@ -222,19 +312,42 @@ class QuranProvider with ChangeNotifier {
   Future<void> selectAyah(int index) async {
     // Just highlight — no scroll, no audio
     _highlightedAyahIndex = index;
+    if (_currentViewingSurahNumber != null && _surahs.isNotEmpty) {
+      final surah = _surahs.firstWhere(
+        (s) => s.number == _currentViewingSurahNumber,
+        orElse: () => _surahs.first,
+      );
+      saveLastRead(_currentViewingSurahNumber!, surah.englishName, index);
+    }
     notifyListeners();
   }
 
   Future<void> togglePlayAyah(int index) async {
+    _delayTimer?.cancel();
+    _isDelayActive = false;
+    _currentHifzRepetition = 1;
     _highlightedAyahIndex = index;
+    
     if (_currentPlayingIndex == index && _audioPlayer.playing) {
       await _audioPlayer.pause();
     } else {
       _currentPlayingIndex = index;
       notifyListeners();
       try {
+        await _audioPlayer.setSpeed(_playbackSpeed);
         await _audioPlayer.setUrl(_ayahs[index].audio);
         await _audioPlayer.play();
+        
+        // Background prefetch next 2-3 verses
+        _prefetchNextAyahs(index);
+
+        if (_currentViewingSurahNumber != null && _surahs.isNotEmpty) {
+          final surah = _surahs.firstWhere(
+            (s) => s.number == _currentViewingSurahNumber,
+            orElse: () => _surahs.first,
+          );
+          saveLastRead(_currentViewingSurahNumber!, surah.englishName, index);
+        }
       } catch (e) {
         debugPrint('Error playing audio: $e');
       }
@@ -243,19 +356,29 @@ class QuranProvider with ChangeNotifier {
   }
 
   Future<void> pauseAudio() async {
+    _delayTimer?.cancel();
+    _isDelayActive = false;
     await _audioPlayer.pause();
     notifyListeners();
   }
 
   Future<void> playAll() async {
     if (_ayahs.isEmpty) return;
+    _delayTimer?.cancel();
+    _isDelayActive = false;
+    _currentHifzRepetition = 1;
+    
     int startIndex = _highlightedAyahIndex ?? _currentPlayingIndex ?? 0;
     if (startIndex >= _ayahs.length) startIndex = 0;
     _currentPlayingIndex = startIndex;
     _highlightedAyahIndex = startIndex;
     try {
+      await _audioPlayer.setSpeed(_playbackSpeed);
       await _audioPlayer.setUrl(_ayahs[startIndex].audio);
       await _audioPlayer.play();
+      
+      // Background prefetch next 2-3 verses
+      _prefetchNextAyahs(startIndex);
     } catch (e) {
       debugPrint('Error playing audio: $e');
     }
@@ -263,6 +386,10 @@ class QuranProvider with ChangeNotifier {
   }
 
   Future<void> playNextAyah() async {
+    _delayTimer?.cancel();
+    _isDelayActive = false;
+    _currentHifzRepetition = 1;
+    
     if (_currentPlayingIndex != null && _currentPlayingIndex! < _ayahs.length - 1) {
       _highlightedAyahIndex = _currentPlayingIndex! + 1;
       await togglePlayAyah(_currentPlayingIndex! + 1);
@@ -272,9 +399,99 @@ class QuranProvider with ChangeNotifier {
     }
   }
 
+  // Hifz Completion Logic
+  void _handleAyahCompletion() {
+    if (_currentPlayingIndex == null || _ayahs.isEmpty) return;
+
+    if (_currentHifzRepetition < _hifzLoopCount) {
+      // Loop repetition active
+      _currentHifzRepetition++;
+      if (_hifzDelaySeconds > 0) {
+        _startHifzDelay(true);
+      } else {
+        _replayCurrentAyah();
+      }
+    } else {
+      // Repeat count reached. Move to next verse
+      _currentHifzRepetition = 1;
+      if (_currentPlayingIndex! < _ayahs.length - 1) {
+        if (_hifzDelaySeconds > 0) {
+          _startHifzDelay(false);
+        } else {
+          playNextAyah();
+        }
+      } else {
+        _currentPlayingIndex = null;
+        notifyListeners();
+      }
+    }
+  }
+
+  void _startHifzDelay(bool repeatCurrent) {
+    _delayTimer?.cancel();
+    _isDelayActive = true;
+    notifyListeners();
+
+    _delayTimer = Timer(Duration(seconds: _hifzDelaySeconds), () {
+      _isDelayActive = false;
+      if (repeatCurrent) {
+        _replayCurrentAyah();
+      } else {
+        // Move to next ayah
+        if (_currentPlayingIndex != null && _currentPlayingIndex! < _ayahs.length - 1) {
+          _highlightedAyahIndex = _currentPlayingIndex! + 1;
+          togglePlayAyah(_currentPlayingIndex! + 1);
+        }
+      }
+    });
+  }
+
+  Future<void> _replayCurrentAyah() async {
+    if (_currentPlayingIndex == null || _ayahs.isEmpty) return;
+    try {
+      await _audioPlayer.seek(Duration.zero);
+      await _audioPlayer.setSpeed(_playbackSpeed);
+      await _audioPlayer.play();
+    } catch (e) {
+      debugPrint('Error replaying ayah: $e');
+    }
+    notifyListeners();
+  }
+
+  // Background Prefetcher for Gapless Playback feel
+  void _prefetchNextAyahs(int currentIndex) {
+    if (_ayahs.isEmpty) return;
+    
+    // Prefetch next 3 ayahs asynchronously
+    for (int i = 1; i <= 3; i++) {
+      int nextIndex = currentIndex + i;
+      if (nextIndex < _ayahs.length) {
+        final url = _ayahs[nextIndex].audio;
+        _prefetchUrl(url);
+      }
+    }
+  }
+
+  Future<void> _prefetchUrl(String url) async {
+    try {
+      final uri = Uri.parse(url);
+      final request = await HttpClient().getUrl(uri);
+      final response = await request.close();
+      if (response.statusCode == 200) {
+        // Read response body fully in the background to warm OS caching layer
+        await response.drain();
+        debugPrint('Prefetched and cached: $url');
+      }
+    } catch (e) {
+      debugPrint('Prefetch failed: $e');
+    }
+  }
+
   @override
   void dispose() {
+    _delayTimer?.cancel();
     _audioPlayer.dispose();
+    NotificationService.cancelQuranNotification();
     super.dispose();
   }
 }

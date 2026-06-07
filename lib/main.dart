@@ -1,14 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'providers/prayer_provider.dart';
 import 'providers/quran_provider.dart';
 import 'providers/theme_provider.dart';
+import 'providers/journal_provider.dart';
 import 'screens/home_screen.dart';
+import 'screens/onboarding/onboarding_flow.dart';
+import 'services/notification_service.dart';
 
-void main() {
-  WidgetsFlutterBinding.ensureInitialized();
+bool _onboardingComplete = false;
+
+void main() async {
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+
+  try {
+    await NotificationService.init();
+    final prefs = await SharedPreferences.getInstance();
+    _onboardingComplete = prefs.getBool('onboarding_complete') ?? false;
+  } catch (e) {
+    debugPrint('Error during initialization: $e');
+  } finally {
+    FlutterNativeSplash.remove();
+  }
 
   // Enable true full-screen immersive mode
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
@@ -32,14 +50,16 @@ void main() {
         ChangeNotifierProvider(create: (_) => PrayerProvider()),
         ChangeNotifierProvider(create: (_) => QuranProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => JournalProvider()),
       ],
-      child: const AzanApp(),
+      child: AzanApp(onboardingComplete: _onboardingComplete),
     ),
   );
 }
 
 class AzanApp extends StatelessWidget {
-  const AzanApp({super.key});
+  final bool onboardingComplete;
+  const AzanApp({super.key, required this.onboardingComplete});
 
   @override
   Widget build(BuildContext context) {
@@ -48,44 +68,25 @@ class AzanApp extends StatelessWidget {
         return MaterialApp(
           title: 'Nuswally Lillah',
           debugShowCheckedModeBanner: false,
-          themeMode: themeProvider.themeMode,
-          theme: ThemeData(
-            useMaterial3: true,
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color(0xFF006064),
-              primary: const Color(0xFF006064),
-              secondary: const Color(0xFF2E7D32),
-              surface: const Color(0xFFF1F8F9),
-              brightness: Brightness.light,
-            ),
-            textTheme: GoogleFonts.outfitTextTheme(),
-            cardTheme: CardThemeData(
-              elevation: 8,
-              shadowColor: const Color(0xFF006064).withValues(alpha: 0.15),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(32),
-              ),
-              color: Colors.white,
-            ),
-          ),
+          themeMode: ThemeMode.dark,
           darkTheme: ThemeData(
             useMaterial3: true,
             colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color(0xFF006064),
-              primary: const Color(0xFF80CBC4),
-              secondary: const Color(0xFF66BB6A),
-              surface: const Color(0xFF0F1717),
-              surfaceContainerHighest: const Color(0xFF1A2626),
-              onSurface: Colors.white,
+              seedColor: themeProvider.primaryAccent,
+              primary: themeProvider.primaryAccent,
+              secondary: themeProvider.primaryAccent.withValues(alpha: 0.7),
+              surface: themeProvider.backgroundBottom,
+              surfaceContainerHighest: themeProvider.containerColor,
+              onSurface: const Color(0xFFD4E4FA),
               brightness: Brightness.dark,
             ),
-            textTheme: GoogleFonts.outfitTextTheme(ThemeData.dark().textTheme),
+            textTheme: GoogleFonts.hankenGroteskTextTheme(ThemeData.dark().textTheme),
             cardTheme: CardThemeData(
               elevation: 0,
-              color: const Color(0xFF1A2626),
+              color: themeProvider.containerColor,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(32),
-                side: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: themeProvider.primaryAccent.withValues(alpha: 0.08)),
               ),
             ),
             appBarTheme: const AppBarTheme(
@@ -94,7 +95,7 @@ class AzanApp extends StatelessWidget {
               centerTitle: false,
             ),
           ),
-          home: const HomeScreen(),
+          home: onboardingComplete ? const HomeScreen() : const OnboardingFlow(),
         );
       },
     );

@@ -82,21 +82,22 @@ class _HaddadScreenState extends State<HaddadScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     return Scaffold(
+      backgroundColor: const Color(0xFF051424),
       body: Container(
-        decoration: BoxDecoration(
-          color: colorScheme.surface,
-          image: const DecorationImage(
-            image: AssetImage('assets/images/islamic_bg.png'),
-            opacity: 0.03,
-            repeat: ImageRepeat.repeat,
+        decoration: const BoxDecoration(
+          gradient: RadialGradient(
+            colors: [
+              Color(0xFF082038),
+              Color(0xFF051424),
+            ],
+            radius: 1.3,
+            center: Alignment.center,
           ),
         ),
         child: SafeArea(
           child: _isLoading
-              ? const Center(child: CircularProgressIndicator())
+              ? const Center(child: CircularProgressIndicator(color: Color(0xFF5EEAD4)))
               : Column(
                   children: [
                     _buildAppBar(context),
@@ -121,41 +122,84 @@ class _HaddadScreenState extends State<HaddadScreen> {
   }
 
   Widget _buildAppBar(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final activeColor = const Color(0xFF5EEAD4);
+    final normalColor = const Color(0xFFD4E4FA);
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           IconButton(
             onPressed: () => Navigator.pop(context),
-            icon: Icon(Icons.arrow_back_ios_new_rounded, color: colorScheme.primary),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
           ),
           Column(
             children: [
               Text(
                 'Ratib al-Haddad',
-                style: GoogleFonts.outfit(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: colorScheme.primary,
+                style: GoogleFonts.hankenGrotesk(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.5,
+                  color: Colors.white,
                 ),
               ),
+              const SizedBox(height: 2),
               Text(
-                '${_currentIndex + 1} / ${_items.length}',
-                style: GoogleFonts.outfit(
-                  fontSize: 12,
-                  color: colorScheme.primary.withValues(alpha: 0.5),
-                  fontWeight: FontWeight.w600,
+                'VERSE ${_currentIndex + 1} OF ${_items.length}',
+                style: GoogleFonts.jetBrainsMono(
+                  fontSize: 11,
+                  color: activeColor.withValues(alpha: 0.7),
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.0,
                 ),
               ),
             ],
           ),
           IconButton(
             onPressed: () {
-              // Show info or settings
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  backgroundColor: const Color(0xFF122131),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: BorderSide(color: activeColor.withValues(alpha: 0.1)),
+                  ),
+                  title: Text(
+                    'About Ratib al-Haddad',
+                    style: GoogleFonts.hankenGrotesk(
+                      fontWeight: FontWeight.bold,
+                      color: normalColor,
+                    ),
+                  ),
+                  content: SingleChildScrollView(
+                    child: Text(
+                      'The Ratib al-Haddad is a famous collection of prayers and supplications compiled by Imam al-Habib Abdullah bin Alawi al-Haddad. It is traditionally recited after the Isha prayer for protection, spiritual elevation, and divine blessings.',
+                      style: GoogleFonts.hankenGrotesk(
+                        fontSize: 14,
+                        color: normalColor.withValues(alpha: 0.7),
+                        height: 1.5,
+                      ),
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(
+                        'DISMISS',
+                        style: GoogleFonts.hankenGrotesk(
+                          color: activeColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
             },
-            icon: Icon(Icons.info_outline_rounded, color: colorScheme.primary),
+            icon: const Icon(Icons.info_outline_rounded, color: Colors.white),
           ),
         ],
       ),
@@ -163,35 +207,32 @@ class _HaddadScreenState extends State<HaddadScreen> {
   }
 
   Widget _buildProgressBar() {
-    final colorScheme = Theme.of(context).colorScheme;
     double progress = _items.isEmpty ? 0 : (_currentIndex + 1) / _items.length;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       child: Stack(
         children: [
           Container(
-            height: 6,
+            height: 4,
             width: double.infinity,
             decoration: BoxDecoration(
-              color: colorScheme.primary.withValues(alpha: 0.1),
+              color: Colors.white.withValues(alpha: 0.04),
               borderRadius: BorderRadius.circular(10),
             ),
           ),
           AnimatedContainer(
-            duration: const Duration(milliseconds: 400),
-            height: 6,
-            width: MediaQuery.of(context).size.width * progress,
+            duration: const Duration(milliseconds: 300),
+            height: 4,
+            width: MediaQuery.of(context).size.width * progress - 48,
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [colorScheme.primary, colorScheme.secondary],
-              ),
+              color: const Color(0xFF5EEAD4),
               borderRadius: BorderRadius.circular(10),
               boxShadow: [
                 BoxShadow(
-                  color: colorScheme.primary.withValues(alpha: 0.3),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
+                  color: const Color(0xFF5EEAD4).withValues(alpha: 0.3),
+                  blurRadius: 6,
+                  spreadRadius: 1,
                 ),
               ],
             ),
@@ -202,24 +243,29 @@ class _HaddadScreenState extends State<HaddadScreen> {
   }
 
   Widget _buildItemView(HaddadItem item) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final activeColor = const Color(0xFF5EEAD4);
+    final normalColor = const Color(0xFFD4E4FA);
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(30),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       physics: const BouncingScrollPhysics(),
       child: Column(
         children: [
           Container(
+            width: double.infinity,
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: isDark ? colorScheme.surfaceContainerHighest : Colors.white,
-              borderRadius: BorderRadius.circular(30),
+              color: const Color(0xFF122131),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: activeColor.withValues(alpha: 0.06),
+                width: 1,
+              ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
+                  color: Colors.black.withValues(alpha: 0.15),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
                 ),
               ],
             ),
@@ -231,96 +277,99 @@ class _HaddadScreenState extends State<HaddadScreen> {
                   textDirection: TextDirection.rtl,
                   style: const TextStyle(
                     fontFamily: 'HafsFont',
-                    fontSize: 28,
-                    height: 1.8,
+                    fontSize: 26,
+                    height: 2.0,
+                    color: Color(0xFF5EEAD4),
                   ),
                 ),
-                const SizedBox(height: 30),
+                const SizedBox(height: 24),
                 Container(
-                  padding: const EdgeInsets.all(1),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        colorScheme.primary.withValues(alpha: 0.1),
-                        colorScheme.secondary.withValues(alpha: 0.1),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Container(
-                    height: 2,
-                    width: 50,
-                    decoration: BoxDecoration(
-                      color: colorScheme.surface,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
+                  height: 1,
+                  width: 60,
+                  color: activeColor.withValues(alpha: 0.15),
                 ),
-                const SizedBox(height: 30),
+                const SizedBox(height: 24),
                 Text(
                   item.translation,
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.outfit(
-                    fontSize: 16,
-                    color: colorScheme.onSurface.withValues(alpha: 0.7),
+                  style: GoogleFonts.hankenGrotesk(
+                    fontSize: 15,
+                    color: normalColor.withValues(alpha: 0.7),
+                    height: 1.5,
                     fontStyle: FontStyle.italic,
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 40),
+          const SizedBox(height: 32),
           if (item.count > 1)
             GestureDetector(
               onTap: _decrementCount,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  SizedBox(
-                    width: 120,
-                    height: 120,
-                    child: CircularProgressIndicator(
-                      value: _currentCount / item.count,
-                      strokeWidth: 8,
-                      backgroundColor: colorScheme.primary.withValues(alpha: 0.1),
-                      valueColor: AlwaysStoppedAnimation<Color>(colorScheme.secondary),
+              child: Container(
+                width: 130,
+                height: 130,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFF0C1D2F).withValues(alpha: 0.6),
+                  border: Border.all(color: activeColor.withValues(alpha: 0.08), width: 1.5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: activeColor.withValues(alpha: 0.04),
+                      blurRadius: 20,
                     ),
-                  ),
-                  Column(
-                    children: [
-                      Text(
-                        _currentCount.toString(),
-                        style: GoogleFonts.outfit(
-                          fontSize: 40,
-                          fontWeight: FontWeight.bold,
-                          color: colorScheme.primary,
-                        ),
+                  ],
+                ),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    SizedBox(
+                      width: 114,
+                      height: 114,
+                      child: CircularProgressIndicator(
+                        value: _currentCount / item.count,
+                        strokeWidth: 4,
+                        backgroundColor: Colors.white.withValues(alpha: 0.02),
+                        valueColor: AlwaysStoppedAnimation<Color>(activeColor),
                       ),
-                      Text(
-                        'REMAINING',
-                        style: GoogleFonts.outfit(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1,
-                          color: colorScheme.primary.withValues(alpha: 0.4),
+                    ),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          _currentCount.toString(),
+                          style: GoogleFonts.jetBrainsMono(
+                            fontSize: 36,
+                            fontWeight: FontWeight.w200,
+                            color: Colors.white,
+                            height: 1.1,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                        Text(
+                          'OF ${item.count}',
+                          style: GoogleFonts.jetBrainsMono(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: activeColor.withValues(alpha: 0.5),
+                            letterSpacing: 1.0,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             )
           else
-             const SizedBox(height: 120),
+             const SizedBox(height: 130),
         ],
       ),
     );
   }
 
   Widget _buildBottomControls() {
-    
     return Padding(
-      padding: const EdgeInsets.fromLTRB(30, 0, 30, 40),
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -341,48 +390,50 @@ class _HaddadScreenState extends State<HaddadScreen> {
   }
 
   Widget _buildNavButton({required IconData icon, required VoidCallback? onPressed, required bool enabled}) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final activeColor = const Color(0xFF5EEAD4);
     return Container(
       decoration: BoxDecoration(
-        color: enabled ? colorScheme.primary.withValues(alpha: 0.1) : Colors.transparent,
+        color: enabled ? const Color(0xFF122131) : Colors.transparent,
         shape: BoxShape.circle,
+        border: Border.all(
+          color: enabled ? activeColor.withValues(alpha: 0.08) : Colors.transparent,
+        ),
       ),
       child: IconButton(
         onPressed: onPressed,
-        icon: Icon(icon, color: enabled ? colorScheme.primary : Colors.grey.withValues(alpha: 0.3)),
+        icon: Icon(icon, color: enabled ? Colors.white : Colors.white.withValues(alpha: 0.15)),
       ),
     );
   }
 
   Widget _buildMainActionButton() {
-    final colorScheme = Theme.of(context).colorScheme;
+    final activeColor = const Color(0xFF5EEAD4);
     bool isLast = _currentIndex == _items.length - 1;
     bool needsCount = _items.isNotEmpty && _items[_currentIndex].count > 1 && _currentCount > 0;
 
     return GestureDetector(
       onTap: needsCount ? _decrementCount : (isLast ? () => Navigator.pop(context) : _next),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 14),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [colorScheme.primary, colorScheme.secondary],
-          ),
+          color: const Color(0xFF144F4B),
           borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: activeColor.withValues(alpha: 0.3)),
           boxShadow: [
             BoxShadow(
-              color: colorScheme.primary.withValues(alpha: 0.3),
+              color: activeColor.withValues(alpha: 0.1),
               blurRadius: 12,
-              offset: const Offset(0, 6),
+              offset: const Offset(0, 4),
             ),
           ],
         ),
         child: Text(
           needsCount ? 'TAP TO COUNT' : (isLast ? 'FINISH' : 'NEXT'),
-          style: GoogleFonts.outfit(
-            fontSize: 16,
+          style: GoogleFonts.hankenGrotesk(
+            fontSize: 14,
             fontWeight: FontWeight.bold,
             color: Colors.white,
-            letterSpacing: 1,
+            letterSpacing: 1.5,
           ),
         ),
       ),

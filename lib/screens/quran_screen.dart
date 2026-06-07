@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/quran_provider.dart';
@@ -46,17 +47,11 @@ class _QuranScreenState extends State<QuranScreen> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     return Scaffold(
+      backgroundColor: const Color(0xFF051424),
       body: Container(
-        decoration: BoxDecoration(
-          color: colorScheme.surface,
-          image: const DecorationImage(
-            image: AssetImage('assets/images/islamic_bg.png'),
-            opacity: 0.05,
-            repeat: ImageRepeat.repeat,
-          ),
+        decoration: const BoxDecoration(
+          color: Color(0xFF051424),
         ),
         child: SafeArea(
           child: Column(
@@ -68,7 +63,7 @@ class _QuranScreenState extends State<QuranScreen> with SingleTickerProviderStat
                 child: Consumer<QuranProvider>(
                   builder: (context, provider, child) {
                     if (provider.isLoadingSurahs) {
-                      return const Center(child: CircularProgressIndicator());
+                      return const Center(child: CircularProgressIndicator(color: Color(0xFF5EEAD4)));
                     }
                     if (provider.surahs.isEmpty) {
                       return _buildErrorView(context, provider);
@@ -100,23 +95,22 @@ class _QuranScreenState extends State<QuranScreen> with SingleTickerProviderStat
   }
 
   Widget _buildAppBar(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
       child: Row(
         children: [
           IconButton(
             onPressed: () => Navigator.pop(context),
-            icon: Icon(Icons.arrow_back_ios_new_rounded, color: colorScheme.primary),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF5EEAD4)),
           ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               'The Holy Quran',
-              style: GoogleFonts.outfit(
+              style: GoogleFonts.hankenGrotesk(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: colorScheme.primary,
+                color: Colors.white,
               ),
             ),
           ),
@@ -126,8 +120,6 @@ class _QuranScreenState extends State<QuranScreen> with SingleTickerProviderStat
   }
 
   Widget _buildContinueReadingCard(BuildContext context, QuranProvider provider) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final surahName = provider.lastReadSurahName ?? '';
     final ayahIndex = provider.lastReadAyahIndex;
 
@@ -150,18 +142,13 @@ class _QuranScreenState extends State<QuranScreen> with SingleTickerProviderStat
         margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              colorScheme.primary.withValues(alpha: isDark ? 0.3 : 0.1),
-              colorScheme.secondary.withValues(alpha: isDark ? 0.2 : 0.06),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: colorScheme.primary.withValues(alpha: 0.2)),
+          color: const Color(0xFF144F4B).withValues(alpha: 0.3),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFF5EEAD4).withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [
-            Icon(Icons.auto_stories_rounded, color: colorScheme.primary, size: 22),
+            const Icon(Icons.auto_stories_rounded, color: Color(0xFF5EEAD4), size: 22),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
@@ -169,34 +156,34 @@ class _QuranScreenState extends State<QuranScreen> with SingleTickerProviderStat
                 children: [
                   Text(
                     'CONTINUE READING',
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.hankenGrotesk(
                       fontSize: 9,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 2,
-                      color: colorScheme.primary.withValues(alpha: 0.6),
+                      color: const Color(0xFF5EEAD4).withValues(alpha: 0.7),
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     surahName,
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.hankenGrotesk(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
-                      color: colorScheme.onSurface,
+                      color: Colors.white,
                     ),
                   ),
                   if (ayahIndex > 0)
                     Text(
                       'Around verse ${ayahIndex + 1}',
-                      style: GoogleFonts.outfit(
+                      style: GoogleFonts.hankenGrotesk(
                         fontSize: 11,
-                        color: colorScheme.onSurface.withValues(alpha: 0.4),
+                        color: const Color(0xFFD4E4FA).withValues(alpha: 0.5),
                       ),
                     ),
                 ],
               ),
             ),
-            Icon(Icons.arrow_forward_ios_rounded, color: colorScheme.primary, size: 14),
+            const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFF5EEAD4), size: 14),
           ],
         ),
       ),
@@ -204,19 +191,16 @@ class _QuranScreenState extends State<QuranScreen> with SingleTickerProviderStat
   }
 
   Widget _buildSearchBar(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
       child: Container(
         decoration: BoxDecoration(
-          color: isDark ? colorScheme.surfaceContainerHighest : Colors.white,
+          color: const Color(0xFF122131),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: colorScheme.primary.withValues(alpha: 0.1)),
+          border: Border.all(color: const Color(0xFF5EEAD4).withValues(alpha: 0.12)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 8,
               offset: const Offset(0, 3),
             ),
@@ -225,17 +209,17 @@ class _QuranScreenState extends State<QuranScreen> with SingleTickerProviderStat
         child: TextField(
           controller: _searchController,
           onChanged: (v) => setState(() => _searchQuery = v),
-          style: GoogleFonts.outfit(fontSize: 15),
+          style: GoogleFonts.hankenGrotesk(fontSize: 15, color: Colors.white),
           decoration: InputDecoration(
             hintText: 'Search surah name or number...',
-            hintStyle: GoogleFonts.outfit(
-              color: colorScheme.onSurface.withValues(alpha: 0.4),
+            hintStyle: GoogleFonts.hankenGrotesk(
+              color: const Color(0xFFD4E4FA).withValues(alpha: 0.4),
               fontSize: 14,
             ),
-            prefixIcon: Icon(Icons.search_rounded, color: colorScheme.primary, size: 20),
+            prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF5EEAD4), size: 20),
             suffixIcon: _searchQuery.isNotEmpty
                 ? IconButton(
-                    icon: Icon(Icons.close_rounded, color: colorScheme.primary, size: 18),
+                    icon: const Icon(Icons.close_rounded, color: Color(0xFF5EEAD4), size: 18),
                     onPressed: () {
                       _searchController.clear();
                       setState(() => _searchQuery = '');
@@ -251,16 +235,15 @@ class _QuranScreenState extends State<QuranScreen> with SingleTickerProviderStat
   }
 
   Widget _buildTabBar(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       child: TabBar(
         controller: _tabController,
-        labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13),
-        unselectedLabelStyle: GoogleFonts.outfit(fontWeight: FontWeight.w500, fontSize: 13),
-        labelColor: colorScheme.primary,
-        unselectedLabelColor: colorScheme.onSurface.withValues(alpha: 0.4),
-        indicatorColor: colorScheme.primary,
+        labelStyle: GoogleFonts.hankenGrotesk(fontWeight: FontWeight.bold, fontSize: 13),
+        unselectedLabelStyle: GoogleFonts.hankenGrotesk(fontWeight: FontWeight.w500, fontSize: 13),
+        labelColor: const Color(0xFF5EEAD4),
+        unselectedLabelColor: const Color(0xFFD4E4FA).withValues(alpha: 0.4),
+        indicatorColor: const Color(0xFF5EEAD4),
         indicatorSize: TabBarIndicatorSize.label,
         dividerColor: Colors.transparent,
         tabs: const [
@@ -334,61 +317,64 @@ class _QuranScreenState extends State<QuranScreen> with SingleTickerProviderStat
   }
 
   Widget _buildSurahCard(BuildContext context, Surah surah, QuranProvider provider) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isBookmarked = provider.isBookmarked(surah.number);
     final isLastRead = provider.lastReadSurahNumber == surah.number;
 
+    final activeColor = const Color(0xFF5EEAD4);
+    final normalColor = const Color(0xFFD4E4FA);
+
     return GestureDetector(
       onTap: () {
-        // Save as last read immediately when tapped
         provider.saveLastRead(surah.number, surah.englishName, 0);
         Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => SurahDetailScreen(surah: surah)),
         );
+        HapticFeedback.lightImpact();
       },
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: isLastRead
-              ? colorScheme.primary.withValues(alpha: isDark ? 0.15 : 0.05)
-              : (isDark ? colorScheme.surfaceContainerHighest : Colors.white),
-          borderRadius: BorderRadius.circular(20),
+              ? const Color(0xFF144F4B).withValues(alpha: 0.3)
+              : const Color(0xFF122131),
+          borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+              color: Colors.black.withValues(alpha: 0.12),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
             ),
           ],
           border: Border.all(
             color: isLastRead
-                ? colorScheme.primary.withValues(alpha: 0.4)
+                ? activeColor.withValues(alpha: 0.4)
                 : isBookmarked
-                    ? colorScheme.secondary.withValues(alpha: 0.3)
-                    : colorScheme.primary.withValues(alpha: 0.05),
+                    ? activeColor.withValues(alpha: 0.2)
+                    : activeColor.withValues(alpha: 0.06),
             width: isLastRead ? 1.5 : 1,
           ),
         ),
         child: Row(
           children: [
             Container(
-              width: 40,
-              height: 40,
+              width: 36,
+              height: 36,
               decoration: BoxDecoration(
-                color: isLastRead
-                    ? colorScheme.primary.withValues(alpha: 0.2)
-                    : colorScheme.primary.withValues(alpha: 0.1),
+                color: activeColor.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
+                border: Border.all(
+                  color: activeColor.withValues(alpha: 0.15),
+                  width: 1,
+                ),
               ),
               child: Center(
                 child: Text(
                   surah.number.toString(),
-                  style: GoogleFonts.outfit(
-                    color: colorScheme.primary,
+                  style: GoogleFonts.jetBrainsMono(
+                    color: activeColor,
                     fontWeight: FontWeight.bold,
-                    fontSize: 13,
+                    fontSize: 12,
                   ),
                 ),
               ),
@@ -402,10 +388,10 @@ class _QuranScreenState extends State<QuranScreen> with SingleTickerProviderStat
                     children: [
                       Text(
                         surah.englishName,
-                        style: GoogleFonts.outfit(
+                        style: GoogleFonts.hankenGrotesk(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
-                          color: colorScheme.onSurface,
+                          color: Colors.white,
                         ),
                       ),
                       if (isLastRead) ...[
@@ -413,51 +399,56 @@ class _QuranScreenState extends State<QuranScreen> with SingleTickerProviderStat
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: colorScheme.primary.withValues(alpha: 0.1),
+                            color: activeColor.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: activeColor.withValues(alpha: 0.2), width: 0.5),
                           ),
                           child: Text(
                             'LAST READ',
-                            style: GoogleFonts.outfit(
+                            style: GoogleFonts.hankenGrotesk(
                               fontSize: 8,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 1,
-                              color: colorScheme.primary,
+                              color: activeColor,
                             ),
                           ),
                         ),
                       ],
                     ],
                   ),
+                  const SizedBox(height: 2),
                   Text(
                     '${surah.revelationType} • ${surah.numberOfAyahs} Verses',
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.hankenGrotesk(
                       fontSize: 11,
-                      color: colorScheme.onSurface.withValues(alpha: 0.5),
+                      color: normalColor.withValues(alpha: 0.4),
                     ),
                   ),
                 ],
               ),
             ),
             GestureDetector(
-              onTap: () => provider.toggleBookmark(surah.number),
+              onTap: () {
+                provider.toggleBookmark(surah.number);
+                HapticFeedback.mediumImpact();
+              },
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 250),
                 child: Icon(
                   isBookmarked ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
                   key: ValueKey(isBookmarked),
-                  color: isBookmarked ? colorScheme.primary : colorScheme.onSurface.withValues(alpha: 0.2),
+                  color: isBookmarked ? activeColor : normalColor.withValues(alpha: 0.2),
                   size: 22,
                 ),
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 12),
             Text(
               surah.name,
               style: TextStyle(
                 fontFamily: 'HafsFont',
                 fontSize: 22,
-                color: colorScheme.primary,
+                color: activeColor,
               ),
             ),
           ],
