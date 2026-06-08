@@ -114,6 +114,7 @@ class _ObPage3ThemeState extends State<ObPage3Theme>
         ),
       ),
       child: SafeArea(
+        top: false,
         child: FadeTransition(
           opacity: _fadeIn,
           child: Column(

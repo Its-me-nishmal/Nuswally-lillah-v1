@@ -23,10 +23,9 @@ class _OnboardingFlowState extends State<OnboardingFlow>
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  // Total pages: Welcome, Location, Theme, Habits, Notifications, Summary
   static const int _totalPages = 6;
 
-  // Pages 0 (Welcome) and 5 (Summary) don't show the progress bar
+  // Pages 0 (Welcome) and 5 (Summary) have no progress bar
   bool get _showProgressBar => _currentPage >= 1 && _currentPage <= 4;
 
   late AnimationController _progressCtrl;
@@ -48,14 +47,6 @@ class _OnboardingFlowState extends State<OnboardingFlow>
   Future<void> _goToPage(int page) async {
     if (page >= _totalPages) return;
     setState(() => _currentPage = page);
-
-    // Animate progress bar
-    if (_showProgressBar) {
-      // progress bar covers pages 1–4 (4 steps)
-      final target = (page - 1) / 4.0;
-      _progressCtrl.animateTo(target.clamp(0.0, 1.0));
-    }
-
     _pageController.animateToPage(
       page,
       duration: const Duration(milliseconds: 420),
@@ -63,7 +54,6 @@ class _OnboardingFlowState extends State<OnboardingFlow>
     );
   }
 
-  /// Marks onboarding as complete in SharedPrefs (called before entering app)
   static Future<void> markComplete() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('onboarding_complete', true);
@@ -73,68 +63,54 @@ class _OnboardingFlowState extends State<OnboardingFlow>
   Widget build(BuildContext context) {
     final theme = context.watch<ThemeProvider>();
     final accent = theme.primaryAccent;
+    final topPad = MediaQuery.of(context).padding.top;
 
     return Scaffold(
       backgroundColor: theme.backgroundBottom,
-      body: Stack(
+      body: Column(
         children: [
-          // Page content
-          PageView(
-            controller: _pageController,
-            physics: const NeverScrollableScrollPhysics(), // no manual swipe
-            children: [
-              // Page 1 — Welcome
-              ObPage1Welcome(
-                onNext: () => _goToPage(1),
-              ),
+          // ── Status bar area (always present, transparent) ──
+          SizedBox(height: topPad),
 
-              // Page 2 — Location (mandatory)
-              ObPage2Location(
-                onNext: () => _goToPage(2),
-              ),
-
-              // Page 3 — Theme
-              ObPage3Theme(
-                onNext: () => _goToPage(3),
-              ),
-
-              // Page 4 — Habits
-              ObPage4Habits(
-                onNext: () => _goToPage(4),
-              ),
-
-              // Page 5 — Notifications
-              ObPage5Notifications(
-                onNext: () async {
-                  await markComplete();
-                  if (mounted) _goToPage(5);
-                },
-              ),
-
-              // Page 6 — Summary / Enter App
-              const ObPage6Summary(),
-            ],
+          // ── Progress bar — only on pages 1–4 ──
+          AnimatedSize(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+            child: _showProgressBar
+                ? _OnboardingProgressBar(
+                    currentPage: _currentPage,
+                    totalSteps: 4,
+                    accent: accent,
+                    onBack: _currentPage > 1
+                        ? () {
+                            HapticFeedback.lightImpact();
+                            _goToPage(_currentPage - 1);
+                          }
+                        : null,
+                  )
+                : const SizedBox.shrink(),
           ),
 
-          // ── Top Progress Bar (pages 1–4) ──
-          if (_showProgressBar)
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: _OnboardingProgressBar(
-                currentPage: _currentPage,
-                totalSteps: 4,
-                accent: accent,
-                pageController: _pageController,
-                onBack: _currentPage > 1
-                    ? () {
-                        HapticFeedback.lightImpact();
-                        _goToPage(_currentPage - 1);
-                      }
-                    : null,
-              ),
+          // ── Page content ──
+          Expanded(
+            child: PageView(
+              controller: _pageController,
+              physics: const NeverScrollableScrollPhysics(),
+              children: [
+                ObPage1Welcome(onNext: () => _goToPage(1)),
+                ObPage2Location(onNext: () => _goToPage(2)),
+                ObPage3Theme(onNext: () => _goToPage(3)),
+                ObPage4Habits(onNext: () => _goToPage(4)),
+                ObPage5Notifications(
+                  onNext: () async {
+                    await markComplete();
+                    if (mounted) _goToPage(5);
+                  },
+                ),
+                const ObPage6Summary(),
+              ],
             ),
+          ),
         ],
       ),
     );
@@ -142,20 +118,18 @@ class _OnboardingFlowState extends State<OnboardingFlow>
 }
 
 // ─────────────────────────────────────────
-// Top Progress Bar Widget
+// Progress Bar — sits between status bar and page content
 // ─────────────────────────────────────────
 class _OnboardingProgressBar extends StatelessWidget {
-  final int currentPage; // 1-indexed page (1=location, 2=theme, 3=habits, 4=notifs)
+  final int currentPage;
   final int totalSteps;
   final Color accent;
-  final PageController pageController;
   final VoidCallback? onBack;
 
   const _OnboardingProgressBar({
     required this.currentPage,
     required this.totalSteps,
     required this.accent,
-    required this.pageController,
     this.onBack,
   });
 
@@ -163,36 +137,35 @@ class _OnboardingProgressBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // currentPage is 1 (Location) through 4 (Notifications)
     final stepIndex = (currentPage - 1).clamp(0, totalSteps - 1);
 
     return Container(
-      padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 8,
-        left: 16,
-        right: 24,
-        bottom: 12,
-      ),
+      padding: const EdgeInsets.fromLTRB(16, 10, 20, 10),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Step info row
+          // ── Step chips row ──
           Row(
             children: [
-              // Back button
+              // Back button (fixed 36px slot)
               SizedBox(
-                width: 40,
+                width: 36,
                 child: onBack != null
                     ? GestureDetector(
                         onTap: onBack,
-                        child: Icon(
-                          Icons.arrow_back_ios_new_rounded,
-                          size: 16,
-                          color: accent.withValues(alpha: 0.7),
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 2),
+                          child: Icon(
+                            Icons.arrow_back_ios_new_rounded,
+                            size: 15,
+                            color: accent.withValues(alpha: 0.7),
+                          ),
                         ),
                       )
                     : null,
               ),
+
+              // Step chips
               Expanded(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -200,11 +173,13 @@ class _OnboardingProgressBar extends StatelessWidget {
                     final isActive = i == stepIndex;
                     final isDone = i < stepIndex;
                     return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 3),
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 300),
                         padding: EdgeInsets.symmetric(
-                            horizontal: isActive ? 10 : 6, vertical: 4),
+                          horizontal: isActive ? 10 : 6,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: isDone
                               ? accent.withValues(alpha: 0.15)
@@ -257,13 +232,14 @@ class _OnboardingProgressBar extends StatelessWidget {
                   }),
                 ),
               ),
-              // Step counter
+
+              // Step counter (fixed 36px slot)
               SizedBox(
-                width: 40,
+                width: 36,
                 child: Text(
                   '${stepIndex + 1}/$totalSteps',
                   style: GoogleFonts.hankenGrotesk(
-                    fontSize: 11,
+                    fontSize: 10,
                     fontWeight: FontWeight.w600,
                     color: Colors.white.withValues(alpha: 0.25),
                   ),
@@ -275,7 +251,7 @@ class _OnboardingProgressBar extends StatelessWidget {
 
           const SizedBox(height: 8),
 
-          // Thin progress line
+          // ── Thin progress line ──
           ClipRRect(
             borderRadius: BorderRadius.circular(2),
             child: LinearProgressIndicator(

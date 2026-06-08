@@ -122,6 +122,7 @@ class _ObPage5NotificationsState extends State<ObPage5Notifications>
         ),
       ),
       child: SafeArea(
+        top: false,
         child: FadeTransition(
           opacity: CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut),
           child: Column(

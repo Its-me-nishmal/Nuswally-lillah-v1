@@ -90,6 +90,7 @@ class _ObPage2LocationState extends State<ObPage2Location>
         ),
       ),
       child: SafeArea(
+        top: false,
         child: Column(
           children: [
             // ── Header ──

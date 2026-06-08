@@ -158,6 +158,7 @@ class _ObPage4HabitsState extends State<ObPage4Habits>
         ),
       ),
       child: SafeArea(
+        top: false,
         child: FadeTransition(
           opacity: CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut),
           child: Column(
