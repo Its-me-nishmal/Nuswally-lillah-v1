@@ -520,8 +520,8 @@ class SettingsScreen extends StatelessWidget {
                 case AppThemeStyle.teal:
                   dotColor = const Color(0xFF2DD4BF);
                   break;
-                case AppThemeStyle.gold:
-                  dotColor = const Color(0xFFF59E0B);
+                case AppThemeStyle.minimal:
+                  dotColor = const Color(0xFFF8FAFC);
                   break;
                 case AppThemeStyle.emerald:
                   dotColor = const Color(0xFF10B981);
@@ -594,16 +594,28 @@ class SettingsScreen extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          colors: [
+            cardColor,
+            cardColor.withValues(alpha: 0.85),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
+            color: primaryColor.withValues(alpha: 0.03),
+            blurRadius: 15,
+            spreadRadius: 1,
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
-        border: Border.all(color: primaryColor.withValues(alpha: 0.06)),
+        border: Border.all(color: primaryColor.withValues(alpha: 0.12), width: 1.2),
       ),
       child: child,
     );

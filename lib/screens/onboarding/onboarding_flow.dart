@@ -69,8 +69,8 @@ class _OnboardingFlowState extends State<OnboardingFlow>
       backgroundColor: theme.backgroundBottom,
       body: Column(
         children: [
-          // ── Status bar area (always present, transparent) ──
-          SizedBox(height: topPad),
+          // ── Status bar area (always present, transparent, with minimum safety pad) ──
+          SizedBox(height: topPad > 0 ? topPad + 6 : 16),
 
           // ── Progress bar — only on pages 1–4 ──
           AnimatedSize(
@@ -133,133 +133,180 @@ class _OnboardingProgressBar extends StatelessWidget {
     this.onBack,
   });
 
-  static const _stepLabels = ['Location', 'Theme', 'Habits', 'Alerts'];
+  static const _stepLabels = [
+    'Location Setup',
+    'Personalize Theme',
+    'Build Daily Rhythm',
+    'Prayer Alerts',
+  ];
+
+  static const _stepSubtitles = [
+    'Select your area',
+    'Choose your mood style',
+    'Track your custom habits',
+    'Configure notifications',
+  ];
+
+  static const _stepIcons = [
+    Icons.location_on_rounded,
+    Icons.palette_rounded,
+    Icons.auto_awesome_rounded,
+    Icons.notifications_active_rounded,
+  ];
 
   @override
   Widget build(BuildContext context) {
     final stepIndex = (currentPage - 1).clamp(0, totalSteps - 1);
+    final size = MediaQuery.of(context).size;
+    final isSmall = size.height < 680;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 10, 20, 10),
+      padding: EdgeInsets.fromLTRB(20, 8, 20, isSmall ? 10 : 16),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // ── Step chips row ──
+          // ── Segmented Progress Bar ──
+          Row(
+            children: List.generate(totalSteps, (i) {
+              final isCompletedOrActive = i <= stepIndex;
+              return Expanded(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: i == 0 ? 0 : 3.0),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: isCompletedOrActive
+                          ? accent
+                          : Colors.white.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ),
+
+          SizedBox(height: isSmall ? 14 : 18),
+
+          // ── Header Row ──
           Row(
             children: [
-              // Back button (fixed 36px slot)
-              SizedBox(
-                width: 36,
-                child: onBack != null
-                    ? GestureDetector(
-                        onTap: onBack,
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 2),
-                          child: Icon(
-                            Icons.arrow_back_ios_new_rounded,
-                            size: 15,
-                            color: accent.withValues(alpha: 0.7),
-                          ),
-                        ),
-                      )
-                    : null,
-              ),
-
-              // Step chips
-              Expanded(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(totalSteps, (i) {
-                    final isActive = i == stepIndex;
-                    final isDone = i < stepIndex;
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 3),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: isActive ? 10 : 6,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isDone
-                              ? accent.withValues(alpha: 0.15)
-                              : isActive
-                                  ? accent.withValues(alpha: 0.12)
-                                  : Colors.transparent,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: isDone
-                                ? accent.withValues(alpha: 0.3)
-                                : isActive
-                                    ? accent.withValues(alpha: 0.4)
-                                    : Colors.white.withValues(alpha: 0.06),
-                            width: 0.8,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (isDone)
-                              Icon(Icons.check_rounded,
-                                  size: 10,
-                                  color: accent.withValues(alpha: 0.8))
-                            else
-                              Container(
-                                width: 5,
-                                height: 5,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: isActive
-                                      ? accent
-                                      : Colors.white.withValues(alpha: 0.15),
-                                ),
-                              ),
-                            if (isActive) ...[
-                              const SizedBox(width: 5),
-                              Text(
-                                _stepLabels[i],
-                                style: GoogleFonts.hankenGrotesk(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  color: accent,
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
+              // Back Button (with modern glass circle)
+              if (onBack != null) ...[
+                GestureDetector(
+                  onTap: onBack,
+                  behavior: HitTestBehavior.opaque,
+                  child: Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withValues(alpha: 0.04),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.08),
+                        width: 0.8,
                       ),
-                    );
-                  }),
+                    ),
+                    child: Center(
+                      child: Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        size: 13,
+                        color: Colors.white.withValues(alpha: 0.85),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+              ],
+
+              // Step info (Title & Description)
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'STEP ${stepIndex + 1} OF $totalSteps',
+                      style: GoogleFonts.hankenGrotesk(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.2,
+                        color: accent.withValues(alpha: 0.7),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        Icon(
+                          _stepIcons[stepIndex],
+                          size: 14,
+                          color: accent,
+                        ),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            _stepLabels[stepIndex],
+                            style: GoogleFonts.hankenGrotesk(
+                              fontSize: isSmall ? 14 : 16,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white.withValues(alpha: 0.95),
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 1),
+                    Text(
+                      _stepSubtitles[stepIndex],
+                      style: GoogleFonts.hankenGrotesk(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white.withValues(alpha: 0.45),
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ),
               ),
 
-              // Step counter (fixed 36px slot)
-              SizedBox(
-                width: 36,
-                child: Text(
-                  '${stepIndex + 1}/$totalSteps',
-                  style: GoogleFonts.hankenGrotesk(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white.withValues(alpha: 0.25),
+              // Step pill badge
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: accent.withValues(alpha: 0.2),
+                    width: 0.8,
                   ),
-                  textAlign: TextAlign.right,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 5,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: accent,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Setup',
+                      style: GoogleFonts.hankenGrotesk(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        color: accent,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
-          ),
-
-          const SizedBox(height: 8),
-
-          // ── Thin progress line ──
-          ClipRRect(
-            borderRadius: BorderRadius.circular(2),
-            child: LinearProgressIndicator(
-              value: (stepIndex + 1) / totalSteps,
-              minHeight: 2,
-              backgroundColor: Colors.white.withValues(alpha: 0.05),
-              valueColor: AlwaysStoppedAnimation<Color>(accent),
-            ),
           ),
         ],
       ),

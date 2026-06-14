@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/prayer_provider.dart';
+import '../providers/theme_provider.dart';
 
 class NotificationSettingsScreen extends StatefulWidget {
   const NotificationSettingsScreen({super.key});
@@ -24,33 +25,35 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = context.watch<ThemeProvider>();
+    final primaryColor = theme.primaryAccent;
+    final bgTop = theme.backgroundTop;
+    final bgBottom = theme.backgroundBottom;
     final provider = context.watch<PrayerProvider>();
 
     final prayers = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
 
     return Scaffold(
+      backgroundColor: bgBottom,
       body: Container(
         decoration: BoxDecoration(
-          color: colorScheme.surface,
-          image: const DecorationImage(
-            image: AssetImage('assets/images/islamic_bg.png'),
-            opacity: 0.03,
-            repeat: ImageRepeat.repeat,
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [bgTop, bgBottom],
           ),
         ),
         child: SafeArea(
           child: Column(
             children: [
-              _buildAppBar(context),
+              _buildAppBar(context, primaryColor),
               Expanded(
                 child: ListView(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   physics: const BouncingScrollPhysics(),
                   children: [
                     const SizedBox(height: 8),
-                    _buildHeroCard(context),
+                    _buildHeroCard(context, theme),
                     const SizedBox(height: 24),
                     Text(
                       'PRAYER ALERTS CONFIGURATION',
@@ -58,11 +61,11 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 2.5,
-                        color: colorScheme.primary.withValues(alpha: 0.4),
+                        color: primaryColor.withValues(alpha: 0.5),
                       ),
                     ),
                     const SizedBox(height: 12),
-                    ...prayers.map((prayer) => _buildPrayerConfigTile(context, provider, prayer, isDark)),
+                    ...prayers.map((prayer) => _buildPrayerConfigTile(context, provider, prayer, theme)),
                     const SizedBox(height: 40),
                   ],
                 ),
@@ -74,15 +77,14 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
     );
   }
 
-  Widget _buildAppBar(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+  Widget _buildAppBar(BuildContext context, Color primaryColor) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
       child: Row(
         children: [
           IconButton(
             onPressed: () => Navigator.pop(context),
-            icon: Icon(Icons.arrow_back_ios_new_rounded, color: colorScheme.primary),
+            icon: Icon(Icons.arrow_back_ios_new_rounded, color: primaryColor),
           ),
           const SizedBox(width: 8),
           Text(
@@ -90,7 +92,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
             style: GoogleFonts.outfit(
               fontSize: 22,
               fontWeight: FontWeight.bold,
-              color: colorScheme.primary,
+              color: Colors.white,
             ),
           ),
         ],
@@ -98,26 +100,32 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
     );
   }
 
-  Widget _buildHeroCard(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+  Widget _buildHeroCard(BuildContext context, ThemeProvider theme) {
+    final primaryColor = theme.primaryAccent;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            colorScheme.primary,
-            colorScheme.secondary,
+            theme.containerColor,
+            theme.containerColor.withValues(alpha: 0.8),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: primaryColor.withValues(alpha: 0.15), width: 1.2),
         boxShadow: [
           BoxShadow(
-            color: colorScheme.primary.withValues(alpha: 0.25),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
+            color: primaryColor.withValues(alpha: 0.04),
+            blurRadius: 15,
+            spreadRadius: 1,
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -129,10 +137,10 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.15),
+                  color: primaryColor.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.ring_volume_rounded, color: Colors.white, size: 24),
+                child: Icon(Icons.ring_volume_rounded, color: primaryColor, size: 24),
               ),
               const SizedBox(width: 14),
               Text(
@@ -150,7 +158,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
             'Configure offline sounds and custom reminder offsets for both Adhan and Iqamah calls individually for each of the 5 daily prayers.',
             style: GoogleFonts.outfit(
               fontSize: 13,
-              color: Colors.white.withValues(alpha: 0.85),
+              color: Colors.white.withValues(alpha: 0.7),
               height: 1.4,
             ),
           ),
@@ -163,9 +171,10 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
     BuildContext context,
     PrayerProvider provider,
     String prayer,
-    bool isDark,
+    ThemeProvider theme,
   ) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final primaryColor = theme.primaryAccent;
+    final cardColor = theme.containerColor;
     final isExpanded = _expandedPrayer == prayer;
     final icon = _prayerIcons[prayer] ?? Icons.notifications;
 
@@ -185,16 +194,23 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
       duration: const Duration(milliseconds: 300),
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: isDark ? colorScheme.surfaceContainerHighest : Colors.white,
+        gradient: LinearGradient(
+          colors: [
+            cardColor,
+            cardColor.withValues(alpha: isExpanded ? 0.9 : 0.95),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: isExpanded ? colorScheme.primary : colorScheme.primary.withValues(alpha: 0.05),
-          width: isExpanded ? 1.5 : 1,
+          color: isExpanded ? primaryColor.withValues(alpha: 0.4) : primaryColor.withValues(alpha: 0.12),
+          width: isExpanded ? 1.5 : 1.2,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: isExpanded ? 0.08 : 0.03),
-            blurRadius: 12,
+            color: Colors.black.withValues(alpha: isExpanded ? 0.2 : 0.15),
+            blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
@@ -217,7 +233,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                   children: [
                     Icon(
                       icon,
-                      color: isExpanded ? colorScheme.primary : colorScheme.primary.withValues(alpha: 0.6),
+                      color: isExpanded ? primaryColor : primaryColor.withValues(alpha: 0.6),
                       size: 24,
                     ),
                     const SizedBox(width: 16),
@@ -230,7 +246,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                             style: GoogleFonts.outfit(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: colorScheme.onSurface,
+                              color: Colors.white,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -239,7 +255,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                             style: GoogleFonts.outfit(
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
-                              color: colorScheme.onSurface.withValues(alpha: 0.4),
+                              color: Colors.white.withValues(alpha: 0.45),
                             ),
                           ),
                         ],
@@ -247,7 +263,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                     ),
                     Icon(
                       isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
-                      color: colorScheme.primary.withValues(alpha: 0.6),
+                      color: primaryColor.withValues(alpha: 0.6),
                     ),
                   ],
                 ),
@@ -260,17 +276,17 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
                 child: Column(
                   children: [
-                    Divider(color: colorScheme.primary.withValues(alpha: 0.1), height: 1),
+                    Divider(color: Colors.white.withValues(alpha: 0.08), height: 1),
                     const SizedBox(height: 20),
                     
                     // --- ADHAN NOTIFICATIONS ---
-                    _buildSubHeader(context, 'Adhan (Call to Prayer) Alerts', Icons.volume_up_rounded),
+                    _buildSubHeader(context, 'Adhan (Call to Prayer) Alerts', Icons.volume_up_rounded, primaryColor),
                     const SizedBox(height: 12),
                     
                     // Adhan Sound type
                     _buildOptionsLabel(context, 'Alert Sound'),
                     const SizedBox(height: 8),
-                    _buildSoundSelector(
+                    _buildCustomSoundSelector(
                       context: context,
                       currentValue: adhanSound,
                       options: ['Silent', 'Chime', 'Beep Only', 'Full Adhan'],
@@ -278,34 +294,36 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                         provider.updateAdhanSound(prayer, sound);
                         provider.playAlertSound(sound);
                       },
+                      primaryColor: primaryColor,
                     ),
                     const SizedBox(height: 16),
                     
                     // Adhan offset timing
                     _buildOptionsLabel(context, 'Remind Me'),
                     const SizedBox(height: 8),
-                    _buildOffsetSelector(
+                    _buildCustomOffsetSelector(
                       context: context,
                       currentValue: adhanOffset,
                       options: [
-                        (0, 'At Adhan time'),
-                        (3, '3 mins before'),
+                        (0, 'At Adhan'),
+                        (3, '3m Before'),
                       ],
                       onSelect: (offset) => provider.updateAdhanOffset(prayer, offset),
+                      primaryColor: primaryColor,
                     ),
                     
                     const SizedBox(height: 24),
-                    Divider(color: colorScheme.primary.withValues(alpha: 0.06), height: 1),
+                    Divider(color: Colors.white.withValues(alpha: 0.05), height: 1),
                     const SizedBox(height: 20),
                     
                     // --- IQAMAH NOTIFICATIONS ---
-                    _buildSubHeader(context, 'Iqamah (Congregation) Alerts', Icons.people_rounded),
+                    _buildSubHeader(context, 'Iqamah (Congregation) Alerts', Icons.people_rounded, primaryColor),
                     const SizedBox(height: 12),
                     
                     // Iqamah Sound type
                     _buildOptionsLabel(context, 'Alert Sound'),
                     const SizedBox(height: 8),
-                    _buildSoundSelector(
+                    _buildCustomSoundSelector(
                       context: context,
                       currentValue: iqamahSound,
                       options: ['Silent', 'Chime', 'Soft Beep', 'Default Alert'],
@@ -313,23 +331,25 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                         provider.updateIqamahNotificationSound(prayer, sound);
                         provider.playAlertSound(sound);
                       },
+                      primaryColor: primaryColor,
                     ),
                     const SizedBox(height: 16),
                     
                     // Iqamah offset timing
                     _buildOptionsLabel(context, 'Remind Me'),
                     const SizedBox(height: 8),
-                    _buildOffsetSelector(
+                    _buildCustomOffsetSelector(
                       context: context,
                       currentValue: iqamahOffset,
                       options: [
-                        (0, 'At Iqamah time'),
-                        (1, '1 min before'),
-                        (2, '2 mins before'),
-                        (3, '3 mins before'),
-                        (5, '5 mins before'),
+                        (0, 'At Iqamah'),
+                        (1, '1m Before'),
+                        (2, '2m Before'),
+                        (3, '3m Before'),
+                        (5, '5m Before'),
                       ],
                       onSelect: (offset) => provider.updateIqamahNotificationOffset(prayer, offset),
+                      primaryColor: primaryColor,
                     ),
                   ],
                 ),
@@ -340,18 +360,17 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
     );
   }
 
-  Widget _buildSubHeader(BuildContext context, String label, IconData icon) {
-    final colorScheme = Theme.of(context).colorScheme;
+  Widget _buildSubHeader(BuildContext context, String label, IconData icon, Color primaryColor) {
     return Row(
       children: [
-        Icon(icon, color: colorScheme.secondary, size: 16),
+        Icon(icon, color: primaryColor, size: 16),
         const SizedBox(width: 8),
         Text(
           label,
           style: GoogleFonts.outfit(
             fontSize: 13,
             fontWeight: FontWeight.bold,
-            color: colorScheme.secondary,
+            color: primaryColor,
           ),
         ),
       ],
@@ -359,7 +378,6 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
   }
 
   Widget _buildOptionsLabel(BuildContext context, String label) {
-    final colorScheme = Theme.of(context).colorScheme;
     return Align(
       alignment: Alignment.centerLeft,
       child: Text(
@@ -367,77 +385,125 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
         style: GoogleFonts.outfit(
           fontSize: 11,
           fontWeight: FontWeight.bold,
-          color: colorScheme.onSurface.withValues(alpha: 0.5),
+          color: Colors.white.withValues(alpha: 0.4),
         ),
       ),
     );
   }
 
-  Widget _buildSoundSelector({
+  Widget _buildCustomSoundSelector({
     required BuildContext context,
     required String currentValue,
     required List<String> options,
     required Function(String) onSelect,
+    required Color primaryColor,
   }) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: options.map((sound) {
-          final isSelected = currentValue == sound;
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: ChoiceChip(
-              label: Text(sound),
-              selected: isSelected,
-              onSelected: (selected) {
-                if (selected) {
-                  onSelect(sound);
-                  HapticFeedback.selectionClick();
-                }
+    return Row(
+      children: options.map((sound) {
+        final isSelected = currentValue == sound;
+        final Color activeThemeColor;
+        switch (sound) {
+          case 'Silent':
+            activeThemeColor = const Color(0xFF64748B);
+            break;
+          case 'Chime':
+            activeThemeColor = const Color(0xFFFBBF24);
+            break;
+          default:
+            activeThemeColor = primaryColor;
+        }
+
+        return Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: GestureDetector(
+              onTap: () {
+                onSelect(sound);
+                HapticFeedback.lightImpact();
               },
-              selectedColor: colorScheme.primary,
-              labelStyle: GoogleFonts.outfit(
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-                color: isSelected ? Colors.white : colorScheme.onSurface,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                height: 38,
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? activeThemeColor.withValues(alpha: 0.15)
+                      : Colors.white.withValues(alpha: 0.03),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isSelected
+                        ? activeThemeColor.withValues(alpha: 0.5)
+                        : Colors.white.withValues(alpha: 0.08),
+                    width: isSelected ? 1.2 : 0.8,
+                  ),
+                ),
+                child: Center(
+                  child: Text(
+                    sound == 'Full Adhan' ? 'Adhan' : (sound == 'Default Alert' ? 'Default' : sound),
+                    style: GoogleFonts.outfit(
+                      fontSize: 10,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                      color: isSelected ? activeThemeColor : Colors.white.withValues(alpha: 0.4),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
               ),
             ),
-          );
-        }).toList(),
-      ),
+          ),
+        );
+      }).toList(),
     );
   }
 
-  Widget _buildOffsetSelector({
+  Widget _buildCustomOffsetSelector({
     required BuildContext context,
     required int currentValue,
     required List<(int, String)> options,
     required Function(int) onSelect,
+    required Color primaryColor,
   }) {
-    final colorScheme = Theme.of(context).colorScheme;
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
+      physics: const BouncingScrollPhysics(),
       child: Row(
         children: options.map((option) {
           final (offset, label) = option;
           final isSelected = currentValue == offset;
+
           return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: ChoiceChip(
-              label: Text(label),
-              selected: isSelected,
-              onSelected: (selected) {
-                if (selected) {
-                  onSelect(offset);
-                  HapticFeedback.selectionClick();
-                }
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: GestureDetector(
+              onTap: () {
+                onSelect(offset);
+                HapticFeedback.lightImpact();
               },
-              selectedColor: colorScheme.secondary,
-              labelStyle: GoogleFonts.outfit(
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-                color: isSelected ? Colors.white : colorScheme.onSurface,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                height: 38,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? primaryColor.withValues(alpha: 0.15)
+                      : Colors.white.withValues(alpha: 0.03),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isSelected
+                        ? primaryColor.withValues(alpha: 0.5)
+                        : Colors.white.withValues(alpha: 0.08),
+                    width: isSelected ? 1.2 : 0.8,
+                  ),
+                ),
+                child: Center(
+                  child: Text(
+                    label,
+                    style: GoogleFonts.outfit(
+                      fontSize: 10,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                      color: isSelected ? primaryColor : Colors.white.withValues(alpha: 0.4),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
               ),
             ),
           );

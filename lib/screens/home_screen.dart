@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart' hide TextDirection;
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/prayer_provider.dart';
@@ -133,11 +135,11 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
-          // Pinned Slim Bottom Navigation Bar
+          // Floating Glassmorphic Bottom Navigation Bar
           Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
+            left: 18,
+            right: 18,
+            bottom: 18,
             child: _NewBottomNavigationBar(
               currentIndex: _currentTabIndex,
               onTabSelected: (index) {
@@ -511,6 +513,56 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
+class _PulseBellIcon extends StatefulWidget {
+  final IconData icon;
+  final Color color;
+  final double size;
+
+  const _PulseBellIcon({
+    required this.icon,
+    required this.color,
+    required this.size,
+  });
+
+  @override
+  State<_PulseBellIcon> createState() => _PulseBellIconState();
+}
+
+class _PulseBellIconState extends State<_PulseBellIcon> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    )..repeat(reverse: true);
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.25).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ScaleTransition(
+      scale: _scaleAnimation,
+      child: Icon(
+        widget.icon,
+        color: widget.color,
+        size: widget.size,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+}
+
 class _NewUpcomingPrayerBanner extends StatelessWidget {
   const _NewUpcomingPrayerBanner();
 
@@ -634,17 +686,27 @@ class _NewUpcomingPrayerBanner extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: backgroundColor,
+            gradient: LinearGradient(
+              colors: [
+                backgroundColor,
+                backgroundColor.withValues(alpha: 0.85),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
             borderRadius: BorderRadius.circular(20),
-            border: Border(
-              left: BorderSide(
-                color: leftBorderColor,
-                width: 4,
-              ),
+            border: Border.all(
+              color: leftBorderColor.withValues(alpha: 0.15),
+              width: 1.2,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
+                color: leftBorderColor.withValues(alpha: 0.05),
+                blurRadius: 15,
+                spreadRadius: 2,
+              ),
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.3),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -652,6 +714,23 @@ class _NewUpcomingPrayerBanner extends StatelessWidget {
           ),
           child: Row(
             children: [
+              // Glowing accent indicator pill
+              Container(
+                width: 4,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: leftBorderColor,
+                  borderRadius: BorderRadius.circular(2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: leftBorderColor.withValues(alpha: 0.4),
+                      blurRadius: 6,
+                      spreadRadius: 1,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
               // Notification Bell Icon Container
               Container(
                 padding: const EdgeInsets.all(10),
@@ -659,13 +738,17 @@ class _NewUpcomingPrayerBanner extends StatelessWidget {
                   color: leftBorderColor.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
-                  isAlertPlaying 
-                      ? Icons.notifications_active_rounded 
-                      : Icons.notifications_none_rounded,
-                  color: leftBorderColor,
-                  size: 20,
-                ),
+                child: isAlertPlaying 
+                    ? _PulseBellIcon(
+                        icon: Icons.notifications_active_rounded,
+                        color: leftBorderColor,
+                        size: 20,
+                      )
+                    : Icon(
+                        Icons.notifications_none_rounded,
+                        color: leftBorderColor,
+                        size: 20,
+                      ),
               ),
               const SizedBox(width: 16),
               // Upcoming Prayer Text Info
@@ -725,60 +808,71 @@ class _NewBottomNavigationBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
+    final activeColor = themeProvider.primaryAccent;
+
     return Container(
       decoration: BoxDecoration(
-        color: themeProvider.backgroundBottom,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        border: Border(
-          top: BorderSide(
-            color: Colors.white.withValues(alpha: 0.05),
-            width: 1,
-          ),
-        ),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.4),
+            color: Colors.black.withValues(alpha: 0.45),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+          BoxShadow(
+            color: activeColor.withValues(alpha: 0.04),
             blurRadius: 15,
-            offset: const Offset(0, -4),
+            spreadRadius: 1,
           ),
         ],
       ),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildBottomNavItem(
-                context: context,
-                icon: Icons.home_filled,
-                label: 'HOME',
-                isActive: currentIndex == 0,
-                onTap: () => onTabSelected(0),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+            decoration: BoxDecoration(
+              color: themeProvider.containerColor.withValues(alpha: 0.75),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.08),
+                width: 1.2,
               ),
-              _buildBottomNavItem(
-                context: context,
-                icon: Icons.menu_book_rounded,
-                label: 'QURAN',
-                isActive: currentIndex == 1,
-                onTap: () => onTabSelected(1),
-              ),
-              _buildBottomNavItem(
-                context: context,
-                icon: Icons.explore_outlined,
-                label: 'QIBLA',
-                isActive: currentIndex == 2,
-                onTap: () => onTabSelected(2),
-              ),
-              _buildBottomNavItem(
-                context: context,
-                icon: Icons.grid_view_rounded,
-                label: 'ALL',
-                isActive: false,
-                onTap: () => _showAllFeaturesSheet(context),
-              ),
-            ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildBottomNavItem(
+                  context: context,
+                  icon: Icons.home_filled,
+                  label: 'HOME',
+                  isActive: currentIndex == 0,
+                  onTap: () => onTabSelected(0),
+                ),
+                _buildBottomNavItem(
+                  context: context,
+                  icon: Icons.menu_book_rounded,
+                  label: 'QURAN',
+                  isActive: currentIndex == 1,
+                  onTap: () => onTabSelected(1),
+                ),
+                _buildBottomNavItem(
+                  context: context,
+                  icon: Icons.explore_outlined,
+                  label: 'QIBLA',
+                  isActive: currentIndex == 2,
+                  onTap: () => onTabSelected(2),
+                ),
+                _buildBottomNavItem(
+                  context: context,
+                  icon: Icons.grid_view_rounded,
+                  label: 'ALL',
+                  isActive: false,
+                  onTap: () => _showAllFeaturesSheet(context),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -803,29 +897,33 @@ class _NewBottomNavigationBar extends StatelessWidget {
       },
       child: Container(
         color: Colors.transparent,
-        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
+        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Highlight box if active
-            isActive
-                ? Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: activeColor.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Icon(
-                      icon,
-                      color: activeColor,
-                      size: 22,
-                    ),
-                  )
-                : Icon(
-                    icon,
-                    color: inactiveColor,
-                    size: 22,
-                  ),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeInOut,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              decoration: BoxDecoration(
+                color: isActive ? activeColor.withValues(alpha: 0.15) : Colors.transparent,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: isActive
+                    ? [
+                        BoxShadow(
+                          color: activeColor.withValues(alpha: 0.08),
+                          blurRadius: 10,
+                          spreadRadius: 1,
+                        )
+                      ]
+                    : null,
+              ),
+              child: Icon(
+                icon,
+                color: isActive ? activeColor : inactiveColor,
+                size: 22,
+              ),
+            ),
             const SizedBox(height: 6),
             Text(
               label,
@@ -1221,20 +1319,12 @@ class _SnakePathPainter extends CustomPainter {
     for (double y = startY; y <= endY; y += stepY) {
       final double t = (y - rowHeight / 2) / rowHeight;
       final double x = baseX + amplitude * math.sin(t * math.pi / 2);
-      final double ratio = (y - startY) / (endY - startY);
       
       final Paint paint = Paint()
-        ..color = dotColor.withValues(alpha: 0.7)
+        ..color = Colors.white.withValues(alpha: 0.08)
         ..style = PaintingStyle.fill;
 
-      canvas.drawCircle(Offset(x, y), 2.0, paint);
-      
-      if (ratio > 0.0 && ratio < 1.0) {
-        final Paint glowPaint = Paint()
-          ..color = dotColor.withValues(alpha: 0.15)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
-        canvas.drawCircle(Offset(x, y), 4.0, glowPaint);
-      }
+      canvas.drawCircle(Offset(x, y), 1.5, paint);
     }
   }
 
@@ -1340,8 +1430,44 @@ String _format24hTo12h(String time24h) {
   }
 }
 
-class _NewDailyScheduleSection extends StatelessWidget {
+class _NewDailyScheduleSection extends StatefulWidget {
   const _NewDailyScheduleSection();
+
+  @override
+  State<_NewDailyScheduleSection> createState() => _NewDailyScheduleSectionState();
+}
+
+class _NewDailyScheduleSectionState extends State<_NewDailyScheduleSection> {
+  int _viewMode = 0; // 0 = timeline, 1 = simple vertical list, 2 = horizontal carousel
+  SharedPreferences? _prefs;
+  PageController? _pageController;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPreferences();
+  }
+
+  Future<void> _loadPreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    _prefs = prefs;
+    if (mounted) {
+      setState(() {
+        if (prefs.containsKey('schedule_view_mode')) {
+          _viewMode = prefs.getInt('schedule_view_mode') ?? 0;
+        } else {
+          final isSimple = prefs.getBool('is_simple_view') ?? false;
+          _viewMode = isSimple ? 1 : 0;
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _pageController?.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1357,7 +1483,7 @@ class _NewDailyScheduleSection extends StatelessWidget {
         final highlightedName = data.$2;
         if (todayTimes == null) return const SizedBox();
 
-        // 1. Core Prayers
+        // 1. Core Prayers (Namaz)
         final List<_TimelineRowItem> listItems = [
           _TimelineRowItem(
             id: 'Fajr',
@@ -1416,7 +1542,7 @@ class _NewDailyScheduleSection extends StatelessWidget {
           ),
         ];
 
-        // 2. Add visible habits chronologically
+        // 2. Personal Habits
         for (final habit in journalProvider.habits) {
           if (habit.showOnHomeTimeline) {
             listItems.add(_TimelineRowItem(
@@ -1432,11 +1558,36 @@ class _NewDailyScheduleSection extends StatelessWidget {
             ));
           }
         }
-
-        // 3. Sort chronologically
+        
+        // 3. Sort everything chronologically
         listItems.sort((a, b) => a.minutesFromMidnight.compareTo(b.minutesFromMidnight));
+        const double rowHeight = 76.0;
 
-        const double rowHeight = 100.0;
+        // Initialize PageController on demand based on current listItems
+        if (_viewMode == 2 && _pageController == null) {
+          int initialPage = -1;
+          for (int i = 0; i < listItems.length; i++) {
+            if (listItems[i].isCurrent) {
+              initialPage = i;
+              break;
+            }
+          }
+          if (initialPage == -1) {
+            for (int i = 0; i < listItems.length; i++) {
+              if (!listItems[i].isCompleted) {
+                initialPage = i;
+                break;
+              }
+            }
+          }
+          if (initialPage == -1) {
+            initialPage = 0;
+          }
+          _pageController = PageController(
+            initialPage: math.max(0, math.min(initialPage, listItems.length - 1)),
+            viewportFraction: 1.0,
+          );
+        }
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1444,14 +1595,44 @@ class _NewDailyScheduleSection extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'DAILY SCHEDULE',
-                  style: GoogleFonts.outfit(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: themeProvider.primaryAccent.withValues(alpha: 0.8),
-                    letterSpacing: 2,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      'DAILY SCHEDULE',
+                      style: GoogleFonts.outfit(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: themeProvider.primaryAccent.withValues(alpha: 0.8),
+                        letterSpacing: 2,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: Icon(
+                        _viewMode == 0
+                            ? Icons.format_list_bulleted_rounded
+                            : _viewMode == 1
+                                ? Icons.view_carousel_rounded
+                                : Icons.alt_route_rounded,
+                        size: 16,
+                        color: themeProvider.primaryAccent.withValues(alpha: 0.6),
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _viewMode = (_viewMode + 1) % 3;
+                          if (_viewMode == 2) {
+                            _pageController?.dispose();
+                            _pageController = null;
+                          }
+                        });
+                        _prefs?.setInt('schedule_view_mode', _viewMode);
+                        HapticFeedback.lightImpact();
+                      },
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      splashRadius: 16,
+                    ),
+                  ],
                 ),
                 Text(
                   'Today, $formattedDate',
@@ -1463,53 +1644,150 @@ class _NewDailyScheduleSection extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 24),
-            Stack(
-              children: [
-                Positioned.fill(
-                  child: CustomPaint(
-                    painter: _SnakePathPainter(
-                      itemCount: listItems.length,
-                      rowHeight: rowHeight,
-                      baseX: 30.0,
-                      amplitude: 22.0,
-                      dotColor: themeProvider.primaryAccent,
+            if (_viewMode == 1)
+              Column(
+                children: List.generate(listItems.length, (index) {
+                  final item = listItems[index];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12.0),
+                    child: SizedBox(
+                      height: 60.0,
+                      child: _PrayerScheduleRow(
+                        item: item,
+                        isCurrent: item.isCurrent,
+                      ),
+                    ),
+                  );
+                }),
+              )
+            else if (_viewMode == 2)
+              SizedBox(
+                height: 90.0,
+                child: PageView.builder(
+                  scrollDirection: Axis.vertical,
+                  controller: _pageController,
+                  itemCount: listItems.length,
+                  itemBuilder: (context, index) {
+                    final item = listItems[index];
+
+                    // Determine label: PAST, NOW, NEXT, COMPLETED
+                    String chronologicalLabel = 'UPCOMING';
+                    if (item.isCompleted) {
+                      chronologicalLabel = 'COMPLETED';
+                    } else if (item.isCurrent) {
+                      chronologicalLabel = 'NOW';
+                    } else {
+                      int currentIndex = -1;
+                      for (int i = 0; i < listItems.length; i++) {
+                        if (listItems[i].isCurrent) {
+                          currentIndex = i;
+                          break;
+                        }
+                      }
+                      if (currentIndex != -1) {
+                        if (index < currentIndex) {
+                          chronologicalLabel = 'PAST';
+                        } else {
+                          chronologicalLabel = 'NEXT';
+                        }
+                      } else {
+                        int firstIncompleteIndex = -1;
+                        for (int i = 0; i < listItems.length; i++) {
+                          if (!listItems[i].isCompleted) {
+                            firstIncompleteIndex = i;
+                            break;
+                          }
+                        }
+                        if (firstIncompleteIndex != -1) {
+                          if (index < firstIncompleteIndex) {
+                            chronologicalLabel = 'PAST';
+                          } else {
+                            chronologicalLabel = 'NEXT';
+                          }
+                        }
+                      }
+                    }
+
+                    return Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          height: 60.0,
+                          child: _PrayerScheduleRow(
+                            item: item,
+                            isCurrent: item.isCurrent,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          chronologicalLabel,
+                          style: GoogleFonts.outfit(
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                            color: item.isCurrent 
+                                ? themeProvider.primaryAccent 
+                                : Colors.white.withValues(alpha: item.isCompleted ? 0.45 : 0.2),
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              )
+            else
+              Stack(
+                children: [
+                  Positioned.fill(
+                    child: CustomPaint(
+                      painter: _SnakePathPainter(
+                        itemCount: listItems.length,
+                        rowHeight: rowHeight,
+                        baseX: 30.0,
+                        amplitude: 22.0,
+                        dotColor: themeProvider.primaryAccent,
+                      ),
                     ),
                   ),
-                ),
-                Column(
-                  children: List.generate(listItems.length, (index) {
-                    final item = listItems[index];
-                    
-                    const double baseX = 30.0;
-                    const double amplitude = 22.0;
-                    final double nodeCenterX = baseX + amplitude * math.sin(index * math.pi / 2);
-                    
-                    return SizedBox(
-                      height: rowHeight,
-                      child: Stack(
-                        children: [
-                          Positioned(
-                            left: nodeCenterX - 14.0,
-                            top: (rowHeight - 84.0) / 2 + (84.0 / 2) - 14.0,
-                            child: _buildNodeIndicator(context, item.isCurrent, item.isCompleted),
-                          ),
-                          Positioned(
-                            left: nodeCenterX + 24.0,
-                            right: 0,
-                            top: (rowHeight - 84.0) / 2,
-                            height: 84.0,
-                            child: _PrayerScheduleRow(
-                              item: item,
-                              isCurrent: item.isCurrent,
+                  Column(
+                    children: List.generate(listItems.length, (index) {
+                      final item = listItems[index];
+                      
+                      const double baseX = 30.0;
+                      const double amplitude = 22.0;
+                      final double nodeCenterX = baseX + amplitude * math.sin(index * math.pi / 2);
+                      
+                      return SizedBox(
+                        height: rowHeight,
+                        child: Stack(
+                          children: [
+                            Positioned(
+                              left: nodeCenterX - 14.0,
+                              top: (rowHeight / 2) - 14.0,
+                              child: _PulseNodeIndicator(
+                                color: themeProvider.primaryAccent,
+                                isCurrent: item.isCurrent,
+                                isCompleted: item.isCompleted,
+                                backgroundColor: themeProvider.backgroundBottom,
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }),
-                ),
-              ],
-            ),
+                            Positioned(
+                              left: nodeCenterX + 24.0,
+                              right: 0,
+                              top: (rowHeight - 60.0) / 2,
+                              height: 60.0,
+                              child: _PrayerScheduleRow(
+                                item: item,
+                                isCurrent: item.isCurrent,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                  ),
+                ],
+              ),
             const SizedBox(height: 10),
             const _NewFooter(),
           ],
@@ -1517,30 +1795,76 @@ class _NewDailyScheduleSection extends StatelessWidget {
       },
     );
   }
+}
 
-  Widget _buildNodeIndicator(BuildContext context, bool isCurrent, bool isCompleted) {
-    final themeProvider = context.watch<ThemeProvider>();
-    final activeColor = themeProvider.primaryAccent;
+class _PulseNodeIndicator extends StatefulWidget {
+  final Color color;
+  final bool isCurrent;
+  final bool isCompleted;
+  final Color backgroundColor;
 
-    if (isCompleted) {
+  const _PulseNodeIndicator({
+    required this.color,
+    required this.isCurrent,
+    required this.isCompleted,
+    required this.backgroundColor,
+  });
+
+  @override
+  State<_PulseNodeIndicator> createState() => _PulseNodeIndicatorState();
+}
+
+class _PulseNodeIndicatorState extends State<_PulseNodeIndicator> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+    if (widget.isCurrent && !widget.isCompleted) {
+      _controller.repeat(reverse: true);
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _PulseNodeIndicator oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isCurrent && !widget.isCompleted) {
+      if (!_controller.isAnimating) {
+        _controller.repeat(reverse: true);
+      }
+    } else {
+      _controller.stop();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.isCompleted) {
       return Container(
         width: 28,
         height: 28,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: activeColor,
-          boxShadow: [
-            BoxShadow(
-              color: activeColor.withValues(alpha: 0.3),
-              blurRadius: 6,
-              spreadRadius: 1,
-            ),
-          ],
+          color: widget.backgroundColor,
+          border: Border.all(
+            color: widget.color.withValues(alpha: 0.65),
+            width: 1.5,
+          ),
         ),
         child: Center(
           child: Icon(
             Icons.check_rounded,
-            color: themeProvider.backgroundBottom,
+            color: widget.color,
             size: 14,
             weight: 900,
           ),
@@ -1548,62 +1872,65 @@ class _NewDailyScheduleSection extends StatelessWidget {
       );
     }
 
-    if (isCurrent) {
-      return Container(
-        width: 28,
-        height: 28,
+    if (widget.isCurrent) {
+      return AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          final opacityValue = 0.35 + (_controller.value * 0.65);
+          return Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: widget.backgroundColor,
+              border: Border.all(color: widget.color, width: 1.5),
+            ),
+            child: Center(
+              child: Opacity(
+                opacity: opacityValue,
+                child: Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: widget.color,
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      );
+    }
+
+    // Normal node (Neutral & minimal)
+    return Container(
+      width: 28,
+      height: 28,
+      alignment: Alignment.center,
+      child: Container(
+        width: 12,
+        height: 12,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: activeColor.withValues(alpha: 0.15),
-          border: Border.all(color: activeColor, width: 1.5),
-          boxShadow: [
-            BoxShadow(
-              color: activeColor.withValues(alpha: 0.3),
-              blurRadius: 8,
-              spreadRadius: 1,
-            ),
-          ],
+          color: widget.backgroundColor,
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.15),
+            width: 1.5,
+          ),
         ),
         child: Center(
           child: Container(
-            width: 10,
-            height: 10,
+            width: 4,
+            height: 4,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: activeColor,
+              color: Colors.white.withValues(alpha: 0.2),
             ),
           ),
         ),
-      );
-    } else {
-      return Container(
-        width: 28,
-        height: 28,
-        alignment: Alignment.center,
-        child: Container(
-          width: 12,
-          height: 12,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: themeProvider.containerColor,
-            border: Border.all(
-              color: activeColor.withValues(alpha: 0.3),
-              width: 1.5,
-            ),
-          ),
-          child: Center(
-            child: Container(
-              width: 4,
-              height: 4,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: activeColor.withValues(alpha: 0.4),
-              ),
-            ),
-          ),
-        ),
-      );
-    }
+      ),
+    );
   }
 }
 
@@ -1623,269 +1950,256 @@ class _PrayerScheduleRow extends StatelessWidget {
     final journalProvider = context.watch<JournalProvider>();
     final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
     
-    final hasIqamah = item.isPrayer && item.name != 'Sunrise';
     final activeColor = themeProvider.primaryAccent;
-    final glassBackground = isCurrent 
-        ? themeProvider.continueReadingBg.withValues(alpha: 0.25) 
-        : themeProvider.containerColor;
+    final isCompleted = item.isCompleted;
 
-    return Selector<PrayerProvider, (int, String, String)>(
-      selector: (_, prov) => (
-        hasIqamah ? (prov.iqamahOffsets[item.name] ?? 20) : 0,
-        hasIqamah ? (prov.iqamahNotificationSounds[item.name] ?? 'Default Alert') : '',
-        hasIqamah ? (prov.adhanNotificationSounds[item.name] ?? 'Default Alert') : '',
-      ),
-      builder: (context, data, child) {
-        final iqamahOffset = data.$1;
-        final iqamahSound = data.$2;
-        final adhanSound = data.$3;
-
-        return Container(
-          decoration: BoxDecoration(
-            color: glassBackground,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: isCurrent 
-                  ? activeColor.withValues(alpha: 0.6) 
-                  : Colors.white.withValues(alpha: 0.04),
-              width: isCurrent ? 1.5 : 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.15),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
+    // Premium visual aesthetics: Minimal & professional theme-coherent linear gradients
+    final decorationGradient = isCurrent
+        ? LinearGradient(
+            colors: [
+              themeProvider.containerColor,
+              themeProvider.backgroundBottom.withValues(alpha: 0.9),
             ],
-          ),
-          child: Stack(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        // Interactive Checkbox / Tick
-                        GestureDetector(
-                          onTap: () {
-                            if (!item.isCompleted) {
-                              final now = DateTime.now();
-                              final currentMinutes = now.hour * 60 + now.minute;
-                              if (currentMinutes < item.minutesFromMidnight) {
-                                HapticFeedback.vibrate();
-                                ScaffoldMessenger.of(context).clearSnackBars();
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Row(
-                                      children: [
-                                        Icon(Icons.lock_clock_rounded, color: themeProvider.primaryAccent, size: 20),
-                                        const SizedBox(width: 12),
-                                        Expanded(
-                                          child: Text(
-                                            "Cannot complete ${item.name} before its scheduled time (${item.time})",
-                                            style: GoogleFonts.outfit(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w600,
-                                              fontSize: 13,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    backgroundColor: themeProvider.containerColor,
-                                    behavior: SnackBarBehavior.floating,
-                                    margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                      side: BorderSide(
-                                        color: themeProvider.primaryAccent.withValues(alpha: 0.2),
-                                        width: 1,
-                                      ),
-                                    ),
-                                    duration: const Duration(seconds: 2),
-                                  ),
-                                );
-                                return;
-                              }
-                            }
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          )
+        : LinearGradient(
+            colors: [
+              themeProvider.containerColor,
+              themeProvider.backgroundBottom.withValues(alpha: 0.95),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          );
 
-                            if (item.isPrayer) {
-                              journalProvider.togglePrayerCompletion(todayStr, item.name);
-                            } else {
-                              journalProvider.toggleHabitCompletion(item.habitId, todayStr);
-                            }
-                            HapticFeedback.mediumImpact();
-                          },
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            width: 22,
-                            height: 22,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: item.isCompleted ? activeColor : Colors.transparent,
-                              border: Border.all(
-                                color: item.isCompleted ? activeColor : Colors.white.withValues(alpha: 0.2),
-                                width: 1.5,
-                              ),
-                            ),
-                            child: item.isCompleted
-                                ? Icon(
-                                    Icons.check_rounded,
-                                    color: themeProvider.backgroundBottom,
-                                    size: 14,
-                                    weight: 900,
-                                  )
-                                : null,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Icon(
-                          item.icon,
-                          color: isCurrent ? activeColor : const Color(0xFF94A3B8),
-                          size: 20,
-                        ),
-                        const SizedBox(width: 12),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              item.name,
-                              style: GoogleFonts.outfit(
-                                fontSize: 14,
-                                fontWeight: isCurrent ? FontWeight.bold : FontWeight.w600,
-                                color: Colors.white,
-                                decoration: item.isCompleted ? TextDecoration.lineThrough : null,
-                                decorationColor: Colors.white.withValues(alpha: 0.4),
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                             Text(
-                               item.time,
-                               style: GoogleFonts.outfit(
-                                 fontSize: 12,
-                                 fontWeight: FontWeight.bold,
-                                 color: isCurrent ? activeColor : const Color(0xFF94A3B8),
-                               ),
-                             ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    
-                    // Right actions: Prayer notifications or Habit pill
-                    if (item.isPrayer) ...[
-                      Row(
-                        children: [
-                          if (hasIqamah) ...[
-                            GestureDetector(
-                              onTap: () => _showIqamahSettingsSheet(context, provider, item.name),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: activeColor.withValues(alpha: 0.08),
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(
-                                    color: activeColor.withValues(alpha: 0.2),
-                                  ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      iqamahSound == 'Silent'
-                                          ? Icons.notifications_off_outlined
-                                          : Icons.notifications_active_rounded,
-                                      size: 10,
-                                      color: activeColor.withValues(alpha: 0.8),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      '+${iqamahOffset}m',
-                                      style: GoogleFonts.outfit(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.bold,
-                                        color: activeColor,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            GestureDetector(
-                              onTap: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => const NotificationSettingsScreen()),
-                              ),
-                              child: Icon(
-                                adhanSound == 'Silent'
-                                    ? Icons.volume_off_outlined
-                                    : (isCurrent ? Icons.volume_up_rounded : Icons.notifications_none_rounded),
-                                size: 18,
-                                color: adhanSound == 'Silent'
-                                    ? const Color(0xFF94A3B8).withValues(alpha: 0.3)
-                                    : activeColor,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ] else ...[
-                      // Small habit indicator badge
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: activeColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          'HABIT',
-                          style: GoogleFonts.outfit(
-                            fontSize: 9,
-                            fontWeight: FontWeight.bold,
-                            color: activeColor,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              if (isCurrent)
-                Positioned(
-                  top: 0,
-                  right: 0,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: activeColor,
-                      borderRadius: const BorderRadius.only(
-                        bottomLeft: Radius.circular(12),
-                        topRight: Radius.circular(18),
-                      ),
-                    ),
-                    child: Text(
-                      'NOW',
-                      style: GoogleFonts.outfit(
-                        fontSize: 9,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF030D0F),
-                      ),
+    final cardBorderColor = isCurrent
+        ? activeColor.withValues(alpha: 0.35)
+        : Colors.white.withValues(alpha: 0.06);
+
+    return GestureDetector(
+      onTap: item.isPrayer
+          ? () => _showPrayerQuickSettingsSheet(context, provider, themeProvider, item.name)
+          : null,
+      child: Container(
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          gradient: decorationGradient,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: cardBorderColor,
+            width: isCurrent ? 1.5 : 1,
+          ),
+        ),
+        child: Stack(
+          children: [
+            // Sleek Left Accent Strip for Current Prayer
+            if (isCurrent)
+              Positioned(
+                left: 0,
+                top: 0,
+                bottom: 0,
+                width: 4,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: activeColor,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(18),
+                      bottomLeft: Radius.circular(18),
                     ),
                   ),
                 ),
-            ],
-          ),
-        );
-      },
+              ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              child: Row(
+                children: [
+                  // Interactive Checkbox / Tick with micro-animations
+                  GestureDetector(
+                    onTap: () {
+                      if (!item.isCompleted) {
+                        final now = DateTime.now();
+                        final currentMinutes = now.hour * 60 + now.minute;
+                        if (currentMinutes < item.minutesFromMidnight) {
+                          HapticFeedback.vibrate();
+                          ScaffoldMessenger.of(context).clearSnackBars();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Row(
+                                children: [
+                                  Icon(Icons.lock_clock_rounded, color: themeProvider.primaryAccent, size: 20),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      "Cannot complete ${item.name} before its scheduled time (${item.time})",
+                                      style: GoogleFonts.outfit(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              backgroundColor: themeProvider.containerColor,
+                              behavior: SnackBarBehavior.floating,
+                              margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                side: BorderSide(
+                                  color: themeProvider.primaryAccent.withValues(alpha: 0.2),
+                                  width: 1,
+                                ),
+                              ),
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                          return;
+                        }
+                      }
+
+                      if (item.isPrayer) {
+                        journalProvider.togglePrayerCompletion(todayStr, item.name);
+                      } else {
+                        journalProvider.toggleHabitCompletion(item.habitId, todayStr);
+                      }
+                      HapticFeedback.mediumImpact();
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      width: 22,
+                      height: 22,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: item.isCompleted ? activeColor : Colors.transparent,
+                        border: Border.all(
+                          color: item.isCompleted ? activeColor : Colors.white.withValues(alpha: 0.2),
+                          width: 1.5,
+                        ),
+                        boxShadow: item.isCompleted
+                            ? [
+                                BoxShadow(
+                                  color: activeColor.withValues(alpha: 0.25),
+                                  blurRadius: 6,
+                                  spreadRadius: 1,
+                                )
+                              ]
+                            : null,
+                      ),
+                      child: Center(
+                        child: TweenAnimationBuilder<double>(
+                          tween: Tween(begin: item.isCompleted ? 0.0 : 1.0, end: item.isCompleted ? 1.0 : 0.0),
+                          duration: const Duration(milliseconds: 200),
+                          curve: Curves.easeOutBack,
+                          builder: (context, scale, child) {
+                            return Transform.scale(
+                              scale: scale,
+                              child: scale > 0.1
+                                  ? Icon(
+                                      Icons.check_rounded,
+                                      color: themeProvider.backgroundBottom,
+                                      size: 13,
+                                      weight: 900,
+                                    )
+                                  : const SizedBox(),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  // Name (Expanded to handle long titles correctly and prevent text overflow)
+                  Expanded(
+                    child: Text(
+                      item.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.outfit(
+                        fontSize: 14,
+                        fontWeight: isCurrent ? FontWeight.bold : FontWeight.w600,
+                        color: Colors.white.withValues(alpha: isCompleted ? 0.45 : 0.9),
+                        decoration: item.isCompleted ? TextDecoration.lineThrough : null,
+                        decorationColor: Colors.white.withValues(alpha: 0.25),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (!item.isPrayer) ...[
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          margin: const EdgeInsets.only(right: 8),
+                          decoration: BoxDecoration(
+                            color: activeColor.withValues(alpha: isCompleted ? 0.04 : 0.08),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            'HABIT',
+                            style: GoogleFonts.outfit(
+                              fontSize: 8,
+                              fontWeight: FontWeight.bold,
+                              color: activeColor.withValues(alpha: isCompleted ? 0.45 : 0.8),
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                      ],
+                      Text(
+                        item.time,
+                        style: GoogleFonts.outfit(
+                          fontSize: 13,
+                          fontWeight: isCurrent ? FontWeight.bold : FontWeight.w600,
+                          color: isCurrent 
+                              ? activeColor 
+                              : const Color(0xFF94A3B8).withValues(alpha: isCompleted ? 0.5 : 1.0),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            if (isCurrent)
+              Positioned(
+                top: 0,
+                right: 0,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: activeColor,
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(12),
+                      topRight: Radius.circular(18),
+                    ),
+                  ),
+                  child: Text(
+                    'NOW',
+                    style: GoogleFonts.outfit(
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 
-  void _showIqamahSettingsSheet(BuildContext context, PrayerProvider provider, String prayerName) {
-    int currentOffset = provider.iqamahOffsets[prayerName] ?? 20;
+  void _showPrayerQuickSettingsSheet(
+    BuildContext context, 
+    PrayerProvider provider, 
+    ThemeProvider themeProvider, 
+    String prayerName
+  ) {
+    String adhanSound = provider.adhanNotificationSounds[prayerName] ?? 'Default Alert';
+    int iqamahOffset = provider.iqamahOffsets[prayerName] ?? 20;
+    String iqamahSound = provider.iqamahNotificationSounds[prayerName] ?? 'Default Alert';
+    final adhanTime = _getAdhanTimeForPrayer(provider, prayerName);
 
     showModalBottomSheet(
       context: context,
@@ -1894,14 +2208,17 @@ class _PrayerScheduleRow extends StatelessWidget {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            final adhanTime = _getAdhanTimeForPrayer(provider, prayerName);
             final calculatedIqamah = provider.getIqamahTime(prayerName, adhanTime);
 
             return Container(
               padding: EdgeInsets.fromLTRB(24, 20, 24, MediaQuery.of(context).viewInsets.bottom + 32),
-              decoration: const BoxDecoration(
-                color: Color(0xFF0C2529),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+              decoration: BoxDecoration(
+                color: themeProvider.containerColor,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.05),
+                  width: 1,
+                ),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -1918,173 +2235,191 @@ class _PrayerScheduleRow extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  Text(
-                    'Iqamah Settings',
-                    style: GoogleFonts.outfit(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF2DD4BF),
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Set offset minutes after Adhan for $prayerName',
-                    style: GoogleFonts.outfit(
-                      fontSize: 13,
-                      color: const Color(0xFF94A3B8),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  // Real-time Preview Card
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.02),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Adhan Time',
-                              style: GoogleFonts.outfit(
-                                fontSize: 12,
-                                color: const Color(0xFF94A3B8),
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            Text(
-                              _formatPrayerTime(prayerName, adhanTime),
-                              style: GoogleFonts.outfit(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Icon(
-                          Icons.arrow_forward_rounded,
-                          color: const Color(0xFF2DD4BF).withValues(alpha: 0.4),
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              'Iqamah Time',
-                              style: GoogleFonts.outfit(
-                                fontSize: 12,
-                                color: const Color(0xFF2DD4BF),
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            Text(
-                              _formatPrayerTime(prayerName, calculatedIqamah),
-                              style: GoogleFonts.outfit(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: const Color(0xFF2DD4BF),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 30),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Offset Minutes',
+                        '$prayerName Settings',
                         style: GoogleFonts.outfit(
-                          fontSize: 15,
+                          fontSize: 22,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color: themeProvider.primaryAccent,
                         ),
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF2DD4BF).withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          '$currentOffset min',
-                          style: GoogleFonts.outfit(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF2DD4BF),
-                          ),
-                        ),
+                      Icon(
+                        Icons.settings_suggest_rounded,
+                        color: themeProvider.primaryAccent.withValues(alpha: 0.5),
+                        size: 24,
                       ),
                     ],
                   ),
-                  Slider(
-                    value: currentOffset.toDouble(),
-                    min: 0,
-                    max: 60,
-                    divisions: 12, // multiples of 5
-                    activeColor: const Color(0xFF2DD4BF),
-                    inactiveColor: Colors.white.withValues(alpha: 0.05),
-                    onChanged: (val) {
-                      setModalState(() {
-                        currentOffset = val.toInt();
-                      });
-                    },
+                  const SizedBox(height: 20),
+
+                  Text(
+                    'Adhan Alert Sound',
+                    style: GoogleFonts.outfit(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 8),
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
-                      children: [5, 10, 15, 20, 25, 30].map((preset) {
-                        final isSelected = currentOffset == preset;
+                      children: ['Silent', 'Chime', 'Beep Only', 'Full Adhan'].map((sound) {
+                        final isSelected = adhanSound == sound;
                         return Padding(
                           padding: const EdgeInsets.only(right: 8),
                           child: ChoiceChip(
-                            label: Text('$preset min'),
+                            label: Text(sound),
                             selected: isSelected,
                             onSelected: (selected) {
                               if (selected) {
                                 setModalState(() {
-                                  currentOffset = preset;
+                                  adhanSound = sound;
                                 });
                               }
                             },
-                            selectedColor: const Color(0xFF2DD4BF),
+                            selectedColor: themeProvider.primaryAccent,
                             backgroundColor: Colors.white.withValues(alpha: 0.03),
                             labelStyle: GoogleFonts.outfit(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
-                              color: isSelected ? const Color(0xFF030D0F) : Colors.white,
+                              color: isSelected ? themeProvider.backgroundBottom : Colors.white,
                             ),
                           ),
                         );
                       }).toList(),
                     ),
                   ),
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 20),
+
+                  if (prayerName != 'Sunrise') ...[
+                    const Divider(color: Colors.white10),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Iqamah Offset',
+                          style: GoogleFonts.outfit(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        Text(
+                          '$iqamahOffset min',
+                          style: GoogleFonts.outfit(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: themeProvider.primaryAccent,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Slider(
+                      value: iqamahOffset.toDouble(),
+                      min: 0,
+                      max: 60,
+                      divisions: 12,
+                      activeColor: themeProvider.primaryAccent,
+                      inactiveColor: Colors.white.withValues(alpha: 0.05),
+                      onChanged: (val) {
+                        setModalState(() {
+                          iqamahOffset = val.toInt();
+                        });
+                      },
+                    ),
+                    
+                    Text(
+                      'Iqamah Alert Sound',
+                      style: GoogleFonts.outfit(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: ['Silent', 'Chime', 'Soft Beep', 'Default Alert'].map((sound) {
+                          final isSelected = iqamahSound == sound;
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: ChoiceChip(
+                              label: Text(sound),
+                              selected: isSelected,
+                              onSelected: (selected) {
+                                if (selected) {
+                                  setModalState(() {
+                                    iqamahSound = sound;
+                                  });
+                                }
+                              },
+                              selectedColor: themeProvider.primaryAccent,
+                              backgroundColor: Colors.white.withValues(alpha: 0.03),
+                              labelStyle: GoogleFonts.outfit(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: isSelected ? themeProvider.backgroundBottom : Colors.white,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.02),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Adhan: ${_formatPrayerTime(prayerName, adhanTime)}',
+                            style: GoogleFonts.outfit(fontSize: 12, color: Colors.white60),
+                          ),
+                          Icon(Icons.arrow_forward_rounded, color: themeProvider.primaryAccent.withValues(alpha: 0.4), size: 14),
+                          Text(
+                            'Iqamah: ${_formatPrayerTime(prayerName, calculatedIqamah)}',
+                            style: GoogleFonts.outfit(fontSize: 12, color: themeProvider.primaryAccent, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () {
-                        provider.updateIqamahOffset(prayerName, currentOffset);
-                        Navigator.pop(context);
-                        HapticFeedback.lightImpact();
+                      onPressed: () async {
+                        final navigator = Navigator.of(context);
+                        await provider.updateAdhanSound(prayerName, adhanSound);
+                        if (prayerName != 'Sunrise') {
+                          await provider.updateIqamahOffset(prayerName, iqamahOffset);
+                          await provider.updateIqamahNotificationSound(prayerName, iqamahSound);
+                        }
+                        navigator.pop();
+                        HapticFeedback.mediumImpact();
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF2DD4BF),
-                        foregroundColor: const Color(0xFF030D0F),
+                        backgroundColor: themeProvider.primaryAccent,
+                        foregroundColor: themeProvider.backgroundBottom,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                         elevation: 0,
                       ),
                       child: Text(
-                        'Save Iqamah Time',
+                        'Save Settings',
                         style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                     ),

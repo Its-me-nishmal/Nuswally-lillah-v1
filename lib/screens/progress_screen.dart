@@ -300,12 +300,24 @@ class _ProgressJournalScreenState extends State<ProgressJournalScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: themeProvider.containerColor,
+        gradient: LinearGradient(
+          colors: [
+            themeProvider.containerColor,
+            themeProvider.containerColor.withValues(alpha: 0.8),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: activeColor.withValues(alpha: 0.08)),
+        border: Border.all(color: activeColor.withValues(alpha: 0.15), width: 1.2),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
+            color: activeColor.withValues(alpha: 0.04),
+            blurRadius: 15,
+            spreadRadius: 1,
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -463,9 +475,23 @@ class _ProgressJournalScreenState extends State<ProgressJournalScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: theme.containerColor,
+        gradient: LinearGradient(
+          colors: [
+            theme.containerColor,
+            theme.containerColor.withValues(alpha: 0.85),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: activeColor.withValues(alpha: 0.05)),
+        border: Border.all(color: activeColor.withValues(alpha: 0.12), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: ListView.separated(
         shrinkWrap: true,
@@ -649,9 +675,23 @@ class _ProgressJournalScreenState extends State<ProgressJournalScreen> {
       return Container(
         padding: const EdgeInsets.symmetric(vertical: 32),
         decoration: BoxDecoration(
-          color: theme.containerColor,
+          gradient: LinearGradient(
+            colors: [
+              theme.containerColor,
+              theme.containerColor.withValues(alpha: 0.85),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: activeColor.withValues(alpha: 0.05)),
+          border: Border.all(color: activeColor.withValues(alpha: 0.12), width: 1.2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.15),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Center(
           child: Column(
@@ -691,12 +731,35 @@ class _ProgressJournalScreenState extends State<ProgressJournalScreen> {
         return Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: theme.containerColor,
+            gradient: isCompleted
+                ? LinearGradient(
+                    colors: [
+                      activeColor.withValues(alpha: 0.08),
+                      theme.containerColor.withValues(alpha: 0.95),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )
+                : LinearGradient(
+                    colors: [
+                      theme.containerColor,
+                      theme.backgroundBottom.withValues(alpha: 0.95),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
               color: isCompleted ? activeColor.withValues(alpha: 0.3) : Colors.white.withValues(alpha: 0.04),
               width: isCompleted ? 1.5 : 1,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.15),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
           child: Row(
             children: [
@@ -759,14 +822,26 @@ class _ProgressJournalScreenState extends State<ProgressJournalScreen> {
                       width: 1.5,
                     ),
                   ),
-                  child: isCompleted
-                      ? Icon(
-                          Icons.check_rounded,
-                          color: theme.backgroundBottom,
-                          size: 16,
-                          weight: 900,
-                        )
-                      : null,
+                  child: Center(
+                    child: TweenAnimationBuilder<double>(
+                      tween: Tween(begin: isCompleted ? 0.0 : 1.0, end: isCompleted ? 1.0 : 0.0),
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeOutBack,
+                      builder: (context, scale, child) {
+                        return Transform.scale(
+                          scale: scale,
+                          child: scale > 0.1
+                              ? Icon(
+                                  Icons.check_rounded,
+                                  color: theme.backgroundBottom,
+                                  size: 14,
+                                  weight: 900,
+                                )
+                              : const SizedBox(),
+                        );
+                      },
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(width: 16),
