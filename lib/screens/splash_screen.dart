@@ -52,8 +52,7 @@ class _SplashScreenState extends State<SplashScreen>
 
     AppUpdateInfo? updateInfo;
     try {
-      updateInfo = await AppUpdateService.fetchUpdateInfo(forceRemote: true)
-          .timeout(const Duration(seconds: 3));
+      updateInfo = await AppUpdateService.fetchUpdateInfo(forceRemote: true);
     } catch (_) {
       // Ignore network errors/timeouts during splash
     }
@@ -406,7 +405,20 @@ class _SplashScreenState extends State<SplashScreen>
                           ),
                         ),
 
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 10),
+
+                        // App Version Tag
+                        Text(
+                          'v${AppUpdateService.currentVersionName}',
+                          style: GoogleFonts.outfit(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF475569),
+                            letterSpacing: 1.0,
+                          ),
+                        ),
+
+                        const SizedBox(height: 20),
                       ],
                     ),
                   ),

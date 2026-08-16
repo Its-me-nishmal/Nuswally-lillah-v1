@@ -155,9 +155,9 @@ class SocialLinksService {
   static const String _spCachedJsonKey = 'cached_social_links_json';
   static const String _spVersionKey = 'cached_social_links_version';
 
-  /// Remote API endpoint URL for downloading latest JSON & version check
+  /// Remote API endpoint URL for downloading latest JSON & version check (hash-free for live sync)
   static String? apiUrl =
-      'https://gist.githubusercontent.com/Its-me-nishmal/12a98c6a24c4e7912f439ebe6ebbc089/raw/bf8ec72748baea7e17fbb8302410801a61180256/nuswally_lillah_media.json';
+      'https://gist.githubusercontent.com/Its-me-nishmal/12a98c6a24c4e7912f439ebe6ebbc089/raw/nuswally_lillah_media.json';
 
   static List<SocialLink>? _cache;
   static List<VideoCategory>? _categoriesCache;
@@ -240,7 +240,13 @@ class SocialLinksService {
     if (api.isEmpty) return false;
 
     try {
-      final response = await http.get(Uri.parse(api)).timeout(
+      final uri = Uri.parse(
+        '$api${api.contains('?') ? '&' : '?'}t=${DateTime.now().millisecondsSinceEpoch}',
+      );
+      final response = await http.get(
+        uri,
+        headers: {'Cache-Control': 'no-cache, no-store, must-revalidate'},
+      ).timeout(
         const Duration(seconds: 10),
       );
 

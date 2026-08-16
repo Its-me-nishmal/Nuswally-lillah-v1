@@ -50,7 +50,9 @@ class AppUpdateInfo {
           (json['min_supported_version_code'] as num?)?.toInt() ?? 100,
       releaseDate: (json['release_date'] ?? '').toString(),
       isCritical: json['is_critical'] == true,
-      downloadUrl: (json['download_url'] ?? '').toString(),
+      downloadUrl: (json['download_url'] ??
+              'https://play.google.com/store/apps/details?id=com.nuswallylillah')
+          .toString(),
       title: (json['title'] ?? 'New Update Available').toString(),
       description: (json['description'] ?? '').toString(),
       features: featuresList,
@@ -70,12 +72,12 @@ class AppUpdateService {
   static const String _spCachedUpdateKey = 'cached_app_update_json';
 
   /// Current installed version of the app
-  static const int currentVersionCode = 100;
-  static const String currentVersionName = '1.0.0';
+  static const int currentVersionCode = 101;
+  static const String currentVersionName = '1.1.0';
 
-  /// Remote API/Gist endpoint for checking app updates
+  /// Remote API/Gist endpoint for checking app updates (hash-free for live sync)
   static String? apiUrl =
-      'https://gist.githubusercontent.com/Its-me-nishmal/c0a93c2dfa355778e7e5de3fd1a88f1a/raw/75e936eecef0ff0d1ef90de9d954cb78b022ca4a/v.json';
+      'https://gist.githubusercontent.com/Its-me-nishmal/c0a93c2dfa355778e7e5de3fd1a88f1a/raw/v.json';
 
   static AppUpdateInfo? _cachedInfo;
 
@@ -85,18 +87,26 @@ class AppUpdateService {
   }
 
   /// Checks whether an update is available (either from remote API or cached/local data)
-  static Future<AppUpdateInfo?> fetchUpdateInfo({bool forceRemote = false}) async {
+  static Future<AppUpdateInfo?> fetchUpdateInfo({
+    bool forceRemote = false,
+  }) async {
     if (!forceRemote && _cachedInfo != null) {
       return _cachedInfo;
     }
 
+    // 1. Try remote API if configured
     try {
-      // 1. Try remote API if configured
       final String api = apiUrl ?? '';
       if (api.isNotEmpty) {
-        final response = await http.get(Uri.parse(api)).timeout(
-          const Duration(seconds: 8),
+        final uri = Uri.parse(
+          '$api${api.contains('?') ? '&' : '?'}t=${DateTime.now().millisecondsSinceEpoch}',
         );
+        final response = await http
+            .get(
+              uri,
+              headers: {'Cache-Control': 'no-cache, no-store, must-revalidate'},
+            )
+            .timeout(const Duration(seconds: 5));
         if (response.statusCode == 200) {
           final decoded = json.decode(response.body);
           if (decoded is Map<String, dynamic>) {
@@ -110,8 +120,12 @@ class AppUpdateService {
           }
         }
       }
+    } catch (e) {
+      debugPrint('Remote update check failed: $e');
+    }
 
-      // 2. Try SharedPreferences cache
+    // 2. Try SharedPreferences cache if remote failed
+    try {
       final prefs = await SharedPreferences.getInstance();
       final cachedStr = prefs.getString(_spCachedUpdateKey);
       if (cachedStr != null && cachedStr.isNotEmpty) {
@@ -122,15 +136,19 @@ class AppUpdateService {
           return info;
         }
       }
+    } catch (e) {
+      debugPrint('Cache update check error: $e');
+    }
 
-      // 3. Fallback to bundled asset
+    // 3. Fallback to bundled asset
+    try {
       final raw = await rootBundle.loadString(_localAssetPath);
       final decoded = json.decode(raw) as Map<String, dynamic>;
       final info = AppUpdateInfo.fromJson(decoded);
       _cachedInfo = info;
       return info;
     } catch (e) {
-      debugPrint('AppUpdateService fetchUpdateInfo error: $e');
+      debugPrint('Asset update check error: $e');
     }
 
     return _cachedInfo;

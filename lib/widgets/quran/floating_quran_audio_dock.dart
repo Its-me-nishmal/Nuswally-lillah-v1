@@ -319,11 +319,20 @@ class FloatingQuranAudioDock extends StatelessWidget {
                             ],
                           ),
                           child: Center(
-                            child: Icon(
-                              isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                              color: const Color(0xFF0B0E14),
-                              size: 24,
-                            ),
+                            child: quranProvider.isAudioLoading
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.5,
+                                      color: Color(0xFF0B0E14),
+                                    ),
+                                  )
+                                : Icon(
+                                    isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                                    color: const Color(0xFF0B0E14),
+                                    size: 24,
+                                  ),
                           ),
                         ),
                       ),

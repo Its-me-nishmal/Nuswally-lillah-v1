@@ -114,6 +114,11 @@ class QuranProvider with ChangeNotifier {
   int get hifzDelaySeconds => _hifzDelaySeconds;
   double get playbackSpeed => _playbackSpeed;
   bool get isDelayActive => _isDelayActive;
+  bool get isChangingTrack => _isChangingTrack;
+  bool get isAudioLoading =>
+      _isChangingTrack ||
+      _playerState?.processingState == ProcessingState.loading ||
+      _playerState?.processingState == ProcessingState.buffering;
   AudioPlayer get audioPlayer => _audioPlayer;
 
   QuranProvider() {
@@ -198,7 +203,16 @@ class QuranProvider with ChangeNotifier {
 
   Future<void> updateQariObject(Qari qari) async {
     final wasPlaying = _audioPlayer.playing;
-    final currentAyah = _currentPlayingIndex;
+    final currentAyah = _currentPlayingIndex ?? 0;
+
+    _delayTimer?.cancel();
+    _isDelayActive = false;
+    _isChangingTrack = true;
+
+    // Immediately stop old audio player stream
+    try {
+      await _audioPlayer.stop();
+    } catch (_) {}
 
     _selectedQariObj = qari;
     _selectedQari = qari.relativePath;
@@ -209,11 +223,43 @@ class QuranProvider with ChangeNotifier {
     await prefs.setString('quran_selected_qari', qari.relativePath);
 
     if (_currentViewingSurahNumber != null) {
-      await fetchSurahDetails(_currentViewingSurahNumber!);
+      await fetchSurahDetails(_currentViewingSurahNumber!, initialIndex: currentAyah);
+
+      // If audio was playing, immediately switch to and play the new Qari's stream!
+      if (wasPlaying && _ayahs.isNotEmpty) {
+        final targetIndex = currentAyah.clamp(0, _ayahs.length - 1);
+        await playAyahDirectly(targetIndex);
+      }
+    }
+  }
+
+  Future<void> updateQari(String newQariId) async {
+    final wasPlaying = _audioPlayer.playing;
+    final currentAyah = _currentPlayingIndex ?? 0;
+
+    _delayTimer?.cancel();
+    _isDelayActive = false;
+    _isChangingTrack = true;
+
+    try {
+      await _audioPlayer.stop();
+    } catch (_) {}
+
+    _selectedQari = newQariId;
+    _syncSelectedQariObject();
+    _cachedAyahs.clear();
+    notifyListeners();
+    
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('quran_selected_qari', newQariId);
+    
+    if (_currentViewingSurahNumber != null) {
+      await fetchSurahDetails(_currentViewingSurahNumber!, initialIndex: currentAyah);
 
       // If audio was playing, instantly switch to and play the new Qari's stream!
-      if (wasPlaying && currentAyah != null && currentAyah < _ayahs.length) {
-        await togglePlayAyah(currentAyah);
+      if (wasPlaying && _ayahs.isNotEmpty) {
+        final targetIndex = currentAyah.clamp(0, _ayahs.length - 1);
+        await playAyahDirectly(targetIndex);
       }
     }
   }
@@ -246,28 +292,6 @@ class QuranProvider with ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble('quran_auto_scroll_speed', newSpeed);
-  }
-
-  Future<void> updateQari(String newQariId) async {
-    final wasPlaying = _audioPlayer.playing;
-    final currentAyah = _currentPlayingIndex;
-
-    _selectedQari = newQariId;
-    _syncSelectedQariObject();
-    _cachedAyahs.clear();
-    notifyListeners();
-    
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('quran_selected_qari', newQariId);
-    
-    if (_currentViewingSurahNumber != null) {
-      await fetchSurahDetails(_currentViewingSurahNumber!);
-
-      // If audio was playing, instantly switch to and play the new Qari's stream!
-      if (wasPlaying && currentAyah != null && currentAyah < _ayahs.length) {
-        await togglePlayAyah(currentAyah);
-      }
-    }
   }
 
   // Hifz State Modifiers
@@ -453,78 +477,85 @@ class QuranProvider with ChangeNotifier {
       saveLastRead(_currentViewingSurahNumber!, surah.englishName, index);
     }
     notifyListeners();
-    await togglePlayAyah(index);
+    await playAyahDirectly(index);
   }
 
   Future<void> togglePlayAyah(int index) async {
+    if (_currentPlayingIndex == index && _audioPlayer.playing) {
+      await _audioPlayer.pause();
+      notifyListeners();
+    } else {
+      await playAyahDirectly(index);
+    }
+  }
+
+  Future<void> playAyahDirectly(int index) async {
+    if (_ayahs.isEmpty || index < 0 || index >= _ayahs.length) return;
+
     _delayTimer?.cancel();
     _isDelayActive = false;
     _currentHifzRepetition = 1;
     _highlightedAyahIndex = index;
-    
-    if (_currentPlayingIndex == index && _audioPlayer.playing) {
-      await _audioPlayer.pause();
-    } else {
-      _isChangingTrack = true;
-      _currentPlayingIndex = index;
-      notifyListeners();
-      try {
-        if (_audioPlayer.playing) {
-          await _audioPlayer.stop();
-        }
-        await _audioPlayer.setSpeed(_playbackSpeed);
+    _currentPlayingIndex = index;
+    _isChangingTrack = true;
+    notifyListeners();
 
-        final surahNum = _currentViewingSurahNumber ?? 1;
-        final verseNum = _ayahs[index].numberInSurah;
-        final cachedPath = QuranAudioCacheService.getCachedFilePath(
-          selectedQariObj.relativePath,
-          surahNum,
-          verseNum,
-        );
+    try {
+      if (_audioPlayer.playing) {
+        await _audioPlayer.stop();
+      }
+      await _audioPlayer.setSpeed(_playbackSpeed);
 
-        if (cachedPath != null) {
-          // Instant 0ms playback from local cache
-          await _audioPlayer.setFilePath(cachedPath);
-        } else {
-          final targetUrl = _ayahs[index].audio;
-          try {
-            await _audioPlayer.setUrl(targetUrl);
-          } catch (e) {
-            final errStr = e.toString().toLowerCase();
-            if (!errStr.contains('abort') && !errStr.contains('cancel')) {
-              debugPrint('Primary ayah audio failed, trying fallback: $e');
-              final sPad = surahNum.toString().padLeft(3, '0');
-              final vPad = verseNum.toString().padLeft(3, '0');
-              final dir = selectedQariObj.getAyahDirectory();
-              await _audioPlayer.setUrl('https://www.everyayah.com/data/$dir/$sPad$vPad.mp3');
-            }
+      final surahNum = _currentViewingSurahNumber ?? 1;
+      final verseNum = _ayahs[index].numberInSurah;
+      final cachedPath = QuranAudioCacheService.getCachedFilePath(
+        selectedQariObj.relativePath,
+        surahNum,
+        verseNum,
+      );
+
+      if (cachedPath != null) {
+        // Instant 0ms playback from local cache
+        await _audioPlayer.setFilePath(cachedPath);
+      } else {
+        final targetUrl = _ayahs[index].audio;
+        try {
+          await _audioPlayer.setUrl(targetUrl);
+        } catch (e) {
+          final errStr = e.toString().toLowerCase();
+          if (!errStr.contains('abort') && !errStr.contains('cancel')) {
+            debugPrint('Primary ayah audio failed, trying fallback: $e');
+            final sPad = surahNum.toString().padLeft(3, '0');
+            final vPad = verseNum.toString().padLeft(3, '0');
+            final dir = selectedQariObj.getAyahDirectory();
+            await _audioPlayer.setUrl('https://everyayah.com/data/$dir/$sPad$vPad.mp3');
           }
         }
-        _isChangingTrack = false;
-        await _audioPlayer.play();
-        
-        // Fast non-blocking background pre-fetch for next 5 ayahs!
-        QuranAudioCacheService.preloadUpcomingAyahs(
-          qari: selectedQariObj,
-          surahNumber: surahNum,
-          currentAyahIndex: index,
-          ayahs: _ayahs,
-          count: 5,
-        );
+      }
+      _isChangingTrack = false;
+      await _audioPlayer.play();
+      
+      // Fast non-blocking background pre-fetch for next 5 ayahs!
+      QuranAudioCacheService.preloadUpcomingAyahs(
+        qari: selectedQariObj,
+        surahNumber: surahNum,
+        currentAyahIndex: index,
+        ayahs: _ayahs,
+        count: 5,
+      );
 
-        if (_currentViewingSurahNumber != null && _surahs.isNotEmpty) {
-          final surah = _surahs.firstWhere(
-            (s) => s.number == _currentViewingSurahNumber,
-            orElse: () => _surahs.first,
-          );
-          saveLastRead(_currentViewingSurahNumber!, surah.englishName, index);
-        }
-      } catch (e) {
-        _isChangingTrack = false;
-        final errStr = e.toString().toLowerCase();
-        if (!errStr.contains('abort') && !errStr.contains('cancel')) {
-          debugPrint('Error playing audio: $e');
-        }
+      if (_currentViewingSurahNumber != null && _surahs.isNotEmpty) {
+        final surah = _surahs.firstWhere(
+          (s) => s.number == _currentViewingSurahNumber,
+          orElse: () => _surahs.first,
+        );
+        saveLastRead(_currentViewingSurahNumber!, surah.englishName, index);
+      }
+    } catch (e) {
+      _isChangingTrack = false;
+      final errStr = e.toString().toLowerCase();
+      if (!errStr.contains('abort') && !errStr.contains('cancel')) {
+        debugPrint('Error playing audio: $e');
       }
     }
     notifyListeners();
@@ -590,7 +621,7 @@ class QuranProvider with ChangeNotifier {
     
     if (_currentPlayingIndex != null && _currentPlayingIndex! < _ayahs.length - 1) {
       _highlightedAyahIndex = _currentPlayingIndex! + 1;
-      await togglePlayAyah(_currentPlayingIndex! + 1);
+      await playAyahDirectly(_currentPlayingIndex! + 1);
     } else {
       await _playNextSurah();
     }
@@ -603,7 +634,7 @@ class QuranProvider with ChangeNotifier {
 
     if (_currentPlayingIndex != null && _currentPlayingIndex! > 0) {
       _highlightedAyahIndex = _currentPlayingIndex! - 1;
-      await togglePlayAyah(_currentPlayingIndex! - 1);
+      await playAyahDirectly(_currentPlayingIndex! - 1);
     } else if (_currentViewingSurahNumber != null && _currentViewingSurahNumber! > 1) {
       _isChangingTrack = true;
       _lastHandledCompletionIndex = null;
@@ -614,7 +645,7 @@ class QuranProvider with ChangeNotifier {
       _currentPlayingIndex = lastIndex;
       _highlightedAyahIndex = lastIndex;
       notifyListeners();
-      await togglePlayAyah(lastIndex);
+      await playAyahDirectly(lastIndex);
     }
   }
 
@@ -631,7 +662,7 @@ class QuranProvider with ChangeNotifier {
       _currentPlayingIndex = 0;
       _highlightedAyahIndex = 0;
       notifyListeners();
-      await togglePlayAyah(0);
+      await playAyahDirectly(0);
     } else {
       _currentPlayingIndex = null;
       notifyListeners();
@@ -685,7 +716,7 @@ class QuranProvider with ChangeNotifier {
       } else {
         if (_currentPlayingIndex != null && _currentPlayingIndex! < _ayahs.length - 1) {
           _highlightedAyahIndex = _currentPlayingIndex! + 1;
-          togglePlayAyah(_currentPlayingIndex! + 1);
+          playAyahDirectly(_currentPlayingIndex! + 1);
         } else {
           _playNextSurah();
         }

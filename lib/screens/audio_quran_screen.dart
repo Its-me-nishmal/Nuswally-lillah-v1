@@ -1002,11 +1002,20 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                           ],
                         ),
                         child: Center(
-                          child: Icon(
-                            isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                            size: 36,
-                            color: const Color(0xFF0B0E14),
-                          ),
+                          child: quranProvider.isAudioLoading
+                              ? const SizedBox(
+                                  width: 28,
+                                  height: 28,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 3.0,
+                                    color: Color(0xFF0B0E14),
+                                  ),
+                                )
+                              : Icon(
+                                  isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                                  size: 36,
+                                  color: const Color(0xFF0B0E14),
+                                ),
                         ),
                       ),
                     ),

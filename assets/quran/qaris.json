@@ -420,20 +420,6 @@
     "torrent_leechers": 0
   },
   {
-    "id": 31,
-    "name": "Saad al-Ghamdi (Partial)",
-    "arabic_name": "سعد الغامدي - غير مكتمل",
-    "relative_path": "sa3d_al-ghaamidi/hidayah/",
-    "file_formats": "mp3",
-    "section_id": 1,
-    "home": 0,
-    "description": null,
-    "torrent_filename": "[Quran] Saad al-Ghamdi (Partial) [128Kbps].torrent",
-    "torrent_info_hash": "d6fe254db49f5fcd9f97e0595bf1140264e05f1a",
-    "torrent_seeders": null,
-    "torrent_leechers": null
-  },
-  {
     "id": 32,
     "name": "Muhammad Jibreel (Partial)",
     "arabic_name": "محمد جبريل - غير مكتمل",
@@ -472,20 +458,6 @@
     "description": "This is Live Recitation from Masjid al-Haram in Makkah Al-Mukarramah, 1427 H./2006 A.D.  Contains 4 Imams:  <a href=\\\"http://quranicaudio.com/quran/4\\\">Sa'ud al-Shuraym</a>, <a href=\\\"http://quranicaudio.com/quran/7\\\">Abdur-Rahman as-Sudays</a>, <a href=\\\"http://quranicaudio.com/quran/1\\\">Abdullah Awwad al-Juhany</a>, and <a href=\\\"http://quranicaudio.com/quran/43\\\">Salah al-Budair</a>.",
     "torrent_filename": "[Quran] Makkah Taraweeh 1427 [192Kbps].torrent",
     "torrent_info_hash": "30552d171183080ba25a44c6f0b73cd1cab71248",
-    "torrent_seeders": 1,
-    "torrent_leechers": 0
-  },
-  {
-    "id": 35,
-    "name": "Saleh al Taleb",
-    "arabic_name": "صالح آل طالب",
-    "relative_path": "saleh_al_taleb/",
-    "file_formats": "mp3",
-    "section_id": 1,
-    "home": 1,
-    "description": null,
-    "torrent_filename": "[Quran] Saleh al Taleb [128Kbps].torrent",
-    "torrent_info_hash": "d963af4c35885eafbb292fc8162e22f25631fb08",
     "torrent_seeders": 1,
     "torrent_leechers": 0
   },
@@ -686,34 +658,6 @@
     "torrent_leechers": 3
   },
   {
-    "id": 51,
-    "name": "Maher al-Muaiqly [Assorted]",
-    "arabic_name": "ماهر المعيقلى - متنوعة",
-    "relative_path": "maher_almu3aiqly/year1424-1425/",
-    "file_formats": "mp3",
-    "section_id": 1,
-    "home": 0,
-    "description": null,
-    "torrent_filename": "[Quran] Maher al-Muaiqly [Assorted] [128Kbps].torrent",
-    "torrent_info_hash": "110a486ee0d20c8b640d83926cfb719ad3884a9c",
-    "torrent_seeders": 1,
-    "torrent_leechers": 0
-  },
-  {
-    "id": 52,
-    "name": "Maher al-Muaiqly [1422-1423]",
-    "arabic_name": "ماهر المعيقلى - ١٤٢٢-١٤٢٣",
-    "relative_path": "maher_almu3aiqly/year1422-1423/",
-    "file_formats": "mp3",
-    "section_id": 1,
-    "home": 0,
-    "description": null,
-    "torrent_filename": "[Quran] Maher al-Muaiqly [1422-1423] [128Kbps].torrent",
-    "torrent_info_hash": "bffb9da27a01ead0c94cf2616e09a443409a6f85",
-    "torrent_seeders": 0,
-    "torrent_leechers": 1
-  },
-  {
     "id": 53,
     "name": "Muhammad al-Luhaidan",
     "arabic_name": "محمد اللحيدان",
@@ -754,20 +698,6 @@
     "torrent_info_hash": "2339aa5f47a1d88e5033595b194099c29155c5e2",
     "torrent_seeders": 0,
     "torrent_leechers": 1
-  },
-  {
-    "id": 56,
-    "name": "Ibrahim Al-Jibreen [1426-1427]",
-    "arabic_name": "إبراهيم الجبرين - ١٤٢٦-١٤٢٧",
-    "relative_path": "jibreen/jibreen_1426-1427/",
-    "file_formats": "mp3",
-    "section_id": 1,
-    "home": null,
-    "description": null,
-    "torrent_filename": "[Quran] Ibrahim Al-Jibreen [1426-1427] [192Kbps].torrent",
-    "torrent_info_hash": "cfdebd7be81fe15f03cbd1832ce656c0e5f27009",
-    "torrent_seeders": 1,
-    "torrent_leechers": 0
   },
   {
     "id": 57,
@@ -1008,34 +938,6 @@
     "torrent_leechers": 1
   },
   {
-    "id": 74,
-    "name": "Dr. Shawqy Hamed [Murattal]",
-    "arabic_name": "الدكتور شوقي حامد - مرتل",
-    "relative_path": "dr.shawqy_7amed/murattal/",
-    "file_formats": "mp3",
-    "section_id": 1,
-    "home": 1,
-    "description": null,
-    "torrent_filename": "[Quran] Dr. Shawqy Hamed [Murattal] [64Kbps - 128Kbps].torrent",
-    "torrent_info_hash": "8ee06829c6bdd92250dcdc3cc1b21b8728742eb1",
-    "torrent_seeders": 0,
-    "torrent_leechers": 1
-  },
-  {
-    "id": 75,
-    "name": "Dr. Shawqy Hamed [Mujawwad]",
-    "arabic_name": "الدكتور شوقي حامد - مجود",
-    "relative_path": "dr.shawqy_7amed/mujawwad/",
-    "file_formats": "mp3",
-    "section_id": 1,
-    "home": null,
-    "description": null,
-    "torrent_filename": "[Quran] Dr. Shawqy Hamed [Mujawwad] [128Kbps].torrent",
-    "torrent_info_hash": "a0c11e244d908583df0c005cc5cbb82902355cbd",
-    "torrent_seeders": 0,
-    "torrent_leechers": 1
-  },
-  {
     "id": 77,
     "name": "Makkah Taraweeh 1429",
     "arabic_name": "تراويح مكة ١٤٢٩",
@@ -1144,20 +1046,6 @@
     "description": "This is the Live Recitation from Masjid al-Nabawi, 1431 H./2010 A.D.  Recited by 5 Imams: <a href=\"http://quranicaudio.com/quran/8\">Ali Abdur-Rahman al-Huthaify</a>, <a href=\"http://quranicaudio.com/quran/11\">AbdulMuhsin al-Qasim</a>, <a href=\"http://quranicaudio.com/quran/43\">Salah al-Budair</a>, Khalid al-Ghamdi, and Hussain Aal ash-Shaykh.",
     "torrent_filename": "[Quran] Madinah Taraweeh 1431 [128Kbps].torrent",
     "torrent_info_hash": "a4e7769822b1577c2839ba0e7c0c8d21a91dcbe1",
-    "torrent_seeders": null,
-    "torrent_leechers": null
-  },
-  {
-    "id": 85,
-    "name": "Hatem Farid",
-    "arabic_name": "حاتم فريد",
-    "relative_path": "hatem_farid/collection/",
-    "file_formats": "mp3",
-    "section_id": 1,
-    "home": 1,
-    "description": "This is the recitation for Sheikh Hatem Farid.  This particular recitation was contributed by a user of this website, and many of these recitations come from <a href=\\\"http://el-moslem.com\\\">el-moslem.com</a>.",
-    "torrent_filename": "[Quran] Hatem Farid [56Kbps - 256Kbps].torrent",
-    "torrent_info_hash": "f7abce08d49cea55d5d793092c7934fa20349f65",
     "torrent_seeders": null,
     "torrent_leechers": null
   },
@@ -1288,20 +1176,6 @@
     "torrent_leechers": null
   },
   {
-    "id": 96,
-    "name": "Hatem Farid - Taraweeh 1433",
-    "arabic_name": "حاتم فريد",
-    "relative_path": "hatem_farid/taraweeh1433/",
-    "file_formats": "mp3",
-    "section_id": 1,
-    "home": null,
-    "description": "This is the recitation for Sheikh Hatem Farid, from Salat al-Taraweeh, 1433 A.H. (2012 A.D.).  This recitation comes from <a href=\\\"http://hatemfarid.com\\\">hatemfarid.com</a>.",
-    "torrent_filename": "[Quran] Hatem Farid - Taraweeh 1433 [128Kbps].torrent",
-    "torrent_info_hash": "16ef192baf58bcb164ec51e358c0335f05172983",
-    "torrent_seeders": null,
-    "torrent_leechers": null
-  },
-  {
     "id": 97,
     "name": "Yasser ad-Dussary",
     "arabic_name": null,
@@ -1410,20 +1284,6 @@
     "description": "This is the recitation for Sheikh Nasser Al Qatami. The files for the 30th juz' come from <a href=\\\"http://mp3quran.net\\\">mp3quran.net</a>.",
     "torrent_filename": "[Quran] Nasser Al Qatami [96Kbps - 128Kbps].torrent",
     "torrent_info_hash": "f7b841dccefc618e71c25accfa30cf74314bd5f1",
-    "torrent_seeders": null,
-    "torrent_leechers": null
-  },
-  {
-    "id": 105,
-    "name": "Khalid Al Ghamdi",
-    "arabic_name": null,
-    "relative_path": "khalid_alghamdi/",
-    "file_formats": "mp3",
-    "section_id": 1,
-    "home": 1,
-    "description": null,
-    "torrent_filename": "[Quran] Khalid Al Ghamdi [143Kbps - 190Kbps].torrent",
-    "torrent_info_hash": "474db66074ae11761dfdff96cdb04079ab4d8b56",
     "torrent_seeders": null,
     "torrent_leechers": null
   },
@@ -1575,20 +1435,6 @@
     "file_formats": "mp3",
     "section_id": 1,
     "home": 1,
-    "description": null,
-    "torrent_filename": null,
-    "torrent_info_hash": null,
-    "torrent_seeders": null,
-    "torrent_leechers": null
-  },
-  {
-    "id": 117,
-    "name": "Bandar Baleela",
-    "arabic_name": null,
-    "relative_path": "bandar_baleela/",
-    "file_formats": "mp3",
-    "section_id": 1,
-    "home": 0,
     "description": null,
     "torrent_filename": null,
     "torrent_info_hash": null,
@@ -1884,20 +1730,6 @@
     "section_id": 1,
     "home": 0,
     "description": "This is the recitation for Sheikh Hatem Farid, from Salat al-Taraweeh, 1430 A.H. (2009 A.D.).",
-    "torrent_filename": null,
-    "torrent_info_hash": null,
-    "torrent_seeders": 0,
-    "torrent_leechers": 0
-  },
-  {
-    "id": 140,
-    "name": "Hatem Farid - Taraweeh 1434",
-    "arabic_name": "حاتم فريد",
-    "relative_path": "hatem_farid/taraweeh1434/",
-    "file_formats": "mp3",
-    "section_id": 1,
-    "home": 0,
-    "description": "This is a partial recitation for Sheikh Hatem Farid, from Salat al-Taraweeh, 1434 A.H. (2013 A.D.).",
     "torrent_filename": null,
     "torrent_info_hash": null,
     "torrent_seeders": 0,

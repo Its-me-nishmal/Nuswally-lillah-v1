@@ -34,8 +34,6 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
   QuranViewMode _viewMode = QuranViewMode.mushaf;
   bool _hasInitialScrolled = false;
   bool _isCollapsed = true;
-  bool _isUserDragging = false;
-  int? _lastScrolledIndex;
 
   ScrollController get _activeScrollController =>
       _viewMode == QuranViewMode.mushaf ? _mushafScrollController : _studyScrollController;
@@ -254,7 +252,7 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
                       )
                     : widget.surah;
 
-                // Auto-scroll on initial load if needed
+                // Auto-scroll on initial load if navigated to specific Ayah
                 if (!provider.isLoadingAyahs && provider.ayahs.isNotEmpty && !_hasInitialScrolled) {
                   _hasInitialScrolled = true;
                   WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -262,17 +260,6 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
                       _scrollToAyah(widget.initialAyahIndex, provider.ayahs.length);
                     }
                   });
-                }
-
-                // Auto-scroll during audio playback (when active playing or highlighted index changes)
-                final activeIndex = provider.currentPlayingIndex ?? provider.highlightedAyahIndex;
-                if (activeIndex != null && activeIndex != _lastScrolledIndex) {
-                  _lastScrolledIndex = activeIndex;
-                  if (!_isUserDragging) {
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      _scrollToAyah(activeIndex, provider.ayahs.length);
-                    });
-                  }
                 }
 
                 return Stack(
@@ -317,22 +304,15 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
                       },
                       child: NotificationListener<ScrollNotification>(
                         onNotification: (notification) {
-                          if (notification is ScrollStartNotification && notification.dragDetails != null) {
-                            _isUserDragging = true;
-                          } else if (notification is ScrollEndNotification) {
-                            _isUserDragging = false;
-                            // When user finishes manual scrolling, smoothly snap back to current active Ayah if one is playing!
-                            final playingIdx = provider.currentPlayingIndex;
-                            if (playingIdx != null && provider.playerState?.playing == true) {
-                              WidgetsBinding.instance.addPostFrameCallback((_) {
-                                _scrollToAyah(playingIdx, provider.ayahs.length);
-                              });
-                            }
-                          } else if (notification is UserScrollNotification) {
+                          if (notification is UserScrollNotification) {
                             if (notification.direction == ScrollDirection.reverse) {
                               final c = _activeScrollController;
                               if (!_isCollapsed && c.hasClients && c.positions.length == 1 && c.offset > 40) {
                                 setState(() => _isCollapsed = true);
+                              }
+                            } else if (notification.direction == ScrollDirection.forward) {
+                              if (_isCollapsed) {
+                                setState(() => _isCollapsed = false);
                               }
                             }
                           }
