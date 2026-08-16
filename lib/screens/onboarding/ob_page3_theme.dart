@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../providers/theme_provider.dart';
+import '../../widgets/heartbeat_tap.dart';
 
 class ObPage3Theme extends StatefulWidget {
   final VoidCallback onNext;
@@ -143,17 +144,17 @@ class _ObPage3ThemeState extends State<ObPage3Theme>
                         children: [
                           Text(
                             'Choose Your Soul',
-                            style: GoogleFonts.hankenGrotesk(
+                            style: GoogleFonts.outfit(
                               fontSize: isSmall ? 18 : 21,
                               fontWeight: FontWeight.w800,
-                              color: Colors.white,
+                              color: themeProvider.textPrimary,
                             ),
                           ),
                           Text(
                             'Every color reflects a different spiritual mood.',
-                            style: GoogleFonts.hankenGrotesk(
+                            style: GoogleFonts.outfit(
                               fontSize: 11,
-                              color: Colors.white.withValues(alpha: 0.4),
+                              color: themeProvider.textSecondary,
                             ),
                           ),
                         ],
@@ -196,7 +197,7 @@ class _ObPage3ThemeState extends State<ObPage3Theme>
                         return _ThemeCard(
                           option: opt,
                           isSelected: isSelected,
-                          containerColor: themeProvider.containerColor,
+                          cardColor: themeProvider.surfaceColor,
                           isSmall: isSmall,
                           onTap: () {
                             HapticFeedback.mediumImpact();
@@ -214,7 +215,6 @@ class _ObPage3ThemeState extends State<ObPage3Theme>
                 padding: EdgeInsets.fromLTRB(
                     20, 10, 20, MediaQuery.of(context).padding.bottom + 20),
                 child: _ObThemeGlowButton(
-                  accent: accent,
                   onTap: () {
                     HapticFeedback.mediumImpact();
                     widget.onNext();
@@ -232,21 +232,22 @@ class _ObPage3ThemeState extends State<ObPage3Theme>
 class _ThemeCard extends StatelessWidget {
   final _ThemeOption option;
   final bool isSelected;
-  final Color containerColor;
+  final Color cardColor;
   final bool isSmall;
   final VoidCallback onTap;
 
   const _ThemeCard({
     required this.option,
     required this.isSelected,
-    required this.containerColor,
+    required this.cardColor,
     required this.isSmall,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    final tp = context.watch<ThemeProvider>();
+    return HeartbeatTap(
       onTap: onTap,
       child: AnimatedScale(
         scale: isSelected ? 1.03 : 1.0,
@@ -256,23 +257,16 @@ class _ThemeCard extends StatelessWidget {
           duration: const Duration(milliseconds: 250),
           curve: Curves.easeOut,
           decoration: BoxDecoration(
-            color: containerColor,
-            borderRadius: BorderRadius.circular(16),
+            color: isSelected
+                ? option.accent.withValues(alpha: 0.15)
+                : cardColor,
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isSelected
                   ? option.accent
-                  : option.accent.withValues(alpha: 0.1),
-              width: isSelected ? 1.8 : 1,
+                  : tp.borderColor,
+              width: isSelected ? 1.5 : 1,
             ),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: option.accent.withValues(alpha: 0.25),
-                      blurRadius: 14,
-                      offset: const Offset(0, 3),
-                    ),
-                  ]
-                : [],
           ),
           child: Padding(
             padding: EdgeInsets.all(isSmall ? 10 : 13),
@@ -294,16 +288,10 @@ class _ThemeCard extends StatelessWidget {
                           ],
                         ),
                         shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: option.accent.withValues(alpha: 0.45),
-                            blurRadius: 6,
-                          ),
-                        ],
                       ),
                       child: isSelected
                           ? const Icon(Icons.check_rounded,
-                              color: Colors.black, size: 12)
+                              color: Colors.white, size: 12)
                           : null,
                     ),
                     // Mini preview strip
@@ -348,15 +336,15 @@ class _ThemeCard extends StatelessWidget {
                 const SizedBox(height: 1),
                 Text(
                   option.name,
-                  style: GoogleFonts.hankenGrotesk(
+                  style: GoogleFonts.outfit(
                     fontSize: isSmall ? 10 : 11,
                     fontWeight: FontWeight.w700,
-                    color: Colors.white.withValues(alpha: 0.8),
+                    color: isSelected ? option.accent : tp.textPrimary,
                   ),
                 ),
                 Text(
                   option.arabicMoodEn,
-                  style: GoogleFonts.hankenGrotesk(
+                  style: GoogleFonts.outfit(
                     fontSize: 9,
                     color: option.accent.withValues(alpha: 0.6),
                   ),
@@ -371,45 +359,35 @@ class _ThemeCard extends StatelessWidget {
 }
 
 class _ObThemeGlowButton extends StatelessWidget {
-  final Color accent;
   final VoidCallback onTap;
 
-  const _ObThemeGlowButton({required this.accent, required this.onTap});
+  const _ObThemeGlowButton({required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return HeartbeatTap(
       onTap: onTap,
       child: Container(
-        height: 56,
+        height: 50,
         width: double.infinity,
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [accent, accent.withValues(alpha: 0.75)],
-          ),
-          borderRadius: BorderRadius.circular(30),
-          boxShadow: [
-            BoxShadow(
-              color: accent.withValues(alpha: 0.4),
-              blurRadius: 20,
-              offset: const Offset(0, 6),
-            ),
-          ],
+          color: const Color(0xFF0C66E4),
+          borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              'This Is Me',
-              style: GoogleFonts.hankenGrotesk(
-                fontSize: 16,
+              'Apply & Continue',
+              style: GoogleFonts.outfit(
+                fontSize: 15,
                 fontWeight: FontWeight.w700,
-                color: Colors.black,
+                color: Colors.white,
+                letterSpacing: 0.3,
               ),
             ),
-            const SizedBox(width: 10),
-            const Icon(Icons.arrow_forward_rounded,
-                size: 18, color: Colors.black),
+            const SizedBox(width: 8),
+            const Icon(Icons.arrow_forward_rounded, size: 18, color: Colors.white),
           ],
         ),
       ),

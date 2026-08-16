@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../providers/theme_provider.dart';
+import '../../theme/jira_theme.dart';
+import '../../widgets/heartbeat_tap.dart';
 import 'ob_page1_welcome.dart';
 import 'ob_page2_location.dart';
-import 'ob_page3_theme.dart';
 import 'ob_page4_habits.dart';
 import 'ob_page5_notifications.dart';
 import 'ob_page6_summary.dart';
@@ -18,29 +17,18 @@ class OnboardingFlow extends StatefulWidget {
   State<OnboardingFlow> createState() => _OnboardingFlowState();
 }
 
-class _OnboardingFlowState extends State<OnboardingFlow>
-    with SingleTickerProviderStateMixin {
+class _OnboardingFlowState extends State<OnboardingFlow> with SingleTickerProviderStateMixin {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  static const int _totalPages = 6;
+  static const int _totalPages = 5;
 
-  // Pages 0 (Welcome) and 5 (Summary) have no progress bar
-  bool get _showProgressBar => _currentPage >= 1 && _currentPage <= 4;
-
-  late AnimationController _progressCtrl;
-
-  @override
-  void initState() {
-    super.initState();
-    _progressCtrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 400));
-  }
+  // Pages 0 (Welcome) and 4 (Summary) have no top progress bar
+  bool get _showProgressBar => _currentPage >= 1 && _currentPage <= 3;
 
   @override
   void dispose() {
     _pageController.dispose();
-    _progressCtrl.dispose();
     super.dispose();
   }
 
@@ -49,7 +37,7 @@ class _OnboardingFlowState extends State<OnboardingFlow>
     setState(() => _currentPage = page);
     _pageController.animateToPage(
       page,
-      duration: const Duration(milliseconds: 420),
+      duration: const Duration(milliseconds: 400),
       curve: Curves.easeInOutCubic,
     );
   }
@@ -61,37 +49,28 @@ class _OnboardingFlowState extends State<OnboardingFlow>
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.watch<ThemeProvider>();
-    final accent = theme.primaryAccent;
     final topPad = MediaQuery.of(context).padding.top;
 
     return Scaffold(
-      backgroundColor: theme.backgroundBottom,
+      backgroundColor: const Color(0xFF0B0E14),
       body: Column(
         children: [
-          // ── Status bar area (always present, transparent, with minimum safety pad) ──
-          SizedBox(height: topPad > 0 ? topPad + 6 : 16),
+          SizedBox(height: topPad > 0 ? topPad + 4 : 14),
 
-          // ── Progress bar — only on pages 1–4 ──
-          AnimatedSize(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOut,
-            child: _showProgressBar
-                ? _OnboardingProgressBar(
-                    currentPage: _currentPage,
-                    totalSteps: 4,
-                    accent: accent,
-                    onBack: _currentPage > 1
-                        ? () {
-                            HapticFeedback.lightImpact();
-                            _goToPage(_currentPage - 1);
-                          }
-                        : null,
-                  )
-                : const SizedBox.shrink(),
-          ),
+          // ── Progress Bar — Only on steps 1, 2, 3 ──
+          if (_showProgressBar)
+            _OnboardingProgressBar(
+              currentPage: _currentPage,
+              totalSteps: 3,
+              onBack: _currentPage > 1
+                  ? () {
+                      HapticFeedback.lightImpact();
+                      _goToPage(_currentPage - 1);
+                    }
+                  : null,
+            ),
 
-          // ── Page content ──
+          // ── Page Content ──
           Expanded(
             child: PageView(
               controller: _pageController,
@@ -99,12 +78,11 @@ class _OnboardingFlowState extends State<OnboardingFlow>
               children: [
                 ObPage1Welcome(onNext: () => _goToPage(1)),
                 ObPage2Location(onNext: () => _goToPage(2)),
-                ObPage3Theme(onNext: () => _goToPage(3)),
-                ObPage4Habits(onNext: () => _goToPage(4)),
+                ObPage4Habits(onNext: () => _goToPage(3)),
                 ObPage5Notifications(
                   onNext: () async {
                     await markComplete();
-                    if (mounted) _goToPage(5);
+                    if (mounted) _goToPage(4);
                   },
                 ),
                 const ObPage6Summary(),
@@ -118,195 +96,98 @@ class _OnboardingFlowState extends State<OnboardingFlow>
 }
 
 // ─────────────────────────────────────────
-// Progress Bar — sits between status bar and page content
+// Progress Bar
 // ─────────────────────────────────────────
 class _OnboardingProgressBar extends StatelessWidget {
   final int currentPage;
   final int totalSteps;
-  final Color accent;
   final VoidCallback? onBack;
 
   const _OnboardingProgressBar({
     required this.currentPage,
     required this.totalSteps,
-    required this.accent,
     this.onBack,
   });
 
   static const _stepLabels = [
-    'Location Setup',
-    'Personalize Theme',
-    'Build Daily Rhythm',
-    'Prayer Alerts',
-  ];
-
-  static const _stepSubtitles = [
-    'Select your area',
-    'Choose your mood style',
-    'Track your custom habits',
-    'Configure notifications',
-  ];
-
-  static const _stepIcons = [
-    Icons.location_on_rounded,
-    Icons.palette_rounded,
-    Icons.auto_awesome_rounded,
-    Icons.notifications_active_rounded,
+    'LOCATION SETUP',
+    'SPIRITUAL RHYTHM',
+    'PRAYER NOTIFICATIONS',
   ];
 
   @override
   Widget build(BuildContext context) {
     final stepIndex = (currentPage - 1).clamp(0, totalSteps - 1);
-    final size = MediaQuery.of(context).size;
-    final isSmall = size.height < 680;
+    final label = _stepLabels[stepIndex];
 
-    return Container(
-      padding: EdgeInsets.fromLTRB(20, 8, 20, isSmall ? 10 : 16),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Segmented Progress Bar ──
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  if (onBack != null) ...[
+                    HeartbeatTap(
+                      onTap: onBack!,
+                      child: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF161B22),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: const Color(0xFF30363D)),
+                        ),
+                        child: const Icon(
+                          Icons.arrow_back_rounded,
+                          size: 16,
+                          color: Color(0xFFF0F6FC),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                  ],
+                  Text(
+                    'STEP $currentPage OF $totalSteps • $label',
+                    style: GoogleFonts.outfit(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.5,
+                      color: JiraTheme.secondaryGreen,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+
+          // 3-Segment Glowing Progress Bar
           Row(
             children: List.generate(totalSteps, (i) {
-              final isCompletedOrActive = i <= stepIndex;
+              final isFilled = i < currentPage;
               return Expanded(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: i == 0 ? 0 : 3.0),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: isCompletedOrActive
-                          ? accent
-                          : Colors.white.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
+                child: Container(
+                  height: 4,
+                  margin: EdgeInsets.only(right: i < totalSteps - 1 ? 6 : 0),
+                  decoration: BoxDecoration(
+                    color: isFilled ? JiraTheme.primaryBlue : const Color(0xFF1F242C),
+                    borderRadius: BorderRadius.circular(2),
+                    boxShadow: isFilled
+                        ? [
+                            BoxShadow(
+                              color: JiraTheme.primaryBlue.withValues(alpha: 0.5),
+                              blurRadius: 6,
+                            ),
+                          ]
+                        : null,
                   ),
                 ),
               );
             }),
-          ),
-
-          SizedBox(height: isSmall ? 14 : 18),
-
-          // ── Header Row ──
-          Row(
-            children: [
-              // Back Button (with modern glass circle)
-              if (onBack != null) ...[
-                GestureDetector(
-                  onTap: onBack,
-                  behavior: HitTestBehavior.opaque,
-                  child: Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withValues(alpha: 0.04),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.08),
-                        width: 0.8,
-                      ),
-                    ),
-                    child: Center(
-                      child: Icon(
-                        Icons.arrow_back_ios_new_rounded,
-                        size: 13,
-                        color: Colors.white.withValues(alpha: 0.85),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-              ],
-
-              // Step info (Title & Description)
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'STEP ${stepIndex + 1} OF $totalSteps',
-                      style: GoogleFonts.hankenGrotesk(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 1.2,
-                        color: accent.withValues(alpha: 0.7),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Row(
-                      children: [
-                        Icon(
-                          _stepIcons[stepIndex],
-                          size: 14,
-                          color: accent,
-                        ),
-                        const SizedBox(width: 6),
-                        Flexible(
-                          child: Text(
-                            _stepLabels[stepIndex],
-                            style: GoogleFonts.hankenGrotesk(
-                              fontSize: isSmall ? 14 : 16,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white.withValues(alpha: 0.95),
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 1),
-                    Text(
-                      _stepSubtitles[stepIndex],
-                      style: GoogleFonts.hankenGrotesk(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white.withValues(alpha: 0.45),
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-
-              // Step pill badge
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: accent.withValues(alpha: 0.2),
-                    width: 0.8,
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 5,
-                      height: 5,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: accent,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Setup',
-                      style: GoogleFonts.hankenGrotesk(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        color: accent,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
           ),
         ],
       ),

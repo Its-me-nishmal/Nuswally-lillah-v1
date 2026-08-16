@@ -51,6 +51,12 @@ class PrayerProvider with ChangeNotifier {
   int get upcomingAlertSecondsRemaining => _upcomingAlertSecondsRemaining;
   String get highlightedPrayerName => _highlightedPrayerName;
 
+  bool _azanNotificationsEnabled = true;
+  int _preAzanReminderMinutes = 0;
+
+  bool get azanNotificationsEnabled => _azanNotificationsEnabled;
+  int get preAzanReminderMinutes => _preAzanReminderMinutes;
+
   final Map<String, int> _iqamahOffsets = {
     'Fajr': 20,
     'Dhuhr': 20,
@@ -156,8 +162,10 @@ class PrayerProvider with ChangeNotifier {
 
   Future<void> _loadNotificationSettings() async {
     final prefs = await SharedPreferences.getInstance();
+    _azanNotificationsEnabled = prefs.getBool('azan_notifications_enabled') ?? true;
+    _preAzanReminderMinutes = prefs.getInt('pre_azan_reminder_minutes') ?? 0;
+
     const prayers = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
-    
     for (var prayer in prayers) {
       _adhanNotificationSounds[prayer] = prefs.getString('adhan_sound_$prayer') ?? 'Full Adhan';
       _adhanNotificationOffsets[prayer] = prefs.getInt('adhan_offset_$prayer') ?? 0;
@@ -165,6 +173,22 @@ class PrayerProvider with ChangeNotifier {
       _iqamahNotificationOffsets[prayer] = prefs.getInt('iqamah_offset_$prayer') ?? 3;
     }
     notifyListeners();
+  }
+
+  Future<void> toggleAzanNotifications(bool enabled) async {
+    _azanNotificationsEnabled = enabled;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('azan_notifications_enabled', enabled);
+    await _scheduleNativeAlarms();
+  }
+
+  Future<void> setPreAzanReminderMinutes(int minutes) async {
+    _preAzanReminderMinutes = minutes;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('pre_azan_reminder_minutes', minutes);
+    await _scheduleNativeAlarms();
   }
 
   Future<void> updateIqamahOffset(String prayerName, int offsetMinutes) async {
@@ -494,6 +518,8 @@ class PrayerProvider with ChangeNotifier {
     try {
       await NotificationService.schedulePrayerNotifications(
         prayerTimes: _currentLocationData!.prayerTimes,
+        enabled: _azanNotificationsEnabled,
+        preAzanReminderMinutes: _preAzanReminderMinutes,
         adhanSounds: _adhanNotificationSounds,
         adhanOffsets: _adhanNotificationOffsets,
         iqamahSounds: _iqamahNotificationSounds,

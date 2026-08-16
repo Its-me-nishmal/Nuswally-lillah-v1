@@ -39,11 +39,14 @@ dependencies:
   provider: ^6.1.1
   google_fonts: ^6.1.0
   http: ^1.2.1
+  url_launcher: ^6.3.1
   just_audio: ^0.9.38
   flutter_local_notifications: ^21.0.0
   timezone: ^0.11.0
   flutter_timezone: ^3.0.0
   flutter_native_splash: ^2.4.7
+  youtube_player_flutter: ^10.0.1
+  share_plus: ^10.1.4
 
 dev_dependencies:
   flutter_test:
@@ -78,10 +81,13 @@ flutter:
     - assets/KERALA-AZAN-DATA-main/
     - assets/images/islamic_bg.png
     - assets/images/mosque_hero.png
+    - assets/images/developer.jpg
+    - assets/images/
     - assets/quran/
     - assets/fonts/
     - assets/data/
     - assets/audio/
+    - assets/audio/asmaul_husna.mp3
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
@@ -98,6 +104,17 @@ flutter:
     - family: HafsFont
       fonts:
         - asset: assets/fonts/Hafs.otf
+    - family: BalooChettan2
+      fonts:
+        - asset: assets/fonts/BalooChettan2-Regular.ttf
+    - family: Indulekha
+      fonts:
+        - asset: assets/fonts/Indulekha-Regular.ttf
+    - family: AdobeArabic
+      fonts:
+        - asset: assets/fonts/AdobeArabic-Regular.ttf
+        - asset: assets/fonts/AdobeArabic-Bold.ttf
+          weight: 700
 
 flutter_native_splash:
   color: "#ffffff"

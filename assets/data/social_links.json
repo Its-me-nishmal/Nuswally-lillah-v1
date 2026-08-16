@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "categories": [
+    {
+      "id": "tafseer_series",
+      "name": "Tafseer Series",
+      "icon": "menu_book_rounded",
+      "items": [
+        {
+          "id": "tafseer_kahf_08",
+          "platform": "youtube",
+          "category": "Tafseer Series",
+          "episode": "Ep. 08",
+          "title": "Understanding Surah Al-Kahf - Deep Reflection & Guidance",
+          "speaker": "Sh. Ahmad Al-Khatib",
+          "duration": "45:20",
+          "url": "https://youtu.be/IrDP9YIcnCo?si=5bI7PW3n-_9zIh60"
+        },
+        {
+          "id": "quran_heart_peace",
+          "platform": "youtube",
+          "category": "Tafseer Series",
+          "episode": "Ep. 07",
+          "title": "Finding Inner Peace Through Quranic Contemplation",
+          "speaker": "Sh. Ahmad Al-Khatib",
+          "duration": "32:15",
+          "url": "https://youtu.be/_H7zBaAjEH0?si=5UCWyrYoBrSmrNy-"
+        }
+      ]
+    },
+    {
+      "id": "lectures_bayan",
+      "name": "Lectures & Bayan",
+      "icon": "record_voice_over_rounded",
+      "items": [
+        {
+          "id": "spiritual_discipline",
+          "platform": "youtube",
+          "category": "Lectures & Bayan",
+          "episode": "Special",
+          "title": "Spiritual Discipline & Overcoming Distractions",
+          "speaker": "Ustadh Muhammad Ilyas",
+          "duration": "28:40",
+          "url": "https://youtu.be/IrDP9YIcnCo?si=5bI7PW3n-_9zIh60"
+        }
+      ]
+    },
+    {
+      "id": "official_channels",
+      "name": "Official Social Media",
+      "icon": "share_rounded",
+      "items": [
+        {
+          "id": "nuswally_yt_channel",
+          "platform": "youtube",
+          "category": "Official Channel",
+          "episode": "Hub",
+          "title": "Nuswally Lillah Official Channel",
+          "speaker": "Nuswally Media",
+          "duration": "Official",
+          "url": "https://youtu.be/_H7zBaAjEH0?si=5UCWyrYoBrSmrNy-"
+        }
+      ]
+    }
+  ],
+  "social_links": [
+    {
+      "platform": "youtube",
+      "title": "Understanding Surah Al-Kahf - Deep Reflection",
+      "url": "https://youtu.be/IrDP9YIcnCo?si=5bI7PW3n-_9zIh60",
+      "category": "Tafseer Series",
+      "episode": "Ep. 08",
+      "speaker": "Sh. Ahmad Al-Khatib",
+      "duration": "45:20"
+    },
+    {
+      "platform": "youtube",
+      "title": "Finding Inner Peace Through Quranic Contemplation",
+      "url": "https://youtu.be/_H7zBaAjEH0?si=5UCWyrYoBrSmrNy-",
+      "category": "Tafseer Series",
+      "episode": "Ep. 07",
+      "speaker": "Sh. Ahmad Al-Khatib",
+      "duration": "32:15"
+    }
+  ]
+}

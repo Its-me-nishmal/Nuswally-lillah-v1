@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import '../providers/theme_provider.dart';
-import '../providers/prayer_provider.dart';
 import '../models/location_model.dart';
+import '../providers/prayer_provider.dart';
+import '../theme/jira_theme.dart';
+import '../widgets/heartbeat_tap.dart';
 
 class LocationSelectionScreen extends StatefulWidget {
   const LocationSelectionScreen({super.key});
@@ -13,516 +14,388 @@ class LocationSelectionScreen extends StatefulWidget {
   State<LocationSelectionScreen> createState() => _LocationSelectionScreenState();
 }
 
-class _LocationSelectionScreenState extends State<LocationSelectionScreen>
-    with SingleTickerProviderStateMixin {
+class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
   District? _selectedDistrict;
   Location? _selectedLocation;
   int _step = 0;
-  bool _isConfirming = false;
-
-  late AnimationController _slideCtrl;
-  late Animation<Offset> _slideAnim;
-
-  @override
-  void initState() {
-    super.initState();
-    _slideCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 380),
-    );
-    _slideAnim = Tween<Offset>(
-      begin: const Offset(1.0, 0.0),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _slideCtrl, curve: Curves.easeOutCubic));
-  }
-
-  @override
-  void dispose() {
-    _slideCtrl.dispose();
-    super.dispose();
-  }
+  String _areaSearchQuery = '';
 
   void _selectDistrict(District d) {
-    HapticFeedback.lightImpact();
+    HapticFeedback.selectionClick();
     setState(() {
       _selectedDistrict = d;
-      _selectedLocation = null;
+      _selectedLocation = d.locations.isNotEmpty ? d.locations.first : null;
       _step = 1;
+      _areaSearchQuery = '';
     });
-    _slideCtrl.forward(from: 0);
   }
 
   void _goBackToDistrict() {
-    HapticFeedback.lightImpact();
+    HapticFeedback.selectionClick();
     setState(() {
       _step = 0;
-      _selectedLocation = null;
+      _areaSearchQuery = '';
     });
-    _slideCtrl.reverse();
   }
 
   Future<void> _confirmLocation(BuildContext context) async {
-    if (_selectedLocation == null || _isConfirming) return;
-    setState(() => _isConfirming = true);
-    HapticFeedback.mediumImpact();
-    final navigator = Navigator.of(context);
+    if (_selectedLocation == null) return;
+    HapticFeedback.selectionClick();
+    final nav = Navigator.of(context);
     await context.read<PrayerProvider>().selectLocation(_selectedLocation!);
-    if (mounted) navigator.pop();
+    if (mounted) nav.pop();
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.watch<ThemeProvider>();
-    final accent = theme.primaryAccent;
-    final bgTop = theme.backgroundTop;
-    final bgBottom = theme.backgroundBottom;
-    final cardColor = theme.containerColor;
     final provider = context.watch<PrayerProvider>();
-    final size = MediaQuery.of(context).size;
-    final isSmall = size.height < 680;
+    final districts = provider.districts;
 
     return Scaffold(
-      backgroundColor: bgBottom,
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [bgTop, bgBottom],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // ── Custom AppBar ──
+      backgroundColor: const Color(0xFF0B0E14),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Top App Bar
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              child: Row(
+                children: [
+                  HeartbeatTap(
+                    onTap: () {
+                      if (_step == 1) {
+                        _goBackToDistrict();
+                      } else {
+                        Navigator.pop(context);
+                      }
+                    },
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF161B22),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: const Color(0xFF30363D)),
+                      ),
+                      child: const Icon(
+                        Icons.arrow_back_rounded,
+                        color: Color(0xFFF0F6FC),
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _step == 0 ? 'Select Your District' : 'Select Your Area',
+                          style: GoogleFonts.outfit(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: const Color(0xFFF0F6FC),
+                          ),
+                        ),
+                        Text(
+                          _step == 0
+                              ? 'Your location ensures micro-precise prayer times & Qibla.'
+                              : '${_selectedDistrict?.name ?? ''} District • ${_selectedDistrict?.locations.length ?? 0} Towns',
+                          style: GoogleFonts.inter(
+                            fontSize: 11.5,
+                            color: const Color(0xFF8B949E),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 6),
+
+            // Step 0: 2-Column District Grid
+            if (_step == 0) ...[
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-                child: Row(
-                  children: [
-                    IconButton(
-                      onPressed: () {
-                        if (_step == 1) {
-                          _goBackToDistrict();
-                        } else {
-                          Navigator.pop(context);
-                          HapticFeedback.lightImpact();
-                        }
-                      },
-                      icon: Icon(
-                        Icons.arrow_back_ios_new_rounded,
-                        color: accent,
-                      ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'KERALA DISTRICTS (${districts.length})',
+                    style: GoogleFonts.outfit(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 2.0,
+                      color: const Color(0xFF8B949E),
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      _step == 0 ? 'Select District' : 'Select Area',
-                      style: GoogleFonts.outfit(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
-
-              // ── Header Section ──
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (_step == 1)
-                      GestureDetector(
-                        onTap: _goBackToDistrict,
+              Expanded(
+                child: GridView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  physics: const BouncingScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                    childAspectRatio: 2.7,
+                  ),
+                  itemCount: districts.length,
+                  itemBuilder: (context, index) {
+                    final d = districts[index];
+                    return HeartbeatTap(
+                      onTap: () => _selectDistrict(d),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF161B22),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: const Color(0xFF30363D)),
+                        ),
                         child: Row(
                           children: [
-                            Icon(Icons.arrow_back_ios_new_rounded,
-                                size: 13, color: accent),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Change District',
-                              style: GoogleFonts.outfit(
-                                fontSize: 12,
-                                color: accent,
-                                fontWeight: FontWeight.bold,
+                            const Icon(
+                              Icons.map_outlined,
+                              size: 16,
+                              color: JiraTheme.primaryBlue,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                d.name,
+                                style: GoogleFonts.outfit(
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: const Color(0xFFF0F6FC),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ],
                         ),
                       ),
-                    if (_step == 1) const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(9),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: accent.withValues(alpha: 0.1),
-                            border: Border.all(
-                                color: accent.withValues(alpha: 0.25)),
-                          ),
-                          child:
-                              Icon(Icons.location_on_rounded, color: accent, size: 18),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _step == 0
-                                    ? 'Select Your District'
-                                    : 'Select Your Area',
-                                style: GoogleFonts.outfit(
-                                  fontSize: isSmall ? 18 : 21,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              Text(
-                                _step == 0
-                                    ? 'Your location ensures precise prayer times'
-                                    : 'Areas in ${_selectedDistrict!.name}',
-                                style: GoogleFonts.outfit(
-                                  fontSize: 11,
-                                  color: Colors.white.withValues(alpha: 0.4),
-                                  height: 1.4,
-                                ),
-                              ),
-                            ],
+                    );
+                  },
+                ),
+              ),
+            ]
+            // Step 1: Area / Town Selection List with Search and Confirmation
+            else ...[
+              // Live Area Search Box
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                child: Container(
+                  height: 46,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF161B22),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFF30363D)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.search_rounded, color: Color(0xFF8B949E), size: 18),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: TextField(
+                          onChanged: (val) => setState(() => _areaSearchQuery = val),
+                          style: GoogleFonts.inter(fontSize: 13, color: Colors.white),
+                          decoration: const InputDecoration(
+                            hintText: 'Search town or village (e.g. Vadakara, Feroke)...',
+                            hintStyle: TextStyle(color: Color(0xFF64748B), fontSize: 12),
+                            border: InputBorder.none,
+                            isDense: true,
                           ),
                         ),
-                      ],
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
 
-              const SizedBox(height: 18),
+              // Solar Calculation Info Banner
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF161B22),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: JiraTheme.primaryBlue.withValues(alpha: 0.5)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.location_on_rounded, color: JiraTheme.primaryBlue, size: 20),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Accurate calculation zones in ${_selectedDistrict?.name ?? ''}',
+                              style: GoogleFonts.outfit(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFFF0F6FC),
+                              ),
+                            ),
+                            Text(
+                              'Solar calculation method: Kerala Samastha Standard (18°)',
+                              style: GoogleFonts.inter(
+                                fontSize: 10.5,
+                                color: const Color(0xFF8B949E),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
 
-              // ── List Area ──
+              // Town List
               Expanded(
-                child: _step == 0
-                    ? _DistrictGrid(
-                        districts: provider.districts,
-                        accent: accent,
-                        cardColor: cardColor,
-                        isSmall: isSmall,
-                        onSelect: _selectDistrict,
-                      )
-                    : SlideTransition(
-                        position: _slideAnim,
-                        child: _PlaceGrid(
-                          locations: _selectedDistrict!.locations,
-                          accent: accent,
-                          cardColor: cardColor,
-                          isSmall: isSmall,
-                          selectedLocation: _selectedLocation,
-                          onSelect: (loc) {
-                            HapticFeedback.lightImpact();
+                child: Builder(
+                  builder: (context) {
+                    final query = _areaSearchQuery.trim().toLowerCase();
+                    final allLocs = _selectedDistrict?.locations ?? [];
+                    final filtered = allLocs.where((l) {
+                      if (query.isEmpty) return true;
+                      return l.name.toLowerCase().contains(query);
+                    }).toList();
+
+                    return ListView.separated(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      physics: const BouncingScrollPhysics(),
+                      itemCount: filtered.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      itemBuilder: (context, index) {
+                        final loc = filtered[index];
+                        final isSelected = _selectedLocation?.id == loc.id;
+
+                        return HeartbeatTap(
+                          onTap: () {
+                            HapticFeedback.selectionClick();
                             setState(() => _selectedLocation = loc);
                           },
-                        ),
-                      ),
+                          child: Container(
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF161B22),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color: isSelected ? JiraTheme.primaryBlue : const Color(0xFF30363D),
+                                width: isSelected ? 1.2 : 1.0,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        loc.name,
+                                        style: GoogleFonts.outfit(
+                                          fontSize: 14.5,
+                                          fontWeight: FontWeight.w700,
+                                          color: const Color(0xFFF0F6FC),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        '${loc.district} • Solar Calculation Zone',
+                                        style: GoogleFonts.inter(
+                                          fontSize: 11,
+                                          color: const Color(0xFF8B949E),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  width: 22,
+                                  height: 22,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: isSelected ? JiraTheme.primaryBlue : Colors.transparent,
+                                    border: Border.all(
+                                      color: isSelected ? JiraTheme.primaryBlue : const Color(0xFF64748B),
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                  child: isSelected
+                                      ? const Center(
+                                          child: Icon(Icons.check, size: 13, color: Colors.white),
+                                        )
+                                      : null,
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
 
-              // ── Confirm Button ──
-              AnimatedSize(
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeOut,
-                child: _step == 1
-                    ? Padding(
-                        padding: EdgeInsets.fromLTRB(
-                            20, 10, 20, MediaQuery.of(context).padding.bottom + 20),
-                        child: _ObGlowButton(
-                          label: _isConfirming
-                              ? 'Saving location...'
-                              : 'Confirm My Location',
-                          accent: accent,
-                          icon: _isConfirming
-                              ? Icons.hourglass_top_rounded
-                              : Icons.check_circle_rounded,
-                          enabled: _selectedLocation != null && !_isConfirming,
-                          onTap: () => _confirmLocation(context),
+              // Bottom Confirmation Button
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                child: Column(
+                  children: [
+                    HeartbeatTap(
+                      onTap: () => _confirmLocation(context),
+                      child: Container(
+                        width: double.infinity,
+                        height: 52,
+                        decoration: BoxDecoration(
+                          color: JiraTheme.primaryBlue,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: JiraTheme.primaryBlue.withValues(alpha: 0.35),
+                              blurRadius: 12,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
                         ),
-                      )
-                    : const SizedBox.shrink(),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.check_rounded, color: Colors.white, size: 18),
+                            const SizedBox(width: 8),
+                            Text(
+                              'SET AS MY PRAYER LOCATION',
+                              style: GoogleFonts.outfit(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Times will immediately calibrate across all widgets and Adhans',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        color: const Color(0xFF64748B),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ── District Grid ──
-class _DistrictGrid extends StatelessWidget {
-  final List<District> districts;
-  final Color accent;
-  final Color cardColor;
-  final bool isSmall;
-  final ValueChanged<District> onSelect;
-
-  const _DistrictGrid({
-    required this.districts,
-    required this.accent,
-    required this.cardColor,
-    required this.isSmall,
-    required this.onSelect,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (ctx, constraints) {
-        final itemW = (constraints.maxWidth - 40 - 12) / 2;
-        final itemH = isSmall ? 46.0 : 52.0;
-        final ratio = itemW / itemH;
-
-        return GridView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          physics: const BouncingScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 10,
-            childAspectRatio: ratio,
-          ),
-          itemCount: districts.length,
-          itemBuilder: (ctx, i) {
-            final d = districts[i];
-            return GestureDetector(
-              onTap: () => onSelect(d),
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      cardColor,
-                      cardColor.withValues(alpha: 0.85),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: accent.withValues(alpha: 0.12),
-                    width: 1.2,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.15),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.map_outlined,
-                        size: 14, color: accent.withValues(alpha: 0.7)),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        d.name,
-                        style: GoogleFonts.outfit(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-}
-
-// ── Place Grid ──
-class _PlaceGrid extends StatelessWidget {
-  final List<Location> locations;
-  final Color accent;
-  final Color cardColor;
-  final bool isSmall;
-  final Location? selectedLocation;
-  final ValueChanged<Location> onSelect;
-
-  const _PlaceGrid({
-    required this.locations,
-    required this.accent,
-    required this.cardColor,
-    required this.isSmall,
-    required this.selectedLocation,
-    required this.onSelect,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (ctx, constraints) {
-        final itemW = (constraints.maxWidth - 40 - 12) / 2;
-        final itemH = isSmall ? 46.0 : 52.0;
-        final ratio = itemW / itemH;
-
-        return GridView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          physics: const BouncingScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 10,
-            childAspectRatio: ratio,
-          ),
-          itemCount: locations.length,
-          itemBuilder: (ctx, i) {
-            final loc = locations[i];
-            final isSelected = selectedLocation?.id == loc.id;
-            return GestureDetector(
-              onTap: () => onSelect(loc),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                decoration: BoxDecoration(
-                  gradient: isSelected
-                      ? LinearGradient(
-                          colors: [
-                            accent.withValues(alpha: 0.18),
-                            cardColor.withValues(alpha: 0.8),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        )
-                      : LinearGradient(
-                          colors: [
-                            cardColor,
-                            cardColor.withValues(alpha: 0.85),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: isSelected
-                        ? accent
-                        : accent.withValues(alpha: 0.12),
-                    width: isSelected ? 1.8 : 1.2,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: isSelected
-                          ? accent.withValues(alpha: 0.15)
-                          : Colors.black.withValues(alpha: 0.15),
-                      blurRadius: isSelected ? 12 : 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (isSelected)
-                      Icon(Icons.check_circle_rounded, size: 14, color: accent),
-                    if (isSelected) const SizedBox(width: 6),
-                    Flexible(
-                      child: Text(
-                        loc.name,
-                        style: GoogleFonts.outfit(
-                          fontSize: 13,
-                          fontWeight: isSelected
-                              ? FontWeight.bold
-                              : FontWeight.w500,
-                          color: isSelected
-                              ? accent
-                              : Colors.white.withValues(alpha: 0.85),
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-}
-
-// ── Glow Button ──
-class _ObGlowButton extends StatelessWidget {
-  final String label;
-  final Color accent;
-  final IconData icon;
-  final VoidCallback onTap;
-  final bool enabled;
-
-  const _ObGlowButton({
-    required this.label,
-    required this.accent,
-    required this.icon,
-    required this.onTap,
-    this.enabled = true,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: enabled ? onTap : null,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        height: 56,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          gradient: enabled
-              ? LinearGradient(
-                  colors: [accent, accent.withValues(alpha: 0.75)],
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                )
-              : null,
-          color: enabled ? null : Colors.white.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(30),
-          border: enabled
-              ? null
-              : Border.all(color: Colors.white.withValues(alpha: 0.08)),
-          boxShadow: enabled
-              ? [
-                  BoxShadow(
-                    color: accent.withValues(alpha: 0.35),
-                    blurRadius: 18,
-                    offset: const Offset(0, 6),
-                  ),
-                ]
-              : [],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              label,
-              style: GoogleFonts.outfit(
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
-                color: enabled
-                    ? Colors.black
-                    : Colors.white.withValues(alpha: 0.2),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Icon(icon,
-                size: 17,
-                color: enabled
-                    ? Colors.black
-                    : Colors.white.withValues(alpha: 0.2)),
           ],
         ),
       ),

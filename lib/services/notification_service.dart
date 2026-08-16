@@ -12,7 +12,8 @@ class NotificationService {
   static Function(String? actionId, String payload)? onActionClicked;
 
   static Future<void> init() async {
-    const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/launcher_icon');
     
     const InitializationSettings initializationSettings = InitializationSettings(
       android: initializationSettingsAndroid,
@@ -29,16 +30,20 @@ class NotificationService {
       tz.setLocalLocation(tz.getLocation('Asia/Kolkata'));
     }
 
-    await _notificationsPlugin.initialize(
-      settings: initializationSettings,
-      onDidReceiveNotificationResponse: (NotificationResponse response) {
-        final payload = response.payload ?? '';
-        final actionId = response.actionId;
-        
-        debugPrint('Notification Action Triggered: $actionId for payload: $payload');
-        onActionClicked?.call(actionId, payload);
-      },
-    );
+    try {
+      await _notificationsPlugin.initialize(
+        settings: initializationSettings,
+        onDidReceiveNotificationResponse: (NotificationResponse response) {
+          final payload = response.payload ?? '';
+          final actionId = response.actionId;
+          
+          debugPrint('Notification Action Triggered: $actionId for payload: $payload');
+          onActionClicked?.call(actionId, payload);
+        },
+      );
+    } catch (e) {
+      debugPrint('NotificationService: Plugin initialize error: $e');
+    }
 
     // Create notification channels for custom Azan sounds
     final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
@@ -46,51 +51,67 @@ class NotificationService {
             AndroidFlutterLocalNotificationsPlugin>();
 
     if (androidImplementation != null) {
-      // Create channel for Full Adhan
-      await androidImplementation.createNotificationChannel(
-        const AndroidNotificationChannel(
-          'adhan_full_channel',
-          'Adhan Full Alarm',
-          description: 'Alarms that play the full Adhan sound',
-          importance: Importance.max,
-          sound: RawResourceAndroidNotificationSound('adhan'),
-          playSound: true,
-        ),
-      );
+      try {
+        // Create channel for Full Adhan
+        await androidImplementation.createNotificationChannel(
+          const AndroidNotificationChannel(
+            'adhan_full_channel',
+            'Adhan Full Alarm',
+            description: 'Alarms that play the full Adhan sound',
+            importance: Importance.max,
+            sound: RawResourceAndroidNotificationSound('adhan'),
+            playSound: true,
+          ),
+        );
+      } catch (e) {
+        debugPrint('NotificationService: Failed to create adhan_full_channel: $e');
+      }
 
-      // Create channel for Chime
-      await androidImplementation.createNotificationChannel(
-        const AndroidNotificationChannel(
-          'adhan_chime_channel',
-          'Adhan Chime Alarm',
-          description: 'Alarms that play the Chime sound',
-          importance: Importance.max,
-          sound: RawResourceAndroidNotificationSound('chime'),
-          playSound: true,
-        ),
-      );
+      try {
+        // Create channel for Chime
+        await androidImplementation.createNotificationChannel(
+          const AndroidNotificationChannel(
+            'adhan_chime_channel',
+            'Adhan Chime Alarm',
+            description: 'Alarms that play the Chime sound',
+            importance: Importance.max,
+            sound: RawResourceAndroidNotificationSound('chime'),
+            playSound: true,
+          ),
+        );
+      } catch (e) {
+        debugPrint('NotificationService: Failed to create adhan_chime_channel: $e');
+      }
 
-      // Create channel for silent notifications
-      await androidImplementation.createNotificationChannel(
-        const AndroidNotificationChannel(
-          'silent_upcoming_channel',
-          'Silent Upcoming Reminders',
-          description: 'Silent reminders shown 10 minutes before prayer alerts',
-          importance: Importance.low,
-          playSound: false,
-        ),
-      );
+      try {
+        // Create channel for silent notifications
+        await androidImplementation.createNotificationChannel(
+          const AndroidNotificationChannel(
+            'silent_upcoming_channel',
+            'Silent Upcoming Reminders',
+            description: 'Silent reminders shown 10 minutes before prayer alerts',
+            importance: Importance.low,
+            playSound: false,
+          ),
+        );
+      } catch (e) {
+        debugPrint('NotificationService: Failed to create silent_upcoming_channel: $e');
+      }
 
-      // Create channel for default system alarms
-      await androidImplementation.createNotificationChannel(
-        const AndroidNotificationChannel(
-          'adhan_default_channel',
-          'Default Adhan Alarms',
-          description: 'Alarms that use the default system sound',
-          importance: Importance.max,
-          playSound: true,
-        ),
-      );
+      try {
+        // Create channel for default system alarms
+        await androidImplementation.createNotificationChannel(
+          const AndroidNotificationChannel(
+            'adhan_default_channel',
+            'Default Adhan Alarms',
+            description: 'Alarms that use the default system sound',
+            importance: Importance.max,
+            playSound: true,
+          ),
+        );
+      } catch (e) {
+        debugPrint('NotificationService: Failed to create adhan_default_channel: $e');
+      }
     }
   }
 
@@ -124,15 +145,23 @@ class NotificationService {
 
   static Future<void> schedulePrayerNotifications({
     required List<PrayerTime> prayerTimes,
-    required Map<String, String> adhanSounds,
-    required Map<String, int> adhanOffsets,
-    required Map<String, String> iqamahSounds,
-    required Map<String, int> iqamahOffsets,
-    required Map<String, int> iqamahNotificationOffsets,
-    required Set<String> temporarilyMutedAlerts,
+    bool enabled = true,
+    int preAzanReminderMinutes = 0,
+    // Optional legacy fallback parameters
+    Map<String, String>? adhanSounds,
+    Map<String, int>? adhanOffsets,
+    Map<String, String>? iqamahSounds,
+    Map<String, int>? iqamahOffsets,
+    Map<String, int>? iqamahNotificationOffsets,
+    Set<String>? temporarilyMutedAlerts,
   }) async {
     // Cancel all previously scheduled alarms to avoid overlapping schedules
     await _notificationsPlugin.cancelAll();
+
+    if (!enabled) {
+      debugPrint('NotificationService: Azan notifications are disabled.');
+      return;
+    }
 
     final now = DateTime.now();
     final tzNow = tz.TZDateTime.now(tz.local);
@@ -154,7 +183,7 @@ class NotificationService {
         ? AndroidScheduleMode.exactAllowWhileIdle 
         : AndroidScheduleMode.inexactAllowWhileIdle;
 
-    debugPrint('NotificationService: Scheduling prayer alarms (Mode: ${scheduleMode.name}) starting from today...');
+    debugPrint('NotificationService: Scheduling Azan alarms (Pre-Azan delay: $preAzanReminderMinutes min, Mode: ${scheduleMode.name})...');
 
     for (int dayOffset = 0; dayOffset < 7; dayOffset++) {
       final targetDate = now.add(Duration(days: dayOffset));
@@ -208,141 +237,46 @@ class NotificationService {
             minute,
           );
 
-          // ------------------ ADHAN ALARM SCHEDULING ------------------
-          final adhanOffset = adhanOffsets[prayerName] ?? 0;
-          final adhanSound = adhanSounds[prayerName] ?? 'Default Alert';
-          final isMuted = temporarilyMutedAlerts.contains(prayerName);
+          // Apply pre-azan delay offset if configured (e.g. 0, 3, 10, 30, 60 min)
+          final triggerTime = preAzanReminderMinutes > 0
+              ? prayerDateTime.subtract(Duration(minutes: preAzanReminderMinutes))
+              : prayerDateTime;
 
-          final adhanAlarmTime = prayerDateTime.subtract(Duration(minutes: adhanOffset));
+          if (triggerTime.isAfter(tzNow)) {
+            final title = preAzanReminderMinutes == 0
+                ? 'Time for $prayerName Prayer 🕌'
+                : '$prayerName Prayer in $preAzanReminderMinutes min 🕌';
+            final body = preAzanReminderMinutes == 0
+                ? "Hayya 'alas-Salah (Come to Prayer) • $timeStr"
+                : "Azan will be called at $timeStr ($preAzanReminderMinutes minutes remaining)";
 
-          if (adhanAlarmTime.isAfter(tzNow)) {
-            if (adhanSound != 'Silent' && !isMuted) {
-              String channelId = 'adhan_default_channel';
-              String soundResource = '';
-
-              if (adhanSound == 'Full Adhan') {
-                channelId = 'adhan_full_channel';
-                soundResource = 'adhan';
-              } else if (adhanSound == 'Default Alert' || adhanSound == 'Chime') {
-                channelId = 'adhan_chime_channel';
-                soundResource = 'chime';
-              }
-
-              final AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-                channelId,
-                'Active Prayer Alarms',
-                channelDescription: 'Alarms sounding for active prayer times',
-                importance: Importance.max,
-                priority: Priority.high,
-                sound: soundResource.isNotEmpty 
-                    ? RawResourceAndroidNotificationSound(soundResource)
-                    : null,
-                playSound: true,
-                ongoing: true,
-                actions: const <AndroidNotificationAction>[
-                  AndroidNotificationAction(
-                    'stop_active',
-                    'STOP ALARM 🔇',
-                    showsUserInterface: true,
-                    cancelNotification: true,
-                  ),
-                ],
-              );
-
-              await _notificationsPlugin.zonedSchedule(
-                id: idCounter++,
-                title: '$prayerName Alarm Active! 🕌',
-                body: 'Tap below to silence the alert sound instantly.',
-                scheduledDate: adhanAlarmTime,
-                notificationDetails: NotificationDetails(android: androidDetails),
-                androidScheduleMode: scheduleMode,
-                payload: prayerName,
-              );
-            }
-          }
-
-          // ------------------ UPCOMING ALERT SCHEDULING ------------------
-          final upcomingTriggerTime = adhanAlarmTime.subtract(const Duration(minutes: 10));
-
-          if (upcomingTriggerTime.isAfter(tzNow) && adhanSound != 'Silent' && !isMuted) {
-            const AndroidNotificationDetails silentDetails = AndroidNotificationDetails(
-              'silent_upcoming_channel',
-              'Silent Upcoming Reminders',
-              channelDescription: 'Silent reminders shown 10 minutes before prayer alerts',
-              importance: Importance.low,
-              priority: Priority.low,
-              playSound: false,
-              silent: true,
-              actions: <AndroidNotificationAction>[
-                AndroidNotificationAction(
-                  'mute_upcoming',
-                  'Mute Upcoming Sound 🔇',
-                  showsUserInterface: true,
-                  cancelNotification: false,
-                ),
-              ],
-            );
-
-            await _notificationsPlugin.zonedSchedule(
-              id: idCounter++,
-              title: 'Upcoming $prayerName Alert',
-              body: 'Triggers in 10 minutes ($adhanSound)',
-              scheduledDate: upcomingTriggerTime,
-              notificationDetails: const NotificationDetails(android: silentDetails),
-              androidScheduleMode: scheduleMode,
-              payload: prayerName,
-            );
-          }
-
-          // ------------------ IQAMAH ALARM SCHEDULING ------------------
-          final iqamahOffset = iqamahOffsets[prayerName] ?? 20;
-          final iqamahNotificationOffset = iqamahNotificationOffsets[prayerName] ?? 3;
-          final iqamahSound = iqamahSounds[prayerName] ?? 'Chime';
-
-          final iqamahTime = prayerDateTime.add(Duration(minutes: iqamahOffset));
-          final iqamahAlarmTime = iqamahTime.subtract(Duration(minutes: iqamahNotificationOffset));
-
-          if (iqamahAlarmTime.isAfter(tzNow) && iqamahSound != 'Silent') {
-            String channelId = 'adhan_default_channel';
-            String soundResource = '';
-
-            if (iqamahSound == 'Default Alert' || iqamahSound == 'Chime') {
-              channelId = 'adhan_chime_channel';
-              soundResource = 'chime';
-            }
-
-            final AndroidNotificationDetails iqamahDetails = AndroidNotificationDetails(
-              channelId,
-              'Iqamah Alarms',
-              channelDescription: 'Alarms sounding for Iqamah times',
+            const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+              'adhan_full_channel',
+              'Adhan Alarms',
+              channelDescription: 'Alarms sounding for daily Azan prayer times',
               importance: Importance.max,
               priority: Priority.high,
-              sound: soundResource.isNotEmpty 
-                  ? RawResourceAndroidNotificationSound(soundResource)
-                  : null,
+              sound: RawResourceAndroidNotificationSound('adhan'),
               playSound: true,
+              ongoing: false,
             );
 
             await _notificationsPlugin.zonedSchedule(
               id: idCounter++,
-              title: iqamahNotificationOffset > 0 
-                  ? '$prayerName Iqamah in $iqamahNotificationOffset mins! 🕌' 
-                  : '$prayerName Iqamah Active! 🕌',
-              body: iqamahNotificationOffset > 0 
-                  ? 'Iqamah congregation will start in $iqamahNotificationOffset minutes.'
-                  : 'It is time for $prayerName Iqamah congregation.',
-              scheduledDate: iqamahAlarmTime,
-              notificationDetails: NotificationDetails(android: iqamahDetails),
+              title: title,
+              body: body,
+              scheduledDate: triggerTime,
+              notificationDetails: const NotificationDetails(android: androidDetails),
               androidScheduleMode: scheduleMode,
               payload: prayerName,
             );
           }
         } catch (e) {
-          debugPrint('Error scheduling alarms for $prayerName on $dateStr: $e');
+          debugPrint('Error scheduling Azan alarm for $prayerName on $dateStr: $e');
         }
       }
     }
-    debugPrint('NotificationService: Alarms scheduled successfully!');
+    debugPrint('NotificationService: Azan alarms scheduled successfully!');
   }
 
   static Future<void> showUpcomingNotification({

@@ -5,25 +5,38 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/juz_model.dart';
+import '../models/qari_model.dart';
+import '../models/quran_edition_model.dart';
 import '../models/quran_model.dart';
+import '../services/alquran_service.dart';
 import '../services/notification_service.dart';
+import '../services/quran_audio_cache_service.dart';
 
 class QuranProvider with ChangeNotifier {
   static AudioPlayer? activeQuranPlayer;
   List<Surah> _surahs = [];
   bool _isLoadingSurahs = false;
+  List<JuzModel> _juzs = [];
   final AudioPlayer _audioPlayer = AudioPlayer();
   
   List<Ayah> _ayahs = [];
   bool _isLoadingAyahs = false;
   List<dynamic>? _cachedFullQuran;
+  final Map<int, List<Ayah>> _cachedAyahs = {};
   
   int? _currentPlayingIndex;
   int? _highlightedAyahIndex;
   PlayerState? _playerState;
-  double _fontSize = 28.0;
+  double _fontSize = 30.0;
   double _autoScrollSpeed = 30.0;
+  
+  // Qari & QuranicAudio Integration
+  List<Qari> _qaris = [];
+  Qari? _selectedQariObj;
   String _selectedQari = 'Alafasy_128kbps';
+  bool _isLoadingQaris = false;
+
   int? _currentViewingSurahNumber;
   Set<int> _bookmarkedSurahNumbers = {};
 
@@ -33,15 +46,40 @@ class QuranProvider with ChangeNotifier {
   int _hifzDelaySeconds = 0;
   double _playbackSpeed = 1.0;
   bool _isDelayActive = false;
+  bool _isChangingTrack = false;
+  int? _lastHandledCompletionIndex;
+  int? _lastHandledCompletionSurah;
   Timer? _delayTimer;
 
-  static const Map<String, String> availableQaris = {
-    'Alafasy_128kbps': 'Mishary Rashid Alafasy',
-    'Abdul_Basit_Murattal_192kbps': 'Abdul Basit',
-    'Abdurrahmaan_As-Sudais_192kbps': 'Abdurrahmaan As-Sudais',
-    'Minshawy_Murattal_128kbps': 'Muhammad Siddiq al-Minshawi',
-    'Abu_Bakr_Ash-Shaatree_128kbps': 'Abu Bakr al-Shatri',
-  };
+  // Fallback Popular Qaris List (offline out-of-the-box ready)
+  static final List<Qari> defaultQaris = [
+    const Qari(id: 5, name: 'Mishari Rashid al-`Afasy', arabicName: 'مشاري راشد العفاسي', relativePath: 'mishaari_raashid_al_3afaasee/'),
+    const Qari(id: 7, name: 'Abdur-Rahman as-Sudais', arabicName: 'عبدالرحمن السديس', relativePath: 'abdurrahmaan_as-sudays/'),
+    const Qari(id: 6, name: 'Muhammad Siddiq al-Minshawi', arabicName: 'محمد صديق المنشاوي', relativePath: 'muhammad_siddeeq_al-minshaawee/'),
+    const Qari(id: 3, name: 'Abu Bakr al-Shatri', arabicName: 'أبو بكر الشاطرى', relativePath: 'abu_bakr_ash-shaatree/'),
+    const Qari(id: 4, name: 'Sa`ud ash-Shuraym', arabicName: 'سعود الشريم', relativePath: 'sa3ood_al-shuraym/'),
+    const Qari(id: 1, name: 'Abdullah Awad al-Juhani', arabicName: 'عبدالله عواد الجهني', relativePath: 'abdullaah_3awwaad_al-juhaynee/'),
+    const Qari(id: 2, name: 'Abdullah Basfar', arabicName: 'عبدالله بصفر', relativePath: 'abdullaah_basfar/'),
+    const Qari(id: 8, name: 'Saad al-Ghamdi', arabicName: 'سعد الغامدي', relativePath: 'sa3d_al-ghaamidee/'),
+    const Qari(id: 9, name: 'Maher al-Muaiqly', arabicName: 'ماهر المعيقلي', relativePath: 'maahir_al-mu3ayqlee/'),
+    const Qari(id: 10, name: 'Ali al-Hudhaifi', arabicName: 'علي بن عبدالرحمن الحذيفي', relativePath: '3alee_al_hudhayfee/'),
+    const Qari(id: 11, name: 'Yasser al-Dosari', arabicName: 'ياسر الدوسري', relativePath: 'yaasir_ad-dawsaree/'),
+    const Qari(id: 12, name: 'Mahmoud Khalil al-Husary', arabicName: 'محمود خليل الحصري', relativePath: 'mahmood_khaleel_al-husaree/'),
+    const Qari(id: 13, name: 'Abdul-Basit Abdus-Samad', arabicName: 'عبدالباسط عبدالصمد', relativePath: 'abdul_baasit_murattal/'),
+    const Qari(id: 14, name: 'Hani ar-Rifai', arabicName: 'هاني الرفاعي', relativePath: 'haanee_ar-rifaa3ee/'),
+    const Qari(id: 15, name: 'Khalid al-Qahtani', arabicName: 'خالد القحطاني', relativePath: 'khaalid_al-qahtaanee/'),
+    const Qari(id: 16, name: 'Nasser al-Qatami', arabicName: 'ناصر القطامي', relativePath: 'naasir_al-qatamee/'),
+    const Qari(id: 17, name: 'Salah Bukhatir', arabicName: 'صلاح بو خاطر', relativePath: 'salah_bukhatir/'),
+    const Qari(id: 18, name: 'Bandar Baleela', arabicName: 'بندر بليلة', relativePath: 'bandar_baleela/'),
+  ];
+
+  static Map<String, String> get availableQaris {
+    final map = <String, String>{};
+    for (final q in defaultQaris) {
+      map[q.relativePath] = q.name;
+    }
+    return map;
+  }
 
   // Last read tracking
   int? _lastReadSurahNumber;
@@ -50,6 +88,7 @@ class QuranProvider with ChangeNotifier {
 
   List<Surah> get surahs => _surahs;
   bool get isLoadingSurahs => _isLoadingSurahs;
+  List<JuzModel> get juzs => _juzs;
   List<Ayah> get ayahs => _ayahs;
   bool get isLoadingAyahs => _isLoadingAyahs;
   int? get currentPlayingIndex => _currentPlayingIndex;
@@ -59,6 +98,10 @@ class QuranProvider with ChangeNotifier {
   double get fontSize => _fontSize;
   double get autoScrollSpeed => _autoScrollSpeed;
   String get selectedQari => _selectedQari;
+  List<Qari> get qaris => _qaris.isNotEmpty ? _qaris : defaultQaris;
+  Qari get selectedQariObj => _selectedQariObj ?? defaultQaris.first;
+  bool get isLoadingQaris => _isLoadingQaris;
+
   Set<int> get bookmarkedSurahNumbers => _bookmarkedSurahNumbers;
   int? get currentViewingSurahNumber => _currentViewingSurahNumber;
   int? get lastReadSurahNumber => _lastReadSurahNumber;
@@ -71,13 +114,15 @@ class QuranProvider with ChangeNotifier {
   int get hifzDelaySeconds => _hifzDelaySeconds;
   double get playbackSpeed => _playbackSpeed;
   bool get isDelayActive => _isDelayActive;
+  AudioPlayer get audioPlayer => _audioPlayer;
 
   QuranProvider() {
     activeQuranPlayer = _audioPlayer;
     _loadSettings();
+    fetchQaris();
     _audioPlayer.playerStateStream.listen((state) {
       _playerState = state;
-      if (state.processingState == ProcessingState.completed) {
+      if (!_isChangingTrack && state.processingState == ProcessingState.completed) {
         _handleAyahCompletion();
       }
       _updateSystemNotification();
@@ -104,11 +149,37 @@ class QuranProvider with ChangeNotifier {
     }
   }
 
+  Future<void> fetchQaris() async {
+    try {
+      final String raw = await rootBundle.loadString('assets/quran/qaris.json');
+      final List<dynamic> list = json.decode(raw) as List<dynamic>;
+      _qaris = list.map((e) => Qari.fromJson(e as Map<String, dynamic>)).toList();
+    } catch (e) {
+      debugPrint('Error loading qaris from assets: $e');
+      _qaris = defaultQaris;
+    } finally {
+      _syncSelectedQariObject();
+      _isLoadingQaris = false;
+      notifyListeners();
+    }
+  }
+
+  void _syncSelectedQariObject() {
+    final list = _qaris.isNotEmpty ? _qaris : defaultQaris;
+    try {
+      _selectedQariObj = list.firstWhere(
+        (q) => q.relativePath == _selectedQari || q.name.toLowerCase().contains(_selectedQari.toLowerCase()),
+      );
+    } catch (_) {
+      _selectedQariObj = list.first;
+    }
+  }
+
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
-    _fontSize = prefs.getDouble('quran_font_size') ?? 28.0;
+    _fontSize = prefs.getDouble('quran_font_size') ?? 30.0;
     _autoScrollSpeed = prefs.getDouble('quran_auto_scroll_speed') ?? 30.0;
-    _selectedQari = prefs.getString('quran_selected_qari') ?? 'Alafasy_128kbps';
+    _selectedQari = prefs.getString('quran_selected_qari') ?? 'mishaari_raashid_al_3afaasee/';
     final saved = prefs.getStringList('bookmarked_surahs') ?? [];
     _bookmarkedSurahNumbers = saved.map((s) => int.parse(s)).toSet();
     _lastReadSurahNumber = prefs.getInt('last_read_surah');
@@ -121,7 +192,30 @@ class QuranProvider with ChangeNotifier {
     _playbackSpeed = prefs.getDouble('quran_playback_speed') ?? 1.0;
     await _audioPlayer.setSpeed(_playbackSpeed);
 
+    _syncSelectedQariObject();
     notifyListeners();
+  }
+
+  Future<void> updateQariObject(Qari qari) async {
+    final wasPlaying = _audioPlayer.playing;
+    final currentAyah = _currentPlayingIndex;
+
+    _selectedQariObj = qari;
+    _selectedQari = qari.relativePath;
+    _cachedAyahs.clear();
+    notifyListeners();
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('quran_selected_qari', qari.relativePath);
+
+    if (_currentViewingSurahNumber != null) {
+      await fetchSurahDetails(_currentViewingSurahNumber!);
+
+      // If audio was playing, instantly switch to and play the new Qari's stream!
+      if (wasPlaying && currentAyah != null && currentAyah < _ayahs.length) {
+        await togglePlayAyah(currentAyah);
+      }
+    }
   }
 
   Future<void> toggleBookmark(int surahNumber) async {
@@ -155,21 +249,24 @@ class QuranProvider with ChangeNotifier {
   }
 
   Future<void> updateQari(String newQariId) async {
-    if (_selectedQari == newQariId) return;
-    
-    // Stop audio if playing
-    if (_audioPlayer.playing) await _audioPlayer.pause();
-    
+    final wasPlaying = _audioPlayer.playing;
+    final currentAyah = _currentPlayingIndex;
+
     _selectedQari = newQariId;
-    _cachedAyahs.clear(); // Clear cache to force URL rebuild
+    _syncSelectedQariObject();
+    _cachedAyahs.clear();
     notifyListeners();
     
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('quran_selected_qari', newQariId);
     
-    // If we are currently viewing a surah, reload it with new audio URLs
     if (_currentViewingSurahNumber != null) {
       await fetchSurahDetails(_currentViewingSurahNumber!);
+
+      // If audio was playing, instantly switch to and play the new Qari's stream!
+      if (wasPlaying && currentAyah != null && currentAyah < _ayahs.length) {
+        await togglePlayAyah(currentAyah);
+      }
     }
   }
 
@@ -188,6 +285,15 @@ class QuranProvider with ChangeNotifier {
     await prefs.setInt('quran_hifz_delay_seconds', seconds);
   }
 
+  Future<void> updateHifzSettings(int loopCount, int delaySeconds) async {
+    _hifzLoopCount = loopCount;
+    _hifzDelaySeconds = delaySeconds;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('quran_hifz_loop_count', loopCount);
+    await prefs.setInt('quran_hifz_delay_seconds', delaySeconds);
+  }
+
   Future<void> updatePlaybackSpeed(double speed) async {
     _playbackSpeed = speed;
     await _audioPlayer.setSpeed(speed);
@@ -196,27 +302,29 @@ class QuranProvider with ChangeNotifier {
     await prefs.setDouble('quran_playback_speed', speed);
   }
 
-  final Map<int, List<Ayah>> _cachedAyahs = {};
-
   Future<void> fetchSurahs() async {
-    if (_surahs.isNotEmpty) return; // Don't reload if already loaded
+    if (_surahs.isNotEmpty) return;
     
     _isLoadingSurahs = true;
     notifyListeners();
 
     try {
-      final String response = await rootBundle.loadString('assets/quran/surahs.json');
-      // Use compute for parsing to keep UI responsive
-      final List<dynamic> chapters = await compute(_decodeJson, response);
+      if (_cachedFullQuran == null) {
+        final String response = await rootBundle.loadString('assets/quran/quran.json');
+        _cachedFullQuran = json.decode(response) as List<dynamic>;
+      }
       
-      _surahs = chapters.map((c) => Surah(
-        number: c['id'],
-        name: c['name'],
-        englishName: c['transliteration'],
-        englishNameTranslation: c['translation'],
-        numberOfAyahs: c['total_verses'],
-        revelationType: c['type'].toString().toUpperCase(),
-      )).toList();
+      _surahs = _cachedFullQuran!
+          .map((s) => Surah.fromJson(s as Map<dynamic, dynamic>))
+          .toList();
+
+      if (_juzs.isEmpty) {
+        try {
+          final String juzRaw = await rootBundle.loadString('assets/quran/juzs.json');
+          final List<dynamic> jList = json.decode(juzRaw) as List<dynamic>;
+          _juzs = jList.map((j) => JuzModel.fromJson(j as Map<dynamic, dynamic>)).toList();
+        } catch (_) {}
+      }
     } catch (e) {
       debugPrint('Error loading surahs from assets: $e');
     } finally {
@@ -235,11 +343,41 @@ class QuranProvider with ChangeNotifier {
     await prefs.setInt('last_read_ayah', ayahIndex);
   }
 
-  Future<void> fetchSurahDetails(int surahNumber) async {
+  String getSurahAudioUrl(int surahNumber) {
+    if (_selectedQariObj != null) {
+      return _selectedQariObj!.getSurahAudioUrl(surahNumber);
+    }
+    final sPad = surahNumber.toString().padLeft(3, '0');
+    return 'https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/$sPad.mp3';
+  }
+
+  static const List<int> _surahVerseCounts = [
+    7, 286, 200, 176, 120, 165, 206, 75, 129, 109, 123, 111, 43, 52, 99, 128, 111, 110, 98, 135,
+    112, 78, 118, 64, 77, 227, 93, 88, 69, 60, 34, 30, 73, 54, 45, 83, 182, 88, 75, 85,
+    54, 53, 89, 59, 37, 35, 38, 29, 18, 45, 60, 49, 62, 55, 78, 96, 29, 22, 24, 13,
+    14, 11, 11, 18, 12, 12, 30, 52, 52, 44, 28, 28, 20, 56, 40, 31, 50, 40, 46, 42,
+    29, 19, 36, 25, 22, 17, 19, 26, 30, 20, 15, 21, 11, 8, 8, 19, 5, 8, 8, 11,
+    11, 8, 3, 9, 5, 4, 7, 3, 6, 3, 5, 4, 5, 6
+  ];
+
+  static int getGlobalAyahNumber(int surahNumber, int verseInSurah) {
+    if (surahNumber < 1 || surahNumber > 114) return verseInSurah;
+    int offset = 0;
+    for (int i = 0; i < surahNumber - 1; i++) {
+      offset += _surahVerseCounts[i];
+    }
+    return offset + verseInSurah;
+  }
+
+  Future<void> fetchSurahDetails(int surahNumber, {int? initialIndex}) async {
     _currentViewingSurahNumber = surahNumber;
     
     if (_cachedAyahs.containsKey(surahNumber)) {
       _ayahs = _cachedAyahs[surahNumber]!;
+      if (initialIndex != null && initialIndex >= 0 && initialIndex < _ayahs.length) {
+        _currentPlayingIndex = initialIndex;
+        _highlightedAyahIndex = initialIndex;
+      }
       notifyListeners();
       return;
     }
@@ -257,49 +395,45 @@ class QuranProvider with ChangeNotifier {
       final surahData = _cachedFullQuran!.firstWhere((s) => s['id'] == surahNumber);
       final List<dynamic> verses = surahData['verses'];
       
+      final qari = selectedQariObj;
+
       final List<Ayah> allAyahs = verses.map((v) {
         int verseNum = v['id'];
-        String sPad = surahNumber.toString().padLeft(3, '0');
-        String vPad = verseNum.toString().padLeft(3, '0');
-        String audioUrl = 'https://www.everyayah.com/data/$_selectedQari/$sPad$vPad.mp3';
+        int globalNumber = getGlobalAyahNumber(surahNumber, verseNum);
+        String audioUrl = qari.getAyahAudioUrl(surahNumber, verseNum, globalNumber: globalNumber);
         
         return Ayah(
-          number: verseNum,
-          text: v['text'], 
+          number: globalNumber,
+          text: v['text'] ?? '', 
           numberInSurah: verseNum,
-          juz: 0,
+          juz: v['juz'] ?? 1,
           audio: audioUrl,
+          translationEn: v['translation'] ?? '',
+          translationMl: v['translation_ml'] ?? '',
         );
       }).toList();
 
-      // Chunked loading to UI (5 by 5) for "streaming" effect
-      for (int i = 0; i < allAyahs.length; i += 5) {
-        int end = (i + 5 < allAyahs.length) ? i + 5 : allAyahs.length;
-        _ayahs.addAll(allAyahs.sublist(i, end));
-        notifyListeners();
-        // Very small delay to allow UI to breathe and show the "stream"
-        await Future.delayed(const Duration(milliseconds: 10));
-      }
-
+      _ayahs = allAyahs;
       _cachedAyahs[surahNumber] = allAyahs;
 
-      // Auto initialize current playing index to last read verse index or verse 1
-      if (_currentPlayingIndex == null || _currentPlayingIndex! >= allAyahs.length) {
+      if (initialIndex != null && initialIndex >= 0 && initialIndex < allAyahs.length) {
+        _currentPlayingIndex = initialIndex;
+        _highlightedAyahIndex = initialIndex;
+      } else if (_currentPlayingIndex == null || _currentPlayingIndex! >= allAyahs.length) {
         _currentPlayingIndex = (_lastReadSurahNumber == surahNumber) ? _lastReadAyahIndex.clamp(0, allAyahs.length - 1) : 0;
         _highlightedAyahIndex = _currentPlayingIndex;
       }
 
-      // Preload current audio in player for zero buffering feel
+      notifyListeners();
+
       if (_currentPlayingIndex != null && _currentPlayingIndex! < allAyahs.length) {
-        final startUrl = allAyahs[_currentPlayingIndex!].audio;
-        await _audioPlayer.setSpeed(_playbackSpeed);
-        _audioPlayer.setUrl(startUrl, preload: true).catchError((e) {
-          debugPrint('Preload error: $e');
-          return null;
-        });
-        
-        // Background prefetch next 2-3 verses
-        _prefetchNextAyahs(_currentPlayingIndex!);
+        QuranAudioCacheService.preloadUpcomingAyahs(
+          qari: qari,
+          surahNumber: surahNumber,
+          currentAyahIndex: _currentPlayingIndex! - 1,
+          ayahs: allAyahs,
+          count: 4,
+        );
       }
     } catch (e) {
       debugPrint('Error loading ayah details from assets: $e');
@@ -310,7 +444,6 @@ class QuranProvider with ChangeNotifier {
   }
 
   Future<void> selectAyah(int index) async {
-    // Just highlight — no scroll, no audio
     _highlightedAyahIndex = index;
     if (_currentViewingSurahNumber != null && _surahs.isNotEmpty) {
       final surah = _surahs.firstWhere(
@@ -320,6 +453,7 @@ class QuranProvider with ChangeNotifier {
       saveLastRead(_currentViewingSurahNumber!, surah.englishName, index);
     }
     notifyListeners();
+    await togglePlayAyah(index);
   }
 
   Future<void> togglePlayAyah(int index) async {
@@ -331,15 +465,52 @@ class QuranProvider with ChangeNotifier {
     if (_currentPlayingIndex == index && _audioPlayer.playing) {
       await _audioPlayer.pause();
     } else {
+      _isChangingTrack = true;
       _currentPlayingIndex = index;
       notifyListeners();
       try {
+        if (_audioPlayer.playing) {
+          await _audioPlayer.stop();
+        }
         await _audioPlayer.setSpeed(_playbackSpeed);
-        await _audioPlayer.setUrl(_ayahs[index].audio);
+
+        final surahNum = _currentViewingSurahNumber ?? 1;
+        final verseNum = _ayahs[index].numberInSurah;
+        final cachedPath = QuranAudioCacheService.getCachedFilePath(
+          selectedQariObj.relativePath,
+          surahNum,
+          verseNum,
+        );
+
+        if (cachedPath != null) {
+          // Instant 0ms playback from local cache
+          await _audioPlayer.setFilePath(cachedPath);
+        } else {
+          final targetUrl = _ayahs[index].audio;
+          try {
+            await _audioPlayer.setUrl(targetUrl);
+          } catch (e) {
+            final errStr = e.toString().toLowerCase();
+            if (!errStr.contains('abort') && !errStr.contains('cancel')) {
+              debugPrint('Primary ayah audio failed, trying fallback: $e');
+              final sPad = surahNum.toString().padLeft(3, '0');
+              final vPad = verseNum.toString().padLeft(3, '0');
+              final dir = selectedQariObj.getAyahDirectory();
+              await _audioPlayer.setUrl('https://www.everyayah.com/data/$dir/$sPad$vPad.mp3');
+            }
+          }
+        }
+        _isChangingTrack = false;
         await _audioPlayer.play();
         
-        // Background prefetch next 2-3 verses
-        _prefetchNextAyahs(index);
+        // Fast non-blocking background pre-fetch for next 5 ayahs!
+        QuranAudioCacheService.preloadUpcomingAyahs(
+          qari: selectedQariObj,
+          surahNumber: surahNum,
+          currentAyahIndex: index,
+          ayahs: _ayahs,
+          count: 5,
+        );
 
         if (_currentViewingSurahNumber != null && _surahs.isNotEmpty) {
           final surah = _surahs.firstWhere(
@@ -349,8 +520,33 @@ class QuranProvider with ChangeNotifier {
           saveLastRead(_currentViewingSurahNumber!, surah.englishName, index);
         }
       } catch (e) {
-        debugPrint('Error playing audio: $e');
+        _isChangingTrack = false;
+        final errStr = e.toString().toLowerCase();
+        if (!errStr.contains('abort') && !errStr.contains('cancel')) {
+          debugPrint('Error playing audio: $e');
+        }
       }
+    }
+    notifyListeners();
+  }
+
+  Future<void> playSurahFullAudio(int surahNumber) async {
+    final primaryUrl = getSurahAudioUrl(surahNumber);
+    try {
+      _isChangingTrack = true;
+      await _audioPlayer.setSpeed(_playbackSpeed);
+      try {
+        await _audioPlayer.setUrl(primaryUrl);
+      } catch (err) {
+        debugPrint('QuranicAudio primary stream failed, trying fallback: $err');
+        final sPad = surahNumber.toString().padLeft(3, '0');
+        await _audioPlayer.setUrl('https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/$sPad.mp3');
+      }
+      _isChangingTrack = false;
+      await _audioPlayer.play();
+    } catch (e) {
+      _isChangingTrack = false;
+      debugPrint('Error playing full surah audio: $e');
     }
     notifyListeners();
   }
@@ -370,16 +566,18 @@ class QuranProvider with ChangeNotifier {
     
     int startIndex = _highlightedAyahIndex ?? _currentPlayingIndex ?? 0;
     if (startIndex >= _ayahs.length) startIndex = 0;
+    _isChangingTrack = true;
     _currentPlayingIndex = startIndex;
     _highlightedAyahIndex = startIndex;
     try {
       await _audioPlayer.setSpeed(_playbackSpeed);
       await _audioPlayer.setUrl(_ayahs[startIndex].audio);
+      _isChangingTrack = false;
       await _audioPlayer.play();
       
-      // Background prefetch next 2-3 verses
       _prefetchNextAyahs(startIndex);
     } catch (e) {
+      _isChangingTrack = false;
       debugPrint('Error playing audio: $e');
     }
     notifyListeners();
@@ -394,6 +592,47 @@ class QuranProvider with ChangeNotifier {
       _highlightedAyahIndex = _currentPlayingIndex! + 1;
       await togglePlayAyah(_currentPlayingIndex! + 1);
     } else {
+      await _playNextSurah();
+    }
+  }
+
+  Future<void> playPreviousAyah() async {
+    _delayTimer?.cancel();
+    _isDelayActive = false;
+    _currentHifzRepetition = 1;
+
+    if (_currentPlayingIndex != null && _currentPlayingIndex! > 0) {
+      _highlightedAyahIndex = _currentPlayingIndex! - 1;
+      await togglePlayAyah(_currentPlayingIndex! - 1);
+    } else if (_currentViewingSurahNumber != null && _currentViewingSurahNumber! > 1) {
+      _isChangingTrack = true;
+      _lastHandledCompletionIndex = null;
+      _lastHandledCompletionSurah = null;
+      final prevSurahNum = _currentViewingSurahNumber! - 1;
+      await fetchSurahDetails(prevSurahNum);
+      final lastIndex = _ayahs.isNotEmpty ? _ayahs.length - 1 : 0;
+      _currentPlayingIndex = lastIndex;
+      _highlightedAyahIndex = lastIndex;
+      notifyListeners();
+      await togglePlayAyah(lastIndex);
+    }
+  }
+
+  Future<void> _playNextSurah() async {
+    if (_currentViewingSurahNumber != null && _currentViewingSurahNumber! < 114) {
+      _isChangingTrack = true;
+      _lastHandledCompletionIndex = null;
+      _lastHandledCompletionSurah = null;
+      _currentPlayingIndex = 0;
+      _highlightedAyahIndex = 0;
+      
+      final nextSurahNum = _currentViewingSurahNumber! + 1;
+      await fetchSurahDetails(nextSurahNum);
+      _currentPlayingIndex = 0;
+      _highlightedAyahIndex = 0;
+      notifyListeners();
+      await togglePlayAyah(0);
+    } else {
       _currentPlayingIndex = null;
       notifyListeners();
     }
@@ -401,10 +640,16 @@ class QuranProvider with ChangeNotifier {
 
   // Hifz Completion Logic
   void _handleAyahCompletion() {
-    if (_currentPlayingIndex == null || _ayahs.isEmpty) return;
+    if (_isChangingTrack || _currentPlayingIndex == null || _ayahs.isEmpty) return;
+
+    final currentSurah = _currentViewingSurahNumber;
+    if (_lastHandledCompletionIndex == _currentPlayingIndex &&
+        _lastHandledCompletionSurah == currentSurah &&
+        _currentHifzRepetition >= _hifzLoopCount) {
+      return;
+    }
 
     if (_currentHifzRepetition < _hifzLoopCount) {
-      // Loop repetition active
       _currentHifzRepetition++;
       if (_hifzDelaySeconds > 0) {
         _startHifzDelay(true);
@@ -412,7 +657,8 @@ class QuranProvider with ChangeNotifier {
         _replayCurrentAyah();
       }
     } else {
-      // Repeat count reached. Move to next verse
+      _lastHandledCompletionIndex = _currentPlayingIndex;
+      _lastHandledCompletionSurah = currentSurah;
       _currentHifzRepetition = 1;
       if (_currentPlayingIndex! < _ayahs.length - 1) {
         if (_hifzDelaySeconds > 0) {
@@ -421,8 +667,8 @@ class QuranProvider with ChangeNotifier {
           playNextAyah();
         }
       } else {
-        _currentPlayingIndex = null;
-        notifyListeners();
+        // Current Surah completed -> automatically transition to next Surah starting at Ayah 0!
+        _playNextSurah();
       }
     }
   }
@@ -437,10 +683,11 @@ class QuranProvider with ChangeNotifier {
       if (repeatCurrent) {
         _replayCurrentAyah();
       } else {
-        // Move to next ayah
         if (_currentPlayingIndex != null && _currentPlayingIndex! < _ayahs.length - 1) {
           _highlightedAyahIndex = _currentPlayingIndex! + 1;
           togglePlayAyah(_currentPlayingIndex! + 1);
+        } else {
+          _playNextSurah();
         }
       }
     });
@@ -458,11 +705,8 @@ class QuranProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // Background Prefetcher for Gapless Playback feel
   void _prefetchNextAyahs(int currentIndex) {
     if (_ayahs.isEmpty) return;
-    
-    // Prefetch next 3 ayahs asynchronously
     for (int i = 1; i <= 3; i++) {
       int nextIndex = currentIndex + i;
       if (nextIndex < _ayahs.length) {
@@ -478,14 +722,48 @@ class QuranProvider with ChangeNotifier {
       final request = await HttpClient().getUrl(uri);
       final response = await request.close();
       if (response.statusCode == 200) {
-        // Read response body fully in the background to warm OS caching layer
         await response.drain();
-        debugPrint('Prefetched and cached: $url');
       }
     } catch (e) {
       debugPrint('Prefetch failed: $e');
     }
   }
+
+  Future<void> seekForward10() async {
+    final current = _audioPlayer.position;
+    final total = _audioPlayer.duration ?? const Duration(seconds: 30);
+    final target = current + const Duration(seconds: 10);
+    await _audioPlayer.seek(target < total ? target : total);
+    notifyListeners();
+  }
+
+  Future<void> seekBackward10() async {
+    final current = _audioPlayer.position;
+    final target = current - const Duration(seconds: 10);
+    await _audioPlayer.seek(target > Duration.zero ? target : Duration.zero);
+    notifyListeners();
+  }
+
+  /// Search Quran text across all Ayahs or within a specific Surah (AlQuran Cloud API)
+  Future<List<QuranSearchResult>> searchQuran(
+    String query, {
+    String edition = 'en.sahih',
+    int? surahNumber,
+  }) async {
+    return await AlQuranService.searchQuran(query, edition: edition, surahNumber: surahNumber);
+  }
+
+  /// Fetch all Sajda (prostration) Ayahs (AlQuran Cloud API)
+  Future<List<SajdaInfo>> fetchSajdas({String edition = 'quran-uthmani'}) async {
+    return await AlQuranService.fetchSajdas(edition: edition);
+  }
+
+  /// Fetch available editions / translations (AlQuran Cloud API)
+  Future<List<QuranEdition>> fetchAvailableEditions({String? language, String? format, String? type}) async {
+    return await AlQuranService.fetchEditions(language: language, format: format, type: type);
+  }
+
+
 
   @override
   void dispose() {
@@ -496,7 +774,6 @@ class QuranProvider with ChangeNotifier {
   }
 }
 
-// Top-level function for compute()
 List<dynamic> _decodeJson(String response) {
   return json.decode(response) as List<dynamic>;
 }

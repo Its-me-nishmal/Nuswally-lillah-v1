@@ -1,481 +1,359 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
-import '../../providers/prayer_provider.dart';
-import '../../providers/theme_provider.dart';
-
-// Sound option model
-class _SoundOption {
-  final String key;
-  final String label;
-  final String subtitle;
-  final IconData icon;
-  const _SoundOption(
-      {required this.key,
-      required this.label,
-      required this.subtitle,
-      required this.icon});
-}
-
-const _soundOptions = [
-  _SoundOption(
-    key: 'Full Adhan',
-    label: 'Full Adhan',
-    subtitle: 'Complete Muezzin call',
-    icon: Icons.volume_up_rounded,
-  ),
-  _SoundOption(
-    key: 'Chime',
-    label: 'Chime',
-    subtitle: 'Gentle bell reminder',
-    icon: Icons.notifications_active_rounded,
-  ),
-  _SoundOption(
-    key: 'Silent',
-    label: 'Silent',
-    subtitle: 'No sound — vibrate only',
-    icon: Icons.notifications_off_rounded,
-  ),
-];
-
-const _prayers = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
-const _prayerArabic = {
-  'Fajr': 'الفجر',
-  'Dhuhr': 'الظهر',
-  'Asr': 'العصر',
-  'Maghrib': 'المغرب',
-  'Isha': 'العشاء',
-};
-const _prayerEmoji = {
-  'Fajr': '🌄',
-  'Dhuhr': '☀️',
-  'Asr': '🌤️',
-  'Maghrib': '🌅',
-  'Isha': '🌙',
-};
+import '../../services/notification_service.dart';
+import '../../theme/jira_theme.dart';
+import '../../widgets/heartbeat_tap.dart';
 
 class ObPage5Notifications extends StatefulWidget {
   final VoidCallback onNext;
+
   const ObPage5Notifications({super.key, required this.onNext});
 
   @override
   State<ObPage5Notifications> createState() => _ObPage5NotificationsState();
 }
 
-class _ObPage5NotificationsState extends State<ObPage5Notifications>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _fadeCtrl;
-
-  // Local selection state — prayer name → sound key
-  final Map<String, String> _selections = {
-    'Fajr': 'Full Adhan',
-    'Dhuhr': 'Full Adhan',
-    'Asr': 'Full Adhan',
-    'Maghrib': 'Full Adhan',
-    'Isha': 'Full Adhan',
-  };
+class _ObPage5NotificationsState extends State<ObPage5Notifications> {
+  bool _notificationsEnabled = true;
+  bool _exactAlarmsGranted = false;
+  int _alertTiming = 0; // 0 = Exact Adhan, 1 = 10 Mins Before
 
   @override
   void initState() {
     super.initState();
-    _fadeCtrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 500));
-    Future.delayed(const Duration(milliseconds: 80), () {
-      if (mounted) _fadeCtrl.forward();
-    });
+    _checkPermissions();
   }
 
-  @override
-  void dispose() {
-    _fadeCtrl.dispose();
-    super.dispose();
+  Future<void> _checkPermissions() async {
+    // Check initial state
   }
 
-  // Apply all selections to PrayerProvider and proceed
-  Future<void> _applyAndContinue() async {
-    HapticFeedback.mediumImpact();
-    final provider = context.read<PrayerProvider>();
-    for (final prayer in _prayers) {
-      await provider.updateAdhanSound(prayer, _selections[prayer]!);
+  Future<void> _requestPermissions() async {
+    HapticFeedback.selectionClick();
+    await NotificationService.requestPermissions();
+    setState(() => _exactAlarmsGranted = true);
+  }
+
+  Future<void> _completeSetup() async {
+    HapticFeedback.selectionClick();
+    if (_notificationsEnabled) {
+      await NotificationService.requestPermissions();
     }
     widget.onNext();
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.watch<ThemeProvider>();
-    final accent = theme.primaryAccent;
-    final bgTop = theme.backgroundTop;
-    final bgBottom = theme.backgroundBottom;
-    final cardColor = theme.containerColor;
-    final isSmall = MediaQuery.of(context).size.height < 680;
-    final bottomPad = MediaQuery.of(context).padding.bottom;
-
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 500),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [bgTop, bgBottom],
-        ),
-      ),
-      child: SafeArea(
-        top: false,
-        child: FadeTransition(
-          opacity: CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut),
+    return Scaffold(
+      backgroundColor: const Color(0xFF0B0E14),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
-              Padding(
-                padding: EdgeInsets.fromLTRB(20, isSmall ? 16 : 24, 20, 0),
+              const SizedBox(height: 10),
+
+              // Title
+              Text(
+                'Prayer Notifications',
+                style: GoogleFonts.outfit(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFFF0F6FC),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Receive precise Adhan alerts so you never miss a prayer.',
+                style: GoogleFonts.inter(
+                  fontSize: 12.5,
+                  color: const Color(0xFF8B949E),
+                  height: 1.4,
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // 1. Master Toggle Card
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF161B22),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: _notificationsEnabled ? JiraTheme.primaryBlue.withValues(alpha: 0.6) : const Color(0xFF30363D),
+                  ),
+                ),
                 child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(9),
+                      width: 44,
+                      height: 44,
                       decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: accent.withValues(alpha: 0.1),
-                        border:
-                            Border.all(color: accent.withValues(alpha: 0.25)),
+                        color: const Color(0xFF1F242C),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(Icons.notifications_rounded,
-                          color: accent, size: 18),
+                      child: Icon(
+                        _notificationsEnabled ? Icons.notifications_active_rounded : Icons.notifications_off_outlined,
+                        color: _notificationsEnabled ? JiraTheme.primaryBlue : const Color(0xFF8B949E),
+                        size: 22,
+                      ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Prayer Alerts',
-                            style: GoogleFonts.hankenGrotesk(
-                              fontSize: isSmall ? 18 : 21,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
+                            'Enable Adhan Alerts',
+                            style: GoogleFonts.outfit(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFFF0F6FC),
                             ),
                           ),
+                          const SizedBox(height: 2),
                           Text(
-                            'Choose how each prayer notifies you.',
-                            style: GoogleFonts.hankenGrotesk(
-                              fontSize: 11,
-                              color: Colors.white.withValues(alpha: 0.4),
+                            'Automatic calls for all 5 daily prayers',
+                            style: GoogleFonts.inter(
+                              fontSize: 11.5,
+                              color: const Color(0xFF8B949E),
                             ),
                           ),
                         ],
+                      ),
+                    ),
+                    Switch.adaptive(
+                      value: _notificationsEnabled,
+                      activeTrackColor: JiraTheme.primaryBlue,
+                      onChanged: (val) {
+                        HapticFeedback.selectionClick();
+                        setState(() => _notificationsEnabled = val);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 14),
+
+              // 2. Exact Alarms & Background Permission Card
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF161B22),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFF30363D)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1F242C),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(
+                            Icons.alarm_on_rounded,
+                            color: JiraTheme.secondaryGreen,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Exact Alarms & Battery Exemption',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: const Color(0xFFF0F6FC),
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Prevents Android from delaying Adhan alerts',
+                                style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  color: const Color(0xFF8B949E),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    HeartbeatTap(
+                      onTap: _requestPermissions,
+                      child: Container(
+                        width: double.infinity,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: _exactAlarmsGranted
+                              ? JiraTheme.secondaryGreen.withValues(alpha: 0.15)
+                              : const Color(0xFF1F242C),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: _exactAlarmsGranted ? JiraTheme.secondaryGreen : const Color(0xFF30363D),
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(
+                            _exactAlarmsGranted ? 'PERMISSIONS GRANTED ✓' : 'ALLOW EXACT ALARMS',
+                            style: GoogleFonts.outfit(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w800,
+                              color: _exactAlarmsGranted ? JiraTheme.secondaryGreen : const Color(0xFF93C5FD),
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
 
-              // Sound legend
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: _SoundLegend(accent: accent, cardColor: cardColor),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Prayer rows
-              Expanded(
-                child: ListView.separated(
-                  physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  itemCount: _prayers.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 10),
-                  itemBuilder: (ctx, i) {
-                    final prayer = _prayers[i];
-                    return _PrayerNotifRow(
-                      prayer: prayer,
-                      arabicName: _prayerArabic[prayer]!,
-                      emoji: _prayerEmoji[prayer]!,
-                      selectedSound: _selections[prayer]!,
-                      accent: accent,
-                      cardColor: cardColor,
-                      onChanged: (sound) {
-                        HapticFeedback.lightImpact();
-                        setState(() => _selections[prayer] = sound);
-                      },
-                    );
-                  },
+              // 3. Alert Mode
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF161B22),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFF30363D)),
                 ),
-              ),
-
-              Padding(
-                padding: EdgeInsets.fromLTRB(
-                    20, 10, 20, bottomPad + 16),
-                child: _ObNotifGlowButton(
-                  accent: accent,
-                  onTap: _applyAndContinue,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ─── Sound Legend ───
-class _SoundLegend extends StatelessWidget {
-  final Color accent;
-  final Color cardColor;
-  const _SoundLegend({required this.accent, required this.cardColor});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: accent.withValues(alpha: 0.07)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: _soundOptions.map((opt) {
-          return Row(
-            children: [
-              Icon(opt.icon, size: 13, color: accent.withValues(alpha: 0.7)),
-              const SizedBox(width: 5),
-              Text(
-                opt.label,
-                style: GoogleFonts.hankenGrotesk(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white.withValues(alpha: 0.5),
-                ),
-              ),
-            ],
-          );
-        }).toList(),
-      ),
-    );
-  }
-}
-
-// ─── Per-Prayer Notification Row ───
-class _PrayerNotifRow extends StatelessWidget {
-  final String prayer;
-  final String arabicName;
-  final String emoji;
-  final String selectedSound;
-  final Color accent;
-  final Color cardColor;
-  final ValueChanged<String> onChanged;
-
-  const _PrayerNotifRow({
-    required this.prayer,
-    required this.arabicName,
-    required this.emoji,
-    required this.selectedSound,
-    required this.accent,
-    required this.cardColor,
-    required this.onChanged,
-  });
-
-  Color _soundColor(String key, Color accent) {
-    switch (key) {
-      case 'Full Adhan':
-        return accent;
-      case 'Chime':
-        return const Color(0xFFFBBF24);
-      case 'Silent':
-        return const Color(0xFF64748B);
-      default:
-        return accent;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final sColor = _soundColor(selectedSound, accent);
-
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: sColor.withValues(alpha: 0.12)),
-      ),
-      child: Column(
-        children: [
-          // Prayer name row
-          Row(
-            children: [
-              Text(emoji, style: const TextStyle(fontSize: 18)),
-              const SizedBox(width: 10),
-              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      prayer,
-                      style: GoogleFonts.hankenGrotesk(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white.withValues(alpha: 0.9),
+                      'ALERT TIMING',
+                      style: GoogleFonts.outfit(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.8,
+                        color: const Color(0xFF8B949E),
                       ),
                     ),
-                    Text(
-                      arabicName,
-                      style: TextStyle(
-                        fontFamily: 'HafsFont',
-                        fontSize: 11,
-                        color: sColor.withValues(alpha: 0.7),
-                      ),
-                      textDirection: TextDirection.rtl,
-                    ),
+                    const SizedBox(height: 10),
+                    _buildTimingOption(0, 'Exact Adhan on Prayer Time', 'Play full call to prayer at the solar moment'),
+                    const SizedBox(height: 8),
+                    _buildTimingOption(1, 'Gentle 10-Minute Reminder', 'Soft chime notification before prayer time'),
                   ],
                 ),
               ),
-              // Current selection badge
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                decoration: BoxDecoration(
-                  color: sColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: sColor.withValues(alpha: 0.2)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(_iconForSound(selectedSound), size: 11, color: sColor),
-                    const SizedBox(width: 4),
-                    Text(
-                      selectedSound,
-                      style: GoogleFonts.hankenGrotesk(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: sColor,
+
+              const Spacer(),
+
+              // Bottom Action Button
+              HeartbeatTap(
+                onTap: _completeSetup,
+                child: Container(
+                  width: double.infinity,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: JiraTheme.primaryBlue,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: JiraTheme.primaryBlue.withValues(alpha: 0.35),
+                        blurRadius: 12,
+                        offset: const Offset(0, 3),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 10),
-
-          // Sound selector chips
-          Row(
-            children: _soundOptions.map((opt) {
-              final isActive = selectedSound == opt.key;
-              final c = _soundColor(opt.key, accent);
-              return Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 3),
-                  child: GestureDetector(
-                    onTap: () => onChanged(opt.key),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: isActive
-                            ? c.withValues(alpha: 0.15)
-                            : Colors.white.withValues(alpha: 0.03),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: isActive
-                              ? c.withValues(alpha: 0.5)
-                              : Colors.white.withValues(alpha: 0.06),
-                          width: isActive ? 1.2 : 0.8,
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'CONTINUE TO FINISH',
+                        style: GoogleFonts.outfit(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                          letterSpacing: 0.5,
                         ),
                       ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(opt.icon,
-                              size: 13,
-                              color: isActive
-                                  ? c
-                                  : Colors.white.withValues(alpha: 0.2)),
-                          const SizedBox(height: 1),
-                          Text(
-                            opt.label == 'Full Adhan' ? 'Adhan' : opt.label,
-                            style: GoogleFonts.hankenGrotesk(
-                              fontSize: 9,
-                              fontWeight:
-                                  isActive ? FontWeight.w700 : FontWeight.w400,
-                              color: isActive
-                                  ? c
-                                  : Colors.white.withValues(alpha: 0.2),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                      const SizedBox(width: 8),
+                      const Icon(Icons.check_circle_outline_rounded, color: Colors.white, size: 18),
+                    ],
                   ),
                 ),
-              );
-            }).toList(),
+              ),
+              const SizedBox(height: 16),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
-  IconData _iconForSound(String key) {
-    switch (key) {
-      case 'Full Adhan':
-        return Icons.volume_up_rounded;
-      case 'Chime':
-        return Icons.notifications_active_rounded;
-      default:
-        return Icons.notifications_off_rounded;
-    }
-  }
-}
+  Widget _buildTimingOption(int index, String title, String subtitle) {
+    final isSelected = _alertTiming == index;
 
-// ─── CTA Button ───
-class _ObNotifGlowButton extends StatelessWidget {
-  final Color accent;
-  final VoidCallback onTap;
-  const _ObNotifGlowButton({required this.accent, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
+    return HeartbeatTap(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        setState(() => _alertTiming = index);
+      },
       child: Container(
-        height: 58,
-        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [accent, accent.withValues(alpha: 0.75)],
+          color: const Color(0xFF1F242C),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isSelected ? JiraTheme.primaryBlue : Colors.transparent,
           ),
-          borderRadius: BorderRadius.circular(30),
-          boxShadow: [
-            BoxShadow(
-              color: accent.withValues(alpha: 0.38),
-              blurRadius: 20,
-              offset: const Offset(0, 6),
-            ),
-          ],
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              'Save & Continue',
-              style: GoogleFonts.hankenGrotesk(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: Colors.black,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.outfit(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFFF0F6FC),
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      color: const Color(0xFF8B949E),
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(width: 10),
-            const Icon(Icons.arrow_forward_rounded,
-                size: 18, color: Colors.black),
+            Container(
+              width: 18,
+              height: 18,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isSelected ? JiraTheme.primaryBlue : Colors.transparent,
+                border: Border.all(
+                  color: isSelected ? JiraTheme.primaryBlue : const Color(0xFF64748B),
+                  width: 1.5,
+                ),
+              ),
+              child: isSelected
+                  ? const Center(child: Icon(Icons.check, size: 11, color: Colors.white))
+                  : null,
+            ),
           ],
         ),
       ),

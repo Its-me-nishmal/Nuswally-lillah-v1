@@ -4,6 +4,10 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/prayer_provider.dart';
+import '../providers/theme_provider.dart';
+import '../widgets/heartbeat_tap.dart';
+import '../widgets/jira_header.dart';
+import '../widgets/jira_screen.dart';
 
 class QiblaScreen extends StatefulWidget {
   const QiblaScreen({super.key});
@@ -67,324 +71,262 @@ class _QiblaScreenState extends State<QiblaScreen> with SingleTickerProviderStat
   @override
   Widget build(BuildContext context) {
     final prayerProvider = Provider.of<PrayerProvider>(context);
+    final tp = context.watch<ThemeProvider>();
     final locationName = prayerProvider.selectedLocation?.name ?? 'Kozhikode';
     final districtName = prayerProvider.selectedLocation?.district ?? 'Kerala';
-    
-    final colorScheme = Theme.of(context).colorScheme;
     final isAligned = _isAligned;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF051424),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: RadialGradient(
-            colors: [
-              Color(0xFF09253d),
-              Color(0xFF051424),
-            ],
-            radius: 1.2,
-            center: Alignment.center,
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              _buildAppBar(context),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Location indicator card
-                      _buildLocationCard(locationName, districtName),
-                      const SizedBox(height: 30),
-                      
-                      // Alignment Badge
-                      AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 300),
-                        child: isAligned
-                            ? Container(
-                                key: const ValueKey('aligned'),
-                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: colorScheme.primary.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(30),
-                                  border: Border.all(color: colorScheme.primary, width: 1.5),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: colorScheme.primary.withValues(alpha: 0.3),
-                                      blurRadius: 12,
-                                      spreadRadius: 2,
-                                    ),
-                                  ],
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.gps_fixed_rounded, color: colorScheme.primary, size: 16),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'PERFECTLY ALIGNED',
-                                      style: GoogleFonts.jetBrainsMono(
-                                        color: colorScheme.primary,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                        letterSpacing: 1.5,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              )
-                            : Container(
-                                key: const ValueKey('aligning'),
-                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.03),
-                                  borderRadius: BorderRadius.circular(30),
-                                  border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.explore_outlined, color: Colors.white.withValues(alpha: 0.4), size: 16),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'ROTATE DEVICE TO ALIGN',
-                                      style: GoogleFonts.jetBrainsMono(
-                                        color: Colors.white.withValues(alpha: 0.4),
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                        letterSpacing: 1.5,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                      ),
-                      
-                      const Spacer(),
-
-                      // Immersive compass rose
-                      GestureDetector(
-                        onPanUpdate: _onPanUpdate,
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            // Outer ambient aura
-                            AnimatedBuilder(
-                              animation: _pulseController,
-                              builder: (context, child) {
-                                final scale = 1.0 + (_pulseController.value * 0.05);
-                                return Container(
-                                  width: 290,
-                                  height: 290,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: isAligned
-                                            ? colorScheme.primary.withValues(alpha: 0.12 * scale)
-                                            : colorScheme.primary.withValues(alpha: 0.01),
-                                        blurRadius: 40,
-                                        spreadRadius: 10,
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
-                            
-                            // Compass background ring
-                            Container(
-                              width: 280,
-                              height: 280,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: const Color(0xFF0C1D2F).withValues(alpha: 0.6),
-                                border: Border.all(
-                                  color: isAligned 
-                                      ? colorScheme.primary.withValues(alpha: 0.4) 
-                                      : Colors.white.withValues(alpha: 0.05),
-                                  width: 2,
-                                ),
-                              ),
-                            ),
-
-                            // The Rotating Compass Dial
-                            Transform.rotate(
-                              angle: -_heading * math.pi / 180,
-                              child: SizedBox(
-                                width: 280,
-                                height: 280,
-                                child: CustomPaint(
-                                  painter: CompassPainter(
-                                    qiblaAngle: _qiblaBearing,
-                                    accentColor: colorScheme.primary,
-                                  ),
-                                ),
-                              ),
-                            ),
-
-                            // Fixed Kaaba pointer needle (pointing up)
-                            Transform.rotate(
-                              angle: _relativeAngle * math.pi / 180,
-                              child: SizedBox(
-                                width: 280,
-                                height: 280,
-                                child: CustomPaint(
-                                  painter: NeedlePainter(accentColor: colorScheme.primary),
-                                ),
-                              ),
-                            ),
-
-                            // Center Kaaba silhouette indicator
-                            Container(
-                                width: 54,
-                                height: 54,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: isAligned ? colorScheme.primary : const Color(0xFF051424),
-                                  border: Border.all(
-                                    color: isAligned ? Colors.transparent : colorScheme.primary.withValues(alpha: 0.3),
-                                    width: 2,
-                                  ),
-                                  boxShadow: [
-                                    if (isAligned)
-                                      BoxShadow(
-                                        color: colorScheme.primary.withValues(alpha: 0.4),
-                                        blurRadius: 15,
-                                        spreadRadius: 3,
-                                      ),
-                                  ],
-                                ),
-                              child: Icon(
-                                Icons.mosque,
-                                color: isAligned ? const Color(0xFF051424) : colorScheme.primary,
-                                size: 24,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      
-                      const Spacer(),
-
-                      // Bearing and distance metrics
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          _buildMetricCard(
-                            title: 'BEARING',
-                            value: '${_heading.toInt()}° NW',
-                            subValue: 'Qibla: ${_qiblaBearing.toInt()}°',
-                            colorScheme: colorScheme,
-                          ),
-                          _buildMetricCard(
-                            title: 'DISTANCE',
-                            value: '3,950 km',
-                            subValue: 'To Makkah',
-                            colorScheme: colorScheme,
-                          ),
-                        ],
-                      ),
-                      
-                      const SizedBox(height: 20),
-
-                      // Tips card
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.02),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(Icons.info_outline_rounded, color: colorScheme.primary.withValues(alpha: 0.6), size: 20),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                'Hold your device flat and keep away from metal objects or magnetic fields for maximum accuracy.',
-                                style: GoogleFonts.hankenGrotesk(
-                                  color: Colors.white.withValues(alpha: 0.5),
-                                  fontSize: 12,
-                                  height: 1.4,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                    ],
-                  ),
-                ),
+    return JiraScreen(
+      child: Column(
+        children: [
+          JiraHeader(
+            title: 'Qibla Finder',
+            actions: [
+              _buildHeaderActionButton(
+                icon: Icons.autorenew_rounded,
+                tooltip: 'Simulate perfect alignment',
+                themeProvider: tp,
+                onTap: () {
+                  setState(() {
+                    // Instantly align compass to let user see perfect state
+                    _heading = _qiblaBearing;
+                    HapticFeedback.heavyImpact();
+                  });
+                },
               ),
             ],
           ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Location indicator card
+                  _buildLocationCard(locationName, districtName, tp),
+                  const SizedBox(height: 30),
+
+                  // Alignment Badge
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    child: isAligned
+                        ? Container(
+                            key: const ValueKey('aligned'),
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: tp.primaryAccent.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: tp.primaryAccent, width: 1.0),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.gps_fixed_rounded, color: tp.primaryAccent, size: 16),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'PERFECTLY ALIGNED',
+                                  style: GoogleFonts.jetBrainsMono(
+                                    color: tp.primaryAccent,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 1.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : Container(
+                            key: const ValueKey('aligning'),
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: tp.containerColor,
+                              borderRadius: BorderRadius.circular(30),
+                              border: Border.all(color: tp.borderColor, width: 1),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.explore_outlined, color: tp.textMuted, size: 16),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'ROTATE DEVICE TO ALIGN',
+                                  style: GoogleFonts.jetBrainsMono(
+                                    color: tp.textMuted,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 1.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                  ),
+
+                  const Spacer(),
+
+                  // Immersive compass rose
+                  GestureDetector(
+                    onPanUpdate: _onPanUpdate,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        // Outer ambient aura
+                        const SizedBox(
+                          width: 290,
+                          height: 290,
+                        ),
+
+                        // Compass background ring
+                        Container(
+                          width: 280,
+                          height: 280,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: tp.surfaceColor,
+                            border: Border.all(
+                              color: isAligned
+                                  ? tp.primaryAccent.withValues(alpha: 0.4)
+                                  : tp.borderColor,
+                              width: 2,
+                            ),
+                          ),
+                        ),
+
+                        // The Rotating Compass Dial
+                        Transform.rotate(
+                          angle: -_heading * math.pi / 180,
+                          child: SizedBox(
+                            width: 280,
+                            height: 280,
+                            child: CustomPaint(
+                              painter: CompassPainter(
+                                qiblaAngle: _qiblaBearing,
+                                accentColor: tp.primaryAccent,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        // Fixed Kaaba pointer needle (pointing up)
+                        Transform.rotate(
+                          angle: _relativeAngle * math.pi / 180,
+                          child: SizedBox(
+                            width: 280,
+                            height: 280,
+                            child: CustomPaint(
+                              painter: NeedlePainter(accentColor: tp.primaryAccent),
+                            ),
+                          ),
+                        ),
+
+                        // Center Kaaba silhouette indicator
+                        Container(
+                            width: 54,
+                            height: 54,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: isAligned ? tp.primaryAccent : tp.containerColor,
+                              border: Border.all(
+                                color: isAligned ? Colors.transparent : tp.primaryAccent.withValues(alpha: 0.3),
+                                width: 1.5,
+                              ),
+                            ),
+                          child: Icon(
+                            Icons.mosque,
+                            color: isAligned ? tp.backgroundBottom : tp.primaryAccent,
+                            size: 24,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const Spacer(),
+
+                  // Bearing and distance metrics
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildMetricCard(
+                        title: 'BEARING',
+                        value: '${_heading.toInt()}° NW',
+                        subValue: 'Qibla: ${_qiblaBearing.toInt()}°',
+                        themeProvider: tp,
+                      ),
+                      _buildMetricCard(
+                        title: 'DISTANCE',
+                        value: '3,950 km',
+                        subValue: 'To Makkah',
+                        themeProvider: tp,
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Tips card
+                  _buildTipsCard(tp),
+                  const SizedBox(height: 20),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeaderActionButton({
+    required IconData icon,
+    required VoidCallback onTap,
+    required ThemeProvider themeProvider,
+    String? tooltip,
+  }) {
+    return Tooltip(
+      message: tooltip ?? '',
+      child: HeartbeatTap(
+        onTap: onTap,
+        child: Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: themeProvider.surfaceColor,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: themeProvider.borderColor, width: 1.0),
+          ),
+          child: Center(
+            child: Icon(icon, size: 18, color: themeProvider.textPrimary),
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildAppBar(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          IconButton(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
-          ),
-          Text(
-            'QIBLA FINDER',
-            style: GoogleFonts.hankenGrotesk(
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 2.0,
-              color: Colors.white,
+  Widget _buildLocationCard(String location, String district, ThemeProvider themeProvider) {
+    return HeartbeatTap(
+      onTap: () {},
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: themeProvider.surfaceColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: themeProvider.borderColor, width: 1.0),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.location_on_rounded, color: themeProvider.primaryAccent, size: 18),
+            const SizedBox(width: 8),
+            Text(
+              '$location, $district',
+              style: GoogleFonts.outfit(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: themeProvider.textPrimary,
+              ),
             ),
-          ),
-          IconButton(
-            onPressed: () {
-              setState(() {
-                // Instantly align compass to let user see perfect state
-                _heading = _qiblaBearing;
-                HapticFeedback.heavyImpact();
-              });
-            },
-            icon: const Icon(Icons.autorenew_rounded, color: Colors.white),
-            tooltip: 'Simulate perfect alignment',
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLocationCard(String location, String district) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: const Color(0xFF122131),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF5EEAD4).withValues(alpha: 0.1)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.location_on_rounded, color: Color(0xFF5EEAD4), size: 18),
-          const SizedBox(width: 8),
-          Text(
-            '$location, $district',
-            style: GoogleFonts.hankenGrotesk(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFFD4E4FA),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -393,42 +335,73 @@ class _QiblaScreenState extends State<QiblaScreen> with SingleTickerProviderStat
     required String title,
     required String value,
     required String subValue,
-    required ColorScheme colorScheme,
+    required ThemeProvider themeProvider,
   }) {
+    return HeartbeatTap(
+      onTap: () {},
+      child: Container(
+        width: 145,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: themeProvider.surfaceColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: themeProvider.borderColor, width: 1.0),
+        ),
+        child: Column(
+          children: [
+            Text(
+              title,
+              style: GoogleFonts.jetBrainsMono(
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                color: themeProvider.textSecondary,
+                letterSpacing: 1.5,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              value,
+              style: GoogleFonts.jetBrainsMono(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: themeProvider.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subValue,
+              style: GoogleFonts.outfit(
+                fontSize: 11,
+                color: themeProvider.primaryAccent.withValues(alpha: 0.7),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTipsCard(ThemeProvider themeProvider) {
     return Container(
-      width: 145,
+      width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF122131),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.04)),
+        color: themeProvider.surfaceColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: themeProvider.borderColor, width: 1.0),
       ),
-      child: Column(
+      child: Row(
         children: [
-          Text(
-            title,
-            style: GoogleFonts.jetBrainsMono(
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-              color: Colors.white.withValues(alpha: 0.3),
-              letterSpacing: 1.5,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            value,
-            style: GoogleFonts.jetBrainsMono(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subValue,
-            style: GoogleFonts.hankenGrotesk(
-              fontSize: 11,
-              color: colorScheme.primary.withValues(alpha: 0.5),
+          Icon(Icons.info_outline_rounded, color: themeProvider.primaryAccent.withValues(alpha: 0.7), size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'Hold your device flat and keep away from metal objects or magnetic fields for maximum accuracy.',
+              style: GoogleFonts.outfit(
+                color: themeProvider.textSecondary,
+                fontSize: 12,
+                height: 1.4,
+              ),
             ),
           ),
         ],

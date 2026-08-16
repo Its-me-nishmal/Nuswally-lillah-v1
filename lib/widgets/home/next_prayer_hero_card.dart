@@ -1,0 +1,313 @@
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../../providers/prayer_provider.dart';
+import '../../providers/theme_provider.dart';
+import '../../theme/jira_theme.dart';
+
+class NextPrayerHeroCard extends StatefulWidget {
+  const NextPrayerHeroCard({super.key});
+
+  @override
+  State<NextPrayerHeroCard> createState() => _NextPrayerHeroCardState();
+}
+
+class _NextPrayerHeroCardState extends State<NextPrayerHeroCard> {
+  Timer? _countdownTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _countdownTimer?.cancel();
+    super.dispose();
+  }
+
+  String _formatPrayerTime(String prayerName, String timeStr) {
+    try {
+      final clean = timeStr.trim().toUpperCase();
+      if (clean.contains('AM') || clean.contains('PM')) {
+        return clean;
+      }
+      final parts = clean.split(':');
+      var hour = int.parse(parts[0]);
+      final minute = int.parse(parts[1]);
+      final displayMin = minute.toString().padLeft(2, '0');
+
+      bool isPM = false;
+      if (hour >= 12) {
+        isPM = true;
+      } else {
+        if (prayerName == 'Fajr' || prayerName == 'Sunrise') {
+          isPM = false;
+        } else if (prayerName == 'Dhuhr') {
+          isPM = true;
+        } else if (prayerName == 'Asr' || prayerName == 'Maghrib' || prayerName == 'Isha') {
+          isPM = true;
+        }
+      }
+
+      var displayHour = hour;
+      if (hour > 12) {
+        displayHour = hour - 12;
+      } else if (hour == 0) {
+        displayHour = 12;
+      }
+
+      final period = isPM ? 'PM' : 'AM';
+      return '$displayHour:$displayMin $period';
+    } catch (_) {
+      return timeStr;
+    }
+  }
+
+  String _getPrayerTime(PrayerProvider provider, String prayerName) {
+    if (provider.todayPrayerTimes == null) return '04:32 PM';
+    switch (prayerName) {
+      case 'Fajr':
+        return _formatPrayerTime('Fajr', provider.todayPrayerTimes!.fajr);
+      case 'Sunrise':
+        return _formatPrayerTime('Sunrise', provider.todayPrayerTimes!.sunrise);
+      case 'Dhuhr':
+        return _formatPrayerTime('Dhuhr', provider.todayPrayerTimes!.dhuhr);
+      case 'Asr':
+        return _formatPrayerTime('Asr', provider.todayPrayerTimes!.asr);
+      case 'Maghrib':
+        return _formatPrayerTime('Maghrib', provider.todayPrayerTimes!.maghrib);
+      case 'Isha':
+        return _formatPrayerTime('Isha', provider.todayPrayerTimes!.isha);
+      default:
+        return '04:32 PM';
+    }
+  }
+
+  String _getFormattedCountdown(Duration duration) {
+    final hours = duration.inHours.toString().padLeft(2, '0');
+    final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return 'in ${hours}h ${minutes}m ${seconds}s';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final themeProvider = context.watch<ThemeProvider>();
+    final isDark = themeProvider.isDarkMode;
+    final surfaceColor = isDark ? JiraTheme.darkSurface : JiraTheme.lightSurface;
+    final containerColor = isDark ? JiraTheme.darkContainer : JiraTheme.lightContainer;
+    final borderColor = isDark ? JiraTheme.darkBorder : JiraTheme.lightBorder;
+
+    return Consumer<PrayerProvider>(
+      builder: (context, provider, child) {
+        final nextPrayer = provider.nextPrayerName.isNotEmpty ? provider.nextPrayerName : 'Asr';
+        final nextTimeStr = _getPrayerTime(provider, nextPrayer);
+        final duration = provider.timeToNextPrayer;
+        final countdownStr = _getFormattedCountdown(duration);
+
+        return Container(
+          width: double.infinity,
+          height: 180,
+          decoration: BoxDecoration(
+            color: surfaceColor,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: borderColor.withValues(alpha: isDark ? 0.6 : 0.9),
+              width: 1.0,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.05),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+              if (isDark)
+                BoxShadow(
+                  color: JiraTheme.primaryBlue.withValues(alpha: 0.04),
+                  blurRadius: 30,
+                  spreadRadius: 2,
+                ),
+            ],
+          ),
+          child: Stack(
+            children: [
+              // Celestial Orbital Rings Graphic
+              Positioned(
+                right: -10,
+                top: -10,
+                bottom: -10,
+                width: 190,
+                child: CustomPaint(
+                  painter: _CelestialOrbitsPainter(
+                    isDark: isDark,
+                    orbitColor: isDark
+                        ? const Color(0xFF30363D).withValues(alpha: 0.45)
+                        : const Color(0xFFD0D7DE).withValues(alpha: 0.7),
+                    glowColor: JiraTheme.primaryBlue,
+                  ),
+                ),
+              ),
+
+              // Content Layout
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Top Row: Caption + Countdown Badge Pill
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'NEXT PRAYER',
+                          style: GoogleFonts.outfit(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.2,
+                            color: themeProvider.textSecondary.withValues(alpha: 0.9),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: containerColor,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: borderColor.withValues(alpha: 0.8),
+                              width: 1.0,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 6,
+                                height: 6,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF60A5FA),
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Color(0xFF60A5FA),
+                                      blurRadius: 6,
+                                      spreadRadius: 1,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                countdownStr,
+                                style: GoogleFonts.inter(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: themeProvider.textPrimary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    // Main Prayer Details (Name + Time)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          nextPrayer.toUpperCase(),
+                          style: GoogleFonts.outfit(
+                            fontSize: 38,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.5,
+                            height: 1.05,
+                            color: themeProvider.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          nextTimeStr,
+                          style: GoogleFonts.outfit(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: themeProvider.textSecondary.withValues(alpha: 0.9),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _CelestialOrbitsPainter extends CustomPainter {
+  final bool isDark;
+  final Color orbitColor;
+  final Color glowColor;
+
+  _CelestialOrbitsPainter({
+    required this.isDark,
+    required this.orbitColor,
+    required this.glowColor,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width * 0.58, size.height * 0.52);
+
+    final linePaint = Paint()
+      ..color = orbitColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+
+    // Outer Orbit 1
+    canvas.drawCircle(center, 78, linePaint);
+
+    // Inner Orbit 2 (slightly offset ellipse/arc)
+    final rect2 = Rect.fromCenter(
+      center: Offset(center.dx - 12, center.dy + 8),
+      width: 140,
+      height: 155,
+    );
+    canvas.drawOval(rect2, linePaint);
+
+    // Glowing Celestial Orb on orbit
+    final orbCenter = Offset(center.dx + 4, center.dy - 6);
+
+    // Ambient radial glow
+    final glowPaint = Paint()
+      ..color = const Color(0xFF60A5FA).withValues(alpha: 0.35)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
+    canvas.drawCircle(orbCenter, 14, glowPaint);
+
+    // Outer white halo
+    final haloPaint = Paint()
+      ..color = const Color(0xFF93C5FD).withValues(alpha: 0.8)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+    canvas.drawCircle(orbCenter, 7, haloPaint);
+
+    // Solid core dot
+    final corePaint = Paint()..color = const Color(0xFFEFF6FF);
+    canvas.drawCircle(orbCenter, 4.5, corePaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _CelestialOrbitsPainter oldDelegate) {
+    return oldDelegate.isDark != isDark ||
+        oldDelegate.orbitColor != orbitColor ||
+        oldDelegate.glowColor != glowColor;
+  }
+}

@@ -3,511 +3,408 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/prayer_provider.dart';
-import '../providers/theme_provider.dart';
+import '../theme/jira_theme.dart';
+import '../widgets/heartbeat_tap.dart';
 
-class NotificationSettingsScreen extends StatefulWidget {
+class NotificationSettingsScreen extends StatelessWidget {
   const NotificationSettingsScreen({super.key});
 
-  @override
-  State<NotificationSettingsScreen> createState() => _NotificationSettingsScreenState();
-}
-
-class _NotificationSettingsScreenState extends State<NotificationSettingsScreen> {
-  String? _expandedPrayer;
-
-  final Map<String, IconData> _prayerIcons = {
-    'Fajr': Icons.wb_twilight_rounded,
-    'Dhuhr': Icons.wb_sunny_rounded,
-    'Asr': Icons.wb_cloudy_rounded,
-    'Maghrib': Icons.nights_stay_rounded,
-    'Isha': Icons.nightlight_round,
-  };
+  static const List<Map<String, dynamic>> _timingOptions = [
+    {
+      'minutes': 0,
+      'title': 'Exact Azan Time',
+      'subtitle': 'Triggers right when the Azan begins (0 min delay)',
+      'icon': Icons.notifications_active_rounded,
+    },
+    {
+      'minutes': 3,
+      'title': '3 Minutes Before',
+      'subtitle': 'Early reminder 3 minutes before Azan',
+      'icon': Icons.timer_3_rounded,
+    },
+    {
+      'minutes': 10,
+      'title': '10 Minutes Before',
+      'subtitle': 'Early reminder 10 minutes before Azan',
+      'icon': Icons.timer_10_rounded,
+    },
+    {
+      'minutes': 30,
+      'title': '30 Minutes Before',
+      'subtitle': 'Early reminder 30 minutes before Azan',
+      'icon': Icons.hourglass_top_rounded,
+    },
+    {
+      'minutes': 60,
+      'title': '1 Hour Before',
+      'subtitle': 'Early reminder 60 minutes before Azan',
+      'icon': Icons.schedule_rounded,
+    },
+  ];
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.watch<ThemeProvider>();
-    final primaryColor = theme.primaryAccent;
-    final bgTop = theme.backgroundTop;
-    final bgBottom = theme.backgroundBottom;
     final provider = context.watch<PrayerProvider>();
-
-    final prayers = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+    final isEnabled = provider.azanNotificationsEnabled;
+    final selectedDelay = provider.preAzanReminderMinutes;
 
     return Scaffold(
-      backgroundColor: bgBottom,
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [bgTop, bgBottom],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              _buildAppBar(context, primaryColor),
-              Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  physics: const BouncingScrollPhysics(),
-                  children: [
-                    const SizedBox(height: 8),
-                    _buildHeroCard(context, theme),
-                    const SizedBox(height: 24),
-                    Text(
-                      'PRAYER ALERTS CONFIGURATION',
-                      style: GoogleFonts.outfit(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 2.5,
-                        color: primaryColor.withValues(alpha: 0.5),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    ...prayers.map((prayer) => _buildPrayerConfigTile(context, provider, prayer, theme)),
-                    const SizedBox(height: 40),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAppBar(BuildContext context, Color primaryColor) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-      child: Row(
+      backgroundColor: const Color(0xFF0B0E14),
+      body: Stack(
         children: [
-          IconButton(
-            onPressed: () => Navigator.pop(context),
-            icon: Icon(Icons.arrow_back_ios_new_rounded, color: primaryColor),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            'Alerts & Notifications',
-            style: GoogleFonts.outfit(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
+          // Ambient Background Gradient
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color(0xFF0B0E14),
+                  Color(0xFF0D121D),
+                  Color(0xFF070A10),
+                ],
+              ),
             ),
           ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildHeroCard(BuildContext context, ThemeProvider theme) {
-    final primaryColor = theme.primaryAccent;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            theme.containerColor,
-            theme.containerColor.withValues(alpha: 0.8),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: primaryColor.withValues(alpha: 0.15), width: 1.2),
-        boxShadow: [
-          BoxShadow(
-            color: primaryColor.withValues(alpha: 0.04),
-            blurRadius: 15,
-            spreadRadius: 1,
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: primaryColor.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(Icons.ring_volume_rounded, color: primaryColor, size: 24),
-              ),
-              const SizedBox(width: 14),
-              Text(
-                'Personalized Alerts',
-                style: GoogleFonts.outfit(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Configure offline sounds and custom reminder offsets for both Adhan and Iqamah calls individually for each of the 5 daily prayers.',
-            style: GoogleFonts.outfit(
-              fontSize: 13,
-              color: Colors.white.withValues(alpha: 0.7),
-              height: 1.4,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPrayerConfigTile(
-    BuildContext context,
-    PrayerProvider provider,
-    String prayer,
-    ThemeProvider theme,
-  ) {
-    final primaryColor = theme.primaryAccent;
-    final cardColor = theme.containerColor;
-    final isExpanded = _expandedPrayer == prayer;
-    final icon = _prayerIcons[prayer] ?? Icons.notifications;
-
-    // Get current configuration summaries
-    final adhanSound = provider.adhanNotificationSounds[prayer] ?? 'Default Alert';
-    final adhanOffset = provider.adhanNotificationOffsets[prayer] ?? 0;
-    final iqamahSound = provider.iqamahNotificationSounds[prayer] ?? 'Default Alert';
-    final iqamahOffset = provider.iqamahNotificationOffsets[prayer] ?? 0;
-
-    String adhanSummary = adhanSound == 'Silent' ? 'Muted 🔇' : '$adhanSound 🔊';
-    if (adhanOffset > 0) adhanSummary += ' (-${adhanOffset}m)';
-
-    String iqamahSummary = iqamahSound == 'Silent' ? 'Muted 🔇' : '$iqamahSound 🔊';
-    if (iqamahOffset > 0) iqamahSummary += ' (-${iqamahOffset}m)';
-
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            cardColor,
-            cardColor.withValues(alpha: isExpanded ? 0.9 : 0.95),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: isExpanded ? primaryColor.withValues(alpha: 0.4) : primaryColor.withValues(alpha: 0.12),
-          width: isExpanded ? 1.5 : 1.2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isExpanded ? 0.2 : 0.15),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: Column(
-          children: [
-            // Header clickable row
-            InkWell(
-              onTap: () {
-                setState(() {
-                  _expandedPrayer = isExpanded ? null : prayer;
-                });
-                HapticFeedback.lightImpact();
-              },
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Row(
-                  children: [
-                    Icon(
-                      icon,
-                      color: isExpanded ? primaryColor : primaryColor.withValues(alpha: 0.6),
-                      size: 24,
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            prayer,
-                            style: GoogleFonts.outfit(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+          SafeArea(
+            child: Column(
+              children: [
+                // Top Navigation Bar
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      HeartbeatTap(
+                        onTap: () {
+                          HapticFeedback.selectionClick();
+                          Navigator.pop(context);
+                        },
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF161B22),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: const Color(0xFF30363D)),
+                          ),
+                          child: const Center(
+                            child: Icon(
+                              Icons.arrow_back_rounded,
+                              size: 20,
+                              color: Color(0xFFF0F6FC),
                             ),
                           ),
-                          const SizedBox(height: 4),
+                        ),
+                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 7,
+                            height: 7,
+                            decoration: BoxDecoration(
+                              color: isEnabled ? JiraTheme.secondaryGreen : const Color(0xFF64748B),
+                              shape: BoxShape.circle,
+                              boxShadow: isEnabled
+                                  ? [
+                                      BoxShadow(
+                                        color: JiraTheme.secondaryGreen.withValues(alpha: 0.8),
+                                        blurRadius: 6,
+                                      ),
+                                    ]
+                                  : null,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
                           Text(
-                            'Azan: $adhanSummary  |  Iqamah: $iqamahSummary',
+                            'AZAN NOTIFICATIONS',
                             style: GoogleFonts.outfit(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white.withValues(alpha: 0.45),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                              color: const Color(0xFFF0F6FC),
+                              letterSpacing: 1.2,
                             ),
                           ),
                         ],
                       ),
-                    ),
-                    Icon(
-                      isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
-                      color: primaryColor.withValues(alpha: 0.6),
-                    ),
-                  ],
+                      const SizedBox(width: 40), // Balance left back button
+                    ],
+                  ),
                 ),
-              ),
-            ),
-            
-            // Expandable settings drawer
-            if (isExpanded)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-                child: Column(
-                  children: [
-                    Divider(color: Colors.white.withValues(alpha: 0.08), height: 1),
-                    const SizedBox(height: 20),
-                    
-                    // --- ADHAN NOTIFICATIONS ---
-                    _buildSubHeader(context, 'Adhan (Call to Prayer) Alerts', Icons.volume_up_rounded, primaryColor),
-                    const SizedBox(height: 12),
-                    
-                    // Adhan Sound type
-                    _buildOptionsLabel(context, 'Alert Sound'),
-                    const SizedBox(height: 8),
-                    _buildCustomSoundSelector(
-                      context: context,
-                      currentValue: adhanSound,
-                      options: ['Silent', 'Chime', 'Beep Only', 'Full Adhan'],
-                      onSelect: (sound) {
-                        provider.updateAdhanSound(prayer, sound);
-                        provider.playAlertSound(sound);
-                      },
-                      primaryColor: primaryColor,
-                    ),
-                    const SizedBox(height: 16),
-                    
-                    // Adhan offset timing
-                    _buildOptionsLabel(context, 'Remind Me'),
-                    const SizedBox(height: 8),
-                    _buildCustomOffsetSelector(
-                      context: context,
-                      currentValue: adhanOffset,
-                      options: [
-                        (0, 'At Adhan'),
-                        (3, '3m Before'),
-                      ],
-                      onSelect: (offset) => provider.updateAdhanOffset(prayer, offset),
-                      primaryColor: primaryColor,
-                    ),
-                    
-                    const SizedBox(height: 24),
-                    Divider(color: Colors.white.withValues(alpha: 0.05), height: 1),
-                    const SizedBox(height: 20),
-                    
-                    // --- IQAMAH NOTIFICATIONS ---
-                    _buildSubHeader(context, 'Iqamah (Congregation) Alerts', Icons.people_rounded, primaryColor),
-                    const SizedBox(height: 12),
-                    
-                    // Iqamah Sound type
-                    _buildOptionsLabel(context, 'Alert Sound'),
-                    const SizedBox(height: 8),
-                    _buildCustomSoundSelector(
-                      context: context,
-                      currentValue: iqamahSound,
-                      options: ['Silent', 'Chime', 'Soft Beep', 'Default Alert'],
-                      onSelect: (sound) {
-                        provider.updateIqamahNotificationSound(prayer, sound);
-                        provider.playAlertSound(sound);
-                      },
-                      primaryColor: primaryColor,
-                    ),
-                    const SizedBox(height: 16),
-                    
-                    // Iqamah offset timing
-                    _buildOptionsLabel(context, 'Remind Me'),
-                    const SizedBox(height: 8),
-                    _buildCustomOffsetSelector(
-                      context: context,
-                      currentValue: iqamahOffset,
-                      options: [
-                        (0, 'At Iqamah'),
-                        (1, '1m Before'),
-                        (2, '2m Before'),
-                        (3, '3m Before'),
-                        (5, '5m Before'),
-                      ],
-                      onSelect: (offset) => provider.updateIqamahNotificationOffset(prayer, offset),
-                      primaryColor: primaryColor,
-                    ),
-                  ],
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
 
-  Widget _buildSubHeader(BuildContext context, String label, IconData icon, Color primaryColor) {
-    return Row(
-      children: [
-        Icon(icon, color: primaryColor, size: 16),
-        const SizedBox(width: 8),
-        Text(
-          label,
-          style: GoogleFonts.outfit(
-            fontSize: 13,
-            fontWeight: FontWeight.bold,
-            color: primaryColor,
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    physics: const BouncingScrollPhysics(),
+                    children: [
+                      // 1. Hero Main Notification Toggle Card
+                      Container(
+                        padding: const EdgeInsets.all(18),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF161B22),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: isEnabled
+                                ? JiraTheme.primaryBlue.withValues(alpha: 0.6)
+                                : const Color(0xFF30363D),
+                            width: 1.0,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: isEnabled
+                                  ? JiraTheme.primaryBlue.withValues(alpha: 0.12)
+                                  : Colors.black.withValues(alpha: 0.3),
+                              blurRadius: 18,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: isEnabled
+                                    ? JiraTheme.secondaryGreen.withValues(alpha: 0.15)
+                                    : const Color(0xFF1F242C),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: isEnabled
+                                      ? JiraTheme.secondaryGreen.withValues(alpha: 0.5)
+                                      : const Color(0xFF30363D),
+                                ),
+                              ),
+                              child: Icon(
+                                isEnabled
+                                    ? Icons.notifications_active_rounded
+                                    : Icons.notifications_off_outlined,
+                                color: isEnabled ? JiraTheme.secondaryGreen : const Color(0xFF8B949E),
+                                size: 24,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Daily Azan Alerts',
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w800,
+                                      color: const Color(0xFFF0F6FC),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    isEnabled
+                                        ? 'Active for all 5 daily prayers'
+                                        : 'Notifications are turned off',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 12.5,
+                                      color: const Color(0xFF8B949E),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Switch.adaptive(
+                              value: isEnabled,
+                              onChanged: (val) {
+                                HapticFeedback.selectionClick();
+                                provider.toggleAzanNotifications(val);
+                              },
+                              activeThumbColor: JiraTheme.primaryBlue,
+                              activeTrackColor: JiraTheme.primaryBlue.withValues(alpha: 0.35),
+                              inactiveThumbColor: const Color(0xFF8B949E),
+                              inactiveTrackColor: const Color(0xFF1F242C),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // 2. Pre-Azan Timing / Delay Selection
+                      Text(
+                        'NOTIFICATION TIMING (ALL PRAYERS)',
+                        style: GoogleFonts.outfit(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 2.0,
+                          color: const Color(0xFF8B949E),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Choose when the reminder should sound relative to Azan time:',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: const Color(0xFF64748B),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+
+                      // Timing Options List
+                      ..._timingOptions.map((opt) {
+                        final int mins = opt['minutes'];
+                        final String title = opt['title'];
+                        final String subtitle = opt['subtitle'];
+                        final IconData icon = opt['icon'];
+                        final bool isSelected = isEnabled && selectedDelay == mins;
+
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 10),
+                          child: HeartbeatTap(
+                            onTap: () {
+                              if (!isEnabled) {
+                                provider.toggleAzanNotifications(true);
+                              }
+                              HapticFeedback.selectionClick();
+                              provider.setPreAzanReminderMinutes(mins);
+                            },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? const Color(0xFF1F2A38)
+                                    : const Color(0xFF161B22),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? JiraTheme.primaryBlue
+                                      : const Color(0xFF30363D),
+                                  width: isSelected ? 1.5 : 1.0,
+                                ),
+                                boxShadow: isSelected
+                                    ? [
+                                        BoxShadow(
+                                          color: JiraTheme.primaryBlue.withValues(alpha: 0.18),
+                                          blurRadius: 12,
+                                          offset: const Offset(0, 3),
+                                        ),
+                                      ]
+                                    : null,
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 38,
+                                    height: 38,
+                                    decoration: BoxDecoration(
+                                      color: isSelected
+                                          ? JiraTheme.primaryBlue.withValues(alpha: 0.2)
+                                          : const Color(0xFF1F242C),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      icon,
+                                      color: isSelected
+                                          ? JiraTheme.primaryBlue
+                                          : const Color(0xFF8B949E),
+                                      size: 20,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 14),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          title,
+                                          style: GoogleFonts.outfit(
+                                            fontSize: 14.5,
+                                            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                                            color: isSelected
+                                                ? Colors.white
+                                                : const Color(0xFFF0F6FC),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          subtitle,
+                                          style: GoogleFonts.inter(
+                                            fontSize: 11.5,
+                                            color: isSelected
+                                                ? const Color(0xFF93C5FD)
+                                                : const Color(0xFF8B949E),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  if (isSelected)
+                                    const Icon(
+                                      Icons.check_circle_rounded,
+                                      color: JiraTheme.primaryBlue,
+                                      size: 22,
+                                    )
+                                  else
+                                    Container(
+                                      width: 20,
+                                      height: 20,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: const Color(0xFF30363D),
+                                          width: 1.5,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      }),
+
+                      const SizedBox(height: 20),
+
+                      // 3. Simple Summary Footer Card
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF161B22).withValues(alpha: 0.8),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: const Color(0xFF30363D)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.info_outline_rounded,
+                              color: JiraTheme.secondaryGreen,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                isEnabled
+                                    ? (selectedDelay == 0
+                                        ? 'Notifications are set to sound at exact Azan time for Fajr, Dhuhr, Asr, Maghrib, and Isha.'
+                                        : 'Notifications are set to sound $selectedDelay minutes before every Azan.')
+                                    : 'Enable Azan notifications above to receive prayer reminders.',
+                                style: GoogleFonts.inter(
+                                  fontSize: 11.5,
+                                  color: const Color(0xFF8B949E),
+                                  height: 1.4,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 30),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildOptionsLabel(BuildContext context, String label) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Text(
-        label,
-        style: GoogleFonts.outfit(
-          fontSize: 11,
-          fontWeight: FontWeight.bold,
-          color: Colors.white.withValues(alpha: 0.4),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCustomSoundSelector({
-    required BuildContext context,
-    required String currentValue,
-    required List<String> options,
-    required Function(String) onSelect,
-    required Color primaryColor,
-  }) {
-    return Row(
-      children: options.map((sound) {
-        final isSelected = currentValue == sound;
-        final Color activeThemeColor;
-        switch (sound) {
-          case 'Silent':
-            activeThemeColor = const Color(0xFF64748B);
-            break;
-          case 'Chime':
-            activeThemeColor = const Color(0xFFFBBF24);
-            break;
-          default:
-            activeThemeColor = primaryColor;
-        }
-
-        return Expanded(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: GestureDetector(
-              onTap: () {
-                onSelect(sound);
-                HapticFeedback.lightImpact();
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                height: 38,
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? activeThemeColor.withValues(alpha: 0.15)
-                      : Colors.white.withValues(alpha: 0.03),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: isSelected
-                        ? activeThemeColor.withValues(alpha: 0.5)
-                        : Colors.white.withValues(alpha: 0.08),
-                    width: isSelected ? 1.2 : 0.8,
-                  ),
-                ),
-                child: Center(
-                  child: Text(
-                    sound == 'Full Adhan' ? 'Adhan' : (sound == 'Default Alert' ? 'Default' : sound),
-                    style: GoogleFonts.outfit(
-                      fontSize: 10,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                      color: isSelected ? activeThemeColor : Colors.white.withValues(alpha: 0.4),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildCustomOffsetSelector({
-    required BuildContext context,
-    required int currentValue,
-    required List<(int, String)> options,
-    required Function(int) onSelect,
-    required Color primaryColor,
-  }) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      physics: const BouncingScrollPhysics(),
-      child: Row(
-        children: options.map((option) {
-          final (offset, label) = option;
-          final isSelected = currentValue == offset;
-
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: GestureDetector(
-              onTap: () {
-                onSelect(offset);
-                HapticFeedback.lightImpact();
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                height: 38,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? primaryColor.withValues(alpha: 0.15)
-                      : Colors.white.withValues(alpha: 0.03),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: isSelected
-                        ? primaryColor.withValues(alpha: 0.5)
-                        : Colors.white.withValues(alpha: 0.08),
-                    width: isSelected ? 1.2 : 0.8,
-                  ),
-                ),
-                child: Center(
-                  child: Text(
-                    label,
-                    style: GoogleFonts.outfit(
-                      fontSize: 10,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                      color: isSelected ? primaryColor : Colors.white.withValues(alpha: 0.4),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-            ),
-          );
-        }).toList(),
+        ],
       ),
     );
   }

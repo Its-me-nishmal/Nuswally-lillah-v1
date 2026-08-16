@@ -6,6 +6,9 @@ import 'package:intl/intl.dart';
 import '../providers/theme_provider.dart';
 import '../providers/journal_provider.dart';
 import '../providers/prayer_provider.dart';
+import '../widgets/jira_screen.dart';
+import '../widgets/jira_header.dart';
+import '../widgets/heartbeat_tap.dart';
 
 class ProgressJournalScreen extends StatefulWidget {
   const ProgressJournalScreen({super.key});
@@ -49,7 +52,7 @@ class _ProgressJournalScreenState extends State<ProgressJournalScreen> {
                       width: 40,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.15),
+                        color: themeProvider.borderColor.withValues(alpha: 0.5),
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
@@ -60,18 +63,18 @@ class _ProgressJournalScreenState extends State<ProgressJournalScreen> {
                     style: GoogleFonts.outfit(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: themeProvider.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 16),
                   TextField(
                     controller: titleController,
-                    style: GoogleFonts.outfit(color: Colors.white, fontSize: 16),
+                    style: GoogleFonts.outfit(color: themeProvider.textPrimary, fontSize: 16),
                     decoration: InputDecoration(
                       hintText: 'e.g. Read Surah Yaseen 📖',
-                      hintStyle: GoogleFonts.outfit(color: Colors.grey[500]),
+                      hintStyle: GoogleFonts.outfit(color: themeProvider.textSecondary),
                       filled: true,
-                      fillColor: Colors.black.withValues(alpha: 0.2),
+                      fillColor: themeProvider.surfaceColor,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide.none,
@@ -88,7 +91,7 @@ class _ProgressJournalScreenState extends State<ProgressJournalScreen> {
                         style: GoogleFonts.outfit(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color: themeProvider.textPrimary,
                         ),
                       ),
                       TextButton.icon(
@@ -174,113 +177,73 @@ class _ProgressJournalScreenState extends State<ProgressJournalScreen> {
     final themeProvider = context.watch<ThemeProvider>();
     final journal = context.watch<JournalProvider>();
     final primaryColor = themeProvider.primaryAccent;
-    final bgColor = themeProvider.backgroundBottom;
 
     final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
     final completedCount = journal.getCompletedCountForDate(todayStr);
 
     return Scaffold(
-      backgroundColor: bgColor,
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              themeProvider.backgroundTop,
-              themeProvider.backgroundBottom,
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              _buildAppBar(context, primaryColor),
-              Expanded(
-                child: ListView(
-                  physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  children: [
-                    const SizedBox(height: 8),
-                    _buildStatsBanner(context, completedCount, themeProvider),
-                    const SizedBox(height: 28),
-                    _buildSectionHeader('PRAYER JOURNAL HISTORY', primaryColor),
-                    const SizedBox(height: 12),
-                    _buildHistoryList(context, journal, themeProvider),
-                    const SizedBox(height: 28),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        _buildSectionHeader('DAILY HABITS', primaryColor),
-                        GestureDetector(
-                          onTap: () => _showAddHabitSheet(context),
-                          child: Row(
-                            children: [
-                              Icon(Icons.add_circle_outline_rounded, size: 14, color: primaryColor),
-                              const SizedBox(width: 4),
-                              Text(
-                                'Add Habit',
-                                style: GoogleFonts.outfit(
-                                  color: primaryColor,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
-                                ),
+      backgroundColor: themeProvider.backgroundBottom,
+      body: JiraScreen(
+        child: Column(
+          children: [
+            JiraHeader(
+              title: 'Journal & Progress',
+            ),
+            Expanded(
+              child: ListView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                children: [
+                  const SizedBox(height: 8),
+                  _buildStatsBanner(context, completedCount, themeProvider),
+                  const SizedBox(height: 28),
+                  _buildSectionHeader('PRAYER JOURNAL HISTORY', themeProvider),
+                  const SizedBox(height: 12),
+                  _buildHistoryList(context, journal, themeProvider),
+                  const SizedBox(height: 28),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildSectionHeader('DAILY HABITS', themeProvider),
+                      HeartbeatTap(
+                        onTap: () => _showAddHabitSheet(context),
+                        child: Row(
+                          children: [
+                            Icon(Icons.add_circle_outline_rounded, size: 14, color: primaryColor),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Add Habit',
+                              style: GoogleFonts.outfit(
+                                color: primaryColor,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    _buildHabitsList(context, journal, themeProvider),
-                    const SizedBox(height: 40),
-                  ],
-                ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  _buildHabitsList(context, journal, themeProvider),
+                  const SizedBox(height: 40),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildAppBar(BuildContext context, Color primaryColor) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-      child: Row(
-        children: [
-          IconButton(
-            onPressed: () {
-              Navigator.pop(context);
-              HapticFeedback.lightImpact();
-            },
-            icon: Icon(
-              Icons.arrow_back_ios_new_rounded,
-              color: primaryColor,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            'Journal & Progress',
-            style: GoogleFonts.outfit(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSectionHeader(String label, Color primaryColor) {
+  Widget _buildSectionHeader(String label, ThemeProvider theme) {
     return Text(
       label,
       style: GoogleFonts.outfit(
-        fontSize: 12,
-        fontWeight: FontWeight.bold,
-        letterSpacing: 2,
-        color: primaryColor.withValues(alpha: 0.8),
+        fontSize: 10,
+        fontWeight: FontWeight.w800,
+        letterSpacing: 2.5,
+        color: theme.textSecondary,
       ),
     );
   }
@@ -300,28 +263,9 @@ class _ProgressJournalScreenState extends State<ProgressJournalScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            themeProvider.containerColor,
-            themeProvider.containerColor.withValues(alpha: 0.8),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: activeColor.withValues(alpha: 0.15), width: 1.2),
-        boxShadow: [
-          BoxShadow(
-            color: activeColor.withValues(alpha: 0.04),
-            blurRadius: 15,
-            spreadRadius: 1,
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        color: themeProvider.surfaceColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: themeProvider.borderColor, width: 1.0),
       ),
       child: Row(
         children: [
@@ -334,7 +278,7 @@ class _ProgressJournalScreenState extends State<ProgressJournalScreen> {
                   style: GoogleFonts.outfit(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: themeProvider.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -351,7 +295,7 @@ class _ProgressJournalScreenState extends State<ProgressJournalScreen> {
                   quote,
                   style: GoogleFonts.outfit(
                     fontSize: 12,
-                    color: Colors.white.withValues(alpha: 0.6),
+                    color: themeProvider.textSecondary,
                     height: 1.4,
                   ),
                 ),
@@ -378,7 +322,7 @@ class _ProgressJournalScreenState extends State<ProgressJournalScreen> {
                 style: GoogleFonts.jetBrainsMono(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: themeProvider.textPrimary,
                 ),
               ),
             ],
@@ -464,7 +408,6 @@ class _ProgressJournalScreenState extends State<ProgressJournalScreen> {
   }
 
   Widget _buildHistoryList(BuildContext context, JournalProvider journal, ThemeProvider theme) {
-    final activeColor = theme.primaryAccent;
     final formatter = DateFormat('yyyy-MM-dd');
     final displayFormatter = DateFormat('EEE, dd MMM');
 
@@ -475,29 +418,15 @@ class _ProgressJournalScreenState extends State<ProgressJournalScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            theme.containerColor,
-            theme.containerColor.withValues(alpha: 0.85),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: activeColor.withValues(alpha: 0.12), width: 1.2),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        color: theme.surfaceColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: theme.borderColor, width: 1.0),
       ),
       child: ListView.separated(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: list.length,
-        separatorBuilder: (_, __) => Divider(color: Colors.white.withValues(alpha: 0.03), height: 1),
+        separatorBuilder: (_, __) => Divider(color: theme.borderColor.withValues(alpha: 0.5), height: 1),
         itemBuilder: (context, idx) {
           final date = list[idx];
           final dateKey = formatter.format(date);
@@ -520,7 +449,7 @@ class _ProgressJournalScreenState extends State<ProgressJournalScreen> {
                     style: GoogleFonts.outfit(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: idx == 0 ? Colors.white : Colors.white.withValues(alpha: 0.7),
+                      color: idx == 0 ? theme.textPrimary : theme.textSecondary,
                     ),
                   ),
                 ),
@@ -555,7 +484,7 @@ class _ProgressJournalScreenState extends State<ProgressJournalScreen> {
     final activeColor = theme.primaryAccent;
     final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
-    return GestureDetector(
+    return HeartbeatTap(
       onTap: () {
         if (!isCompleted && dateKey == todayStr) {
           final now = DateTime.now();
@@ -603,7 +532,7 @@ class _ProgressJournalScreenState extends State<ProgressJournalScreen> {
                         child: Text(
                           "Cannot complete $fullName before its scheduled time (${_formatPrayerTime(fullName, timeStr)})",
                           style: GoogleFonts.outfit(
-                            color: Colors.white,
+                            color: theme.textPrimary,
                             fontWeight: FontWeight.w600,
                             fontSize: 13,
                           ),
@@ -638,20 +567,11 @@ class _ProgressJournalScreenState extends State<ProgressJournalScreen> {
         height: 32,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: isCompleted ? activeColor : Colors.white.withValues(alpha: 0.03),
+          color: isCompleted ? activeColor : theme.containerColor,
           border: Border.all(
-            color: isCompleted ? activeColor : Colors.white.withValues(alpha: 0.1),
+            color: isCompleted ? activeColor : theme.borderColor,
             width: 1,
           ),
-          boxShadow: isCompleted
-              ? [
-                  BoxShadow(
-                    color: activeColor.withValues(alpha: 0.3),
-                    blurRadius: 6,
-                    spreadRadius: 1,
-                  ),
-                ]
-              : null,
         ),
         child: Center(
           child: Text(
@@ -659,7 +579,7 @@ class _ProgressJournalScreenState extends State<ProgressJournalScreen> {
             style: GoogleFonts.outfit(
               fontSize: 11,
               fontWeight: FontWeight.bold,
-              color: isCompleted ? theme.backgroundBottom : Colors.white.withValues(alpha: 0.4),
+              color: isCompleted ? theme.backgroundBottom : theme.textSecondary,
             ),
           ),
         ),
@@ -675,23 +595,9 @@ class _ProgressJournalScreenState extends State<ProgressJournalScreen> {
       return Container(
         padding: const EdgeInsets.symmetric(vertical: 32),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              theme.containerColor,
-              theme.containerColor.withValues(alpha: 0.85),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: activeColor.withValues(alpha: 0.12), width: 1.2),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.15),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          color: theme.surfaceColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: theme.borderColor, width: 1.0),
         ),
         child: Center(
           child: Column(
@@ -700,7 +606,7 @@ class _ProgressJournalScreenState extends State<ProgressJournalScreen> {
               const SizedBox(height: 8),
               Text(
                 'No daily habits yet',
-                style: GoogleFonts.outfit(fontSize: 14, color: Colors.grey[500]),
+                style: GoogleFonts.outfit(fontSize: 14, color: theme.textSecondary),
               ),
               const SizedBox(height: 12),
               TextButton(
@@ -731,39 +637,16 @@ class _ProgressJournalScreenState extends State<ProgressJournalScreen> {
         return Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            gradient: isCompleted
-                ? LinearGradient(
-                    colors: [
-                      activeColor.withValues(alpha: 0.08),
-                      theme.containerColor.withValues(alpha: 0.95),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  )
-                : LinearGradient(
-                    colors: [
-                      theme.containerColor,
-                      theme.backgroundBottom.withValues(alpha: 0.95),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-            borderRadius: BorderRadius.circular(18),
+            color: theme.surfaceColor,
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: isCompleted ? activeColor.withValues(alpha: 0.3) : Colors.white.withValues(alpha: 0.04),
-              width: isCompleted ? 1.5 : 1,
+              color: isCompleted ? activeColor.withValues(alpha: 0.4) : theme.borderColor,
+              width: 1.0,
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.15),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
           ),
           child: Row(
             children: [
-              GestureDetector(
+              HeartbeatTap(
                 onTap: () {
                   if (!isCompleted) {
                     final now = DateTime.now();
@@ -782,7 +665,7 @@ class _ProgressJournalScreenState extends State<ProgressJournalScreen> {
                                 child: Text(
                                   "Cannot complete ${habit.title} before its scheduled time ($formattedTime)",
                                   style: GoogleFonts.outfit(
-                                    color: Colors.white,
+                                    color: theme.textPrimary,
                                     fontWeight: FontWeight.w600,
                                     fontSize: 13,
                                   ),
@@ -818,7 +701,7 @@ class _ProgressJournalScreenState extends State<ProgressJournalScreen> {
                     color: isCompleted ? activeColor : Colors.transparent,
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(
-                      color: isCompleted ? activeColor : Colors.white.withValues(alpha: 0.2),
+                      color: isCompleted ? activeColor : theme.borderColor,
                       width: 1.5,
                     ),
                   ),
@@ -854,9 +737,9 @@ class _ProgressJournalScreenState extends State<ProgressJournalScreen> {
                       style: GoogleFonts.outfit(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: theme.textPrimary,
                         decoration: isCompleted ? TextDecoration.lineThrough : null,
-                        decorationColor: Colors.white.withValues(alpha: 0.4),
+                        decorationColor: theme.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -873,7 +756,7 @@ class _ProgressJournalScreenState extends State<ProgressJournalScreen> {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        GestureDetector(
+                        HeartbeatTap(
                           onTap: () {
                             journal.toggleHabitTimelineVisibility(habit.id);
                             HapticFeedback.lightImpact();
@@ -883,7 +766,7 @@ class _ProgressJournalScreenState extends State<ProgressJournalScreen> {
                             decoration: BoxDecoration(
                               color: habit.showOnHomeTimeline
                                   ? activeColor.withValues(alpha: 0.1)
-                                  : Colors.white.withValues(alpha: 0.03),
+                                  : theme.containerColor,
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Row(
@@ -895,7 +778,7 @@ class _ProgressJournalScreenState extends State<ProgressJournalScreen> {
                                   size: 10,
                                   color: habit.showOnHomeTimeline
                                       ? activeColor
-                                      : Colors.grey,
+                                      : theme.textSecondary,
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
@@ -905,7 +788,7 @@ class _ProgressJournalScreenState extends State<ProgressJournalScreen> {
                                     fontWeight: FontWeight.bold,
                                     color: habit.showOnHomeTimeline
                                         ? activeColor
-                                        : Colors.grey,
+                                        : theme.textSecondary,
                                   ),
                                 ),
                               ],
@@ -917,13 +800,16 @@ class _ProgressJournalScreenState extends State<ProgressJournalScreen> {
                   ],
                 ),
               ),
-              IconButton(
-                padding: EdgeInsets.zero,
-                icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 20),
-                onPressed: () {
+              HeartbeatTap(
+                onTap: () {
                   journal.deleteHabit(habit.id);
                   HapticFeedback.mediumImpact();
                 },
+                child: IconButton(
+                  padding: EdgeInsets.zero,
+                  onPressed: null,
+                  icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 20),
+                ),
               ),
             ],
           ),
