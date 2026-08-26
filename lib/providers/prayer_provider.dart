@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -555,11 +556,8 @@ class PrayerProvider with ChangeNotifier {
     return '$day ${hijriMonths[monthIdx]} 1448 AH';
   }
 
-  void _updateStickyNotification() {
-    if (!_stickyNotificationEnabled || _todayPrayerTimes == null) {
-      NotificationService.cancelStickyPrayerNotification();
-      return;
-    }
+  void _updateStickyNotification() async {
+    if (_todayPrayerTimes == null) return;
 
     final locName = _selectedLocation?.name ?? 'Kerala';
     final remainingMins = _timeToNextPrayer.inMinutes;
@@ -568,13 +566,39 @@ class PrayerProvider with ChangeNotifier {
         ? '${_timeToNextPrayer.inHours}h ${remainingMins % 60}m'
         : (remainingMins > 0 ? '${remainingMins}m' : '${remainingSecs}s');
 
+    final hijriDate = _getHijriDateString();
+
+    // 1. Sync Native Android Home Screen Widget Data
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('widget_next_prayer', _nextPrayerName);
+      await prefs.setString('widget_countdown', formattedCountdown);
+      await prefs.setString('widget_hijri_date', hijriDate);
+      await prefs.setString('widget_location', locName);
+      await prefs.setString('widget_fajr', _todayPrayerTimes!.fajr);
+      await prefs.setString('widget_dhuhr', _todayPrayerTimes!.dhuhr);
+      await prefs.setString('widget_asr', _todayPrayerTimes!.asr);
+      await prefs.setString('widget_maghrib', _todayPrayerTimes!.maghrib);
+      await prefs.setString('widget_isha', _todayPrayerTimes!.isha);
+
+      const MethodChannel('com.nuswallylillah/widget').invokeMethod('updateWidget');
+    } catch (e) {
+      debugPrint('PrayerProvider: widget sync error: $e');
+    }
+
+    // 2. Sync Persistent Lock Screen Notification
+    if (!_stickyNotificationEnabled) {
+      NotificationService.cancelStickyPrayerNotification();
+      return;
+    }
+
     final title = 'Next: $_nextPrayerName in $formattedCountdown';
     final body = 'Fajr ${_todayPrayerTimes!.fajr} • Dhuhr ${_todayPrayerTimes!.dhuhr} • Asr ${_todayPrayerTimes!.asr} • Maghrib ${_todayPrayerTimes!.maghrib} • Isha ${_todayPrayerTimes!.isha}';
 
     NotificationService.updateStickyPrayerNotification(
       title: title,
       body: body,
-      hijriDate: _getHijriDateString(),
+      hijriDate: hijriDate,
       locationName: locName,
       enabled: _stickyNotificationEnabled,
     );
