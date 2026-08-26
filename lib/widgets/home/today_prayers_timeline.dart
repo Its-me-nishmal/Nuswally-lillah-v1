@@ -3,38 +3,32 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import '../../models/prayer_time_model.dart';
-import '../../providers/prayer_provider.dart';
+
+import '../../models/prayer_times_model.dart';
 import '../../providers/journal_provider.dart';
+import '../../providers/prayer_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../theme/jira_theme.dart';
 import '../heartbeat_tap.dart';
 
+/// Single unified grouped card for daily 5 prayers, replacing fragmented box cards.
 class TodayPrayersTimeline extends StatelessWidget {
   const TodayPrayersTimeline({super.key});
 
   String _formatPrayerTime(String prayerName, String timeStr) {
     try {
-      final clean = timeStr.trim().toUpperCase();
-      if (clean.contains('AM') || clean.contains('PM')) {
-        return clean;
-      }
-      final parts = clean.split(':');
-      var hour = int.parse(parts[0]);
-      final minute = int.parse(parts[1]);
-      final displayMin = minute.toString().padLeft(2, '0');
+      final parts = timeStr.split(':');
+      final hour = int.parse(parts[0]);
+      final min = int.parse(parts[1]);
+      final displayMin = min.toString().padLeft(2, '0');
 
-      bool isPM = false;
-      if (hour >= 12) {
+      var isPM = false;
+      if (prayerName == 'Sunrise') {
+        isPM = false;
+      } else if (prayerName == 'Dhuhr') {
+        isPM = hour < 11 ? true : false;
+      } else if (prayerName == 'Asr' || prayerName == 'Maghrib' || prayerName == 'Isha') {
         isPM = true;
-      } else {
-        if (prayerName == 'Fajr' || prayerName == 'Sunrise') {
-          isPM = false;
-        } else if (prayerName == 'Dhuhr') {
-          isPM = true;
-        } else if (prayerName == 'Asr' || prayerName == 'Maghrib' || prayerName == 'Isha') {
-          isPM = true;
-        }
       }
 
       var displayHour = hour;
@@ -56,6 +50,9 @@ class TodayPrayersTimeline extends StatelessWidget {
     final themeProvider = context.watch<ThemeProvider>();
     final journalProvider = context.watch<JournalProvider>();
     final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final isDark = themeProvider.isDarkMode;
+    final surfaceColor = isDark ? JiraTheme.darkSurface : JiraTheme.lightSurface;
+    final borderColor = isDark ? JiraTheme.darkBorderSubtle : JiraTheme.lightBorderSubtle;
 
     return Selector<PrayerProvider, (PrayerTime?, String, String, bool)>(
       selector: (_, provider) => (
@@ -121,7 +118,7 @@ class TodayPrayersTimeline extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Header Row: TODAY'S PRAYERS + 60%
+            // Header Row: TODAY'S PRAYERS + Progress percentage
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -152,34 +149,60 @@ class TodayPrayersTimeline extends StatelessWidget {
               borderRadius: BorderRadius.circular(2),
               child: LinearProgressIndicator(
                 value: progress,
-                minHeight: 3.5,
-                backgroundColor: themeProvider.borderColor.withValues(alpha: 0.2),
+                minHeight: 3.0,
+                backgroundColor: themeProvider.borderColor.withValues(alpha: 0.15),
                 valueColor: const AlwaysStoppedAnimation<Color>(JiraTheme.secondaryGreen),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
 
-            // Timeline List of Prayer Rows
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              padding: EdgeInsets.zero,
-              itemCount: prayers.length,
-              itemBuilder: (context, index) {
-                final item = prayers[index];
-                final isFirst = index == 0;
-                final isLast = index == prayers.length - 1;
+            // Unified Grouped Prayers Card
+            Container(
+              decoration: BoxDecoration(
+                color: surfaceColor,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: borderColor,
+                  width: 1.0,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.03),
+                    blurRadius: 12,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(18),
+                child: Column(
+                  children: List.generate(prayers.length, (index) {
+                    final item = prayers[index];
+                    final isLast = index == prayers.length - 1;
 
-                return _PrayerTimelineRow(
-                  data: item,
-                  isFirst: isFirst,
-                  isLast: isLast,
-                  onToggleCompleted: () {
-                    HapticFeedback.selectionClick();
-                    journalProvider.togglePrayerCompletion(todayStr, item.id);
-                  },
-                );
-              },
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _PrayerRowItem(
+                          data: item,
+                          onToggleCompleted: () {
+                            HapticFeedback.selectionClick();
+                            journalProvider.togglePrayerCompletion(todayStr, item.id);
+                          },
+                        ),
+                        if (!isLast)
+                          Divider(
+                            height: 1,
+                            thickness: 0.6,
+                            indent: 52,
+                            endIndent: 16,
+                            color: borderColor.withValues(alpha: 0.35),
+                          ),
+                      ],
+                    );
+                  }),
+                ),
+              ),
             ),
           ],
         );
@@ -206,16 +229,12 @@ class _PrayerRowData {
   });
 }
 
-class _PrayerTimelineRow extends StatelessWidget {
+class _PrayerRowItem extends StatelessWidget {
   final _PrayerRowData data;
-  final bool isFirst;
-  final bool isLast;
   final VoidCallback onToggleCompleted;
 
-  const _PrayerTimelineRow({
+  const _PrayerRowItem({
     required this.data,
-    required this.isFirst,
-    required this.isLast,
     required this.onToggleCompleted,
   });
 
@@ -223,203 +242,139 @@ class _PrayerTimelineRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
     final isDark = themeProvider.isDarkMode;
-    final surfaceColor = isDark ? JiraTheme.darkSurface : JiraTheme.lightSurface;
-    final containerColor = isDark ? JiraTheme.darkContainer : JiraTheme.lightContainer;
-    final borderColor = isDark ? JiraTheme.darkBorderSubtle : JiraTheme.lightBorderSubtle;
 
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Left Connected Timeline Track
-          SizedBox(
-            width: 36,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                // Connecting Vertical Line
-                Positioned(
-                  top: isFirst ? 22 : 0,
-                  bottom: isLast ? 22 : 0,
-                  child: Container(
-                    width: 1.0,
-                    color: isDark
-                        ? JiraTheme.darkBorderSubtle
-                        : const Color(0xFFE2E8F0),
-                  ),
-                ),
+    return HeartbeatTap(
+      onTap: onToggleCompleted,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+        decoration: BoxDecoration(
+          color: data.isOngoing
+              ? JiraTheme.primaryBlue.withValues(alpha: isDark ? 0.08 : 0.05)
+              : Colors.transparent,
+        ),
+        child: Row(
+          children: [
+            // Left Status Node (Tappable completion toggle)
+            _buildStatusNode(isDark),
+            const SizedBox(width: 14),
 
-                // Node Indicator
-                HeartbeatTap(
-                  onTap: onToggleCompleted,
-                  child: _buildNode(
-                    isDark: isDark,
-                    containerColor: containerColor,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-
-          // Right Prayer Card
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 3.5),
-              child: HeartbeatTap(
-                onTap: onToggleCompleted,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-                  decoration: BoxDecoration(
-                    color: surfaceColor,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: data.isOngoing
-                          ? JiraTheme.primaryBlue.withValues(alpha: 0.6)
-                          : (data.isNext
-                              ? JiraTheme.primaryBlue.withValues(alpha: 0.3)
-                              : borderColor),
-                      width: data.isOngoing ? 1.2 : 1.0,
+            // Prayer Name + Optional "NOW" Badge
+            Expanded(
+              child: Row(
+                children: [
+                  Text(
+                    data.name,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 14.5,
+                      fontWeight: (data.isOngoing || data.isNext) ? FontWeight.w600 : FontWeight.w500,
+                      color: data.isCompleted
+                          ? (isDark ? const Color(0xFFD0D7DE) : const Color(0xFF1E293B))
+                          : themeProvider.textPrimary,
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.02),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Prayer Name + Optional "NOW" or "NEXT" Badge
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            data.name,
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 15,
-                              fontWeight: (data.isOngoing || data.isNext) ? FontWeight.w600 : FontWeight.w500,
-                              color: themeProvider.textPrimary,
-                            ),
-                          ),
-                          if (data.isOngoing) ...[
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: JiraTheme.primaryBlue.withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(6),
-                                border: Border.all(
-                                  color: JiraTheme.primaryBlue.withValues(alpha: 0.4),
-                                  width: 1.0,
-                                ),
-                              ),
-                              child: Text(
-                                'NOW',
-                                style: GoogleFonts.inter(
-                                  fontSize: 9.5,
-                                  fontWeight: FontWeight.w600,
-                                  color: JiraTheme.primaryBlue,
-                                  letterSpacing: 0.4,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-
-                      // Prayer Time
-                      Text(
-                        data.time,
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: data.isOngoing ? 14.5 : 13.5,
-                          fontWeight: data.isOngoing ? FontWeight.w600 : FontWeight.w400,
-                          color: (data.isOngoing || data.isNext)
-                              ? themeProvider.textPrimary
-                              : themeProvider.textSecondary.withValues(alpha: 0.85),
+                  if (data.isOngoing) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6.5, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: JiraTheme.primaryBlue.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(5),
+                        border: Border.all(
+                          color: JiraTheme.primaryBlue.withValues(alpha: 0.35),
+                          width: 1.0,
                         ),
                       ),
-                    ],
-                  ),
-                ),
+                      child: Text(
+                        'NOW',
+                        style: GoogleFonts.inter(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w600,
+                          color: JiraTheme.primaryBlue,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
-          ),
-        ],
+
+            // Prayer Time
+            Text(
+              data.time,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: (data.isOngoing || data.isNext) ? 14 : 13.5,
+                fontWeight: (data.isOngoing || data.isNext) ? FontWeight.w600 : FontWeight.w400,
+                color: (data.isOngoing || data.isNext)
+                    ? themeProvider.textPrimary
+                    : themeProvider.textSecondary.withValues(alpha: 0.85),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildNode({
-    required bool isDark,
-    required Color containerColor,
-  }) {
+  Widget _buildStatusNode(bool isDark) {
     if (data.isCompleted) {
-      // Completed Checked Node
       return Container(
-        width: 30,
-        height: 30,
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF0F291E) : const Color(0xFFDCFCE7),
+        width: 22,
+        height: 22,
+        decoration: const BoxDecoration(
+          color: JiraTheme.secondaryGreen,
           shape: BoxShape.circle,
-          border: Border.all(
-            color: JiraTheme.secondaryGreen.withValues(alpha: 0.5),
-            width: 1.2,
-          ),
         ),
         child: const Center(
           child: Icon(
             Icons.check_rounded,
-            size: 15,
-            color: JiraTheme.secondaryGreen,
+            size: 13,
+            color: Colors.white,
           ),
         ),
       );
     }
 
     if (data.isOngoing) {
-      // Ongoing "NOW" Node
       return Container(
-        width: 30,
-        height: 30,
+        width: 22,
+        height: 22,
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF0C2B59) : const Color(0xFFE0EDFE),
+          color: JiraTheme.primaryBlue.withValues(alpha: 0.15),
           shape: BoxShape.circle,
           border: Border.all(
-            color: JiraTheme.primaryBlue.withValues(alpha: 0.6),
+            color: JiraTheme.primaryBlue,
             width: 1.2,
           ),
         ),
         child: const Center(
           child: Icon(
             Icons.access_time_filled_rounded,
-            size: 14,
+            size: 11,
             color: JiraTheme.primaryBlue,
           ),
         ),
       );
     }
 
-    // Upcoming / Normal Node with center dot
+    // Normal / Upcoming state
     return Container(
-      width: 28,
-      height: 28,
+      width: 22,
+      height: 22,
       decoration: BoxDecoration(
-        color: containerColor,
+        color: Colors.transparent,
         shape: BoxShape.circle,
         border: Border.all(
           color: data.isNext
-              ? JiraTheme.primaryBlue.withValues(alpha: 0.5)
-              : (isDark ? JiraTheme.darkBorderSubtle : const Color(0xFFD0D7DE)),
-          width: 1.0,
+              ? JiraTheme.primaryBlue.withValues(alpha: 0.6)
+              : (isDark ? const Color(0xFF30363D) : const Color(0xFFD0D7DE)),
+          width: 1.2,
         ),
       ),
       child: Center(
         child: Container(
-          width: 5,
-          height: 5,
+          width: 4.5,
+          height: 4.5,
           decoration: BoxDecoration(
             color: data.isNext
                 ? JiraTheme.primaryBlue

@@ -19,24 +19,17 @@ class QuickActionsDock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = context.watch<ThemeProvider>();
-    final isDark = themeProvider.isDarkMode;
-    final surfaceColor = isDark ? JiraTheme.darkSurface : JiraTheme.lightSurface;
-    final containerColor = isDark ? JiraTheme.darkContainer : JiraTheme.lightContainer;
-    final borderColor = isDark ? JiraTheme.darkBorderSubtle : JiraTheme.lightBorderSubtle;
-
-    return Row(
-      children: [
-        // 1. Audio Quran Player
-        Expanded(
-          child: _buildTile(
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // 1. Audio Quran Player
+          _buildActionItem(
             context: context,
             label: 'Audio',
             icon: Icons.headphones_rounded,
-            iconColor: const Color(0xFF38BDF8),
-            surfaceColor: surfaceColor,
-            containerColor: containerColor,
-            borderColor: borderColor,
+            accentColor: const Color(0xFF38BDF8),
             onTap: () {
               HapticFeedback.selectionClick();
               Navigator.push(
@@ -45,19 +38,13 @@ class QuickActionsDock extends StatelessWidget {
               );
             },
           ),
-        ),
-        const SizedBox(width: 10),
 
-        // 2. Tasbeeh
-        Expanded(
-          child: _buildTile(
+          // 2. Tasbeeh Counter
+          _buildActionItem(
             context: context,
             label: 'Tasbeeh',
             icon: Icons.fingerprint_rounded,
-            iconColor: JiraTheme.secondaryGreen,
-            surfaceColor: surfaceColor,
-            containerColor: containerColor,
-            borderColor: borderColor,
+            accentColor: JiraTheme.secondaryGreen,
             onTap: () {
               HapticFeedback.selectionClick();
               Navigator.push(
@@ -66,19 +53,13 @@ class QuickActionsDock extends StatelessWidget {
               );
             },
           ),
-        ),
-        const SizedBox(width: 10),
 
-        // 3. Quran
-        Expanded(
-          child: _buildTile(
+          // 3. Quran Directory Tab
+          _buildActionItem(
             context: context,
             label: 'Quran',
             icon: Icons.menu_book_rounded,
-            iconColor: const Color(0xFF818CF8),
-            surfaceColor: surfaceColor,
-            containerColor: containerColor,
-            borderColor: borderColor,
+            accentColor: const Color(0xFF818CF8),
             onTap: () {
               HapticFeedback.selectionClick();
               if (onNavigateTab != null) {
@@ -86,19 +67,13 @@ class QuickActionsDock extends StatelessWidget {
               }
             },
           ),
-        ),
-        const SizedBox(width: 10),
 
-        // 4. 99 Names of Allah
-        Expanded(
-          child: _buildTile(
+          // 4. 99 Names of Allah
+          _buildActionItem(
             context: context,
             label: '99 Names',
             icon: Icons.auto_awesome_rounded,
-            iconColor: const Color(0xFFFBBF24),
-            surfaceColor: surfaceColor,
-            containerColor: containerColor,
-            borderColor: borderColor,
+            accentColor: const Color(0xFFFBBF24),
             onTap: () {
               HapticFeedback.selectionClick();
               Navigator.push(
@@ -107,19 +82,16 @@ class QuickActionsDock extends StatelessWidget {
               );
             },
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
-  Widget _buildTile({
+  Widget _buildActionItem({
     required BuildContext context,
     required String label,
     required IconData icon,
-    required Color iconColor,
-    required Color surfaceColor,
-    required Color containerColor,
-    required Color borderColor,
+    required Color accentColor,
     required VoidCallback onTap,
   }) {
     final themeProvider = context.watch<ThemeProvider>();
@@ -127,50 +99,44 @@ class QuickActionsDock extends StatelessWidget {
 
     return HeartbeatTap(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        decoration: BoxDecoration(
-          color: surfaceColor,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: borderColor,
-            width: 1.0,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
+      child: SizedBox(
+        width: 72,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Circular Glass Accent Icon Capsule
             Container(
-              width: 36,
-              height: 36,
+              width: 52,
+              height: 52,
               decoration: BoxDecoration(
-                color: containerColor,
+                color: isDark
+                    ? accentColor.withValues(alpha: 0.10)
+                    : accentColor.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: borderColor.withValues(alpha: 0.5),
+                  color: isDark
+                      ? accentColor.withValues(alpha: 0.22)
+                      : accentColor.withValues(alpha: 0.30),
                   width: 1.0,
                 ),
               ),
               child: Center(
                 child: Icon(
                   icon,
-                  size: 19,
-                  color: iconColor,
+                  size: 22,
+                  color: accentColor,
                 ),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 7),
+            // Label
             Text(
               label,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: GoogleFonts.plusJakartaSans(
-                fontSize: 12,
+                fontSize: 11.5,
                 fontWeight: FontWeight.w500,
                 color: themeProvider.textPrimary,
                 letterSpacing: 0.1,
