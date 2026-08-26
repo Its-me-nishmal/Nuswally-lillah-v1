@@ -740,38 +740,50 @@ class _TasbeehScreenState extends State<TasbeehScreen> {
 
           // 3. Main Minimalist Screen Layout
           SafeArea(
-            child: Column(
-              children: [
-                // Minimal Top Bar
-                _buildTopBar(),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                    child: IntrinsicHeight(
+                      child: Column(
+                        children: [
+                          // Minimal Top Bar
+                          _buildTopBar(),
 
-                const SizedBox(height: 6),
+                          const SizedBox(height: 6),
 
-                // Horizontal Dhikr Selector Pills + Add Custom Button
-                _buildDhikrSelectorPills(),
+                          // Horizontal Dhikr Selector Pills + Add Custom Button
+                          _buildDhikrSelectorPills(),
 
-                const Spacer(flex: 2),
+                          const Spacer(flex: 2),
 
-                // Active Dhikr Calligraphy & Details
-                _buildActiveDhikrHeader(currentPhrase),
+                          // Active Dhikr Calligraphy & Details
+                          _buildActiveDhikrHeader(currentPhrase),
 
-                const Spacer(flex: 3),
+                          const Spacer(flex: 3),
 
-                // Hero Centerpiece: Circular Counter Orb with Heartbeat Pulse
-                _buildCounterOrb(progress),
+                          // Hero Centerpiece: Circular Counter Orb with Heartbeat Pulse
+                          _buildCounterOrb(progress),
 
-                const Spacer(flex: 4),
+                          const Spacer(flex: 4),
 
-                // Sleek Quick Controls Row (Reset, Target Segment, Lap)
-                _buildQuickControls(),
+                          // Sleek Quick Controls Row (Reset, Target Segment, Lap)
+                          _buildQuickControls(),
 
-                const SizedBox(height: 14),
+                          const SizedBox(height: 14),
 
-                // Minimalist Bottom Stats Subtitle
-                _buildMinimalBottomStats(),
+                          // Minimalist Bottom Stats Subtitle
+                          _buildMinimalBottomStats(),
 
-                const SizedBox(height: 16),
-              ],
+                          const SizedBox(height: 16),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         ],

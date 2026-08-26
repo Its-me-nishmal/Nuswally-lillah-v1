@@ -27,6 +27,7 @@ class _ProgressJournalScreenState extends State<ProgressJournalScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
         return StatefulBuilder(
@@ -181,22 +182,20 @@ class _ProgressJournalScreenState extends State<ProgressJournalScreen> {
     final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
     final completedCount = journal.getCompletedCountForDate(todayStr);
 
-    return Scaffold(
-      backgroundColor: themeProvider.backgroundBottom,
-      body: JiraScreen(
-        child: Column(
-          children: [
-            JiraHeader(
-              title: 'Journal & Progress',
-            ),
-            Expanded(
-              child: ListView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                children: [
-                  const SizedBox(height: 8),
-                  _buildStatsBanner(context, completedCount, themeProvider),
-                  const SizedBox(height: 28),
+    return JiraScreen(
+      child: Column(
+        children: [
+          JiraHeader(
+            title: 'Journal & Progress',
+          ),
+          Expanded(
+            child: ListView(
+              physics: const BouncingScrollPhysics(),
+              padding: EdgeInsets.fromLTRB(20, 8, 20, 30 + MediaQuery.paddingOf(context).bottom),
+              children: [
+                const SizedBox(height: 8),
+                _buildStatsBanner(context, completedCount, themeProvider),
+                const SizedBox(height: 28),
                   _buildSectionHeader('PRAYER JOURNAL HISTORY', themeProvider),
                   const SizedBox(height: 12),
                   _buildHistoryList(context, journal, themeProvider),
@@ -232,7 +231,6 @@ class _ProgressJournalScreenState extends State<ProgressJournalScreen> {
             ),
           ],
         ),
-      ),
     );
   }
 

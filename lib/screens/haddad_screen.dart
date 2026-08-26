@@ -195,14 +195,18 @@ class _HaddadScreenState extends State<HaddadScreen> {
               borderRadius: BorderRadius.circular(10),
             ),
           ),
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            height: 4,
-            width: MediaQuery.of(context).size.width * progress - 48,
-            decoration: BoxDecoration(
-              color: tp.primaryAccent,
-              borderRadius: BorderRadius.circular(10),
-            ),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                height: 4,
+                width: constraints.maxWidth * progress,
+                decoration: BoxDecoration(
+                  color: tp.primaryAccent,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              );
+            },
           ),
         ],
       ),

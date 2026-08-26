@@ -171,7 +171,9 @@ class _HomeScreenState extends State<HomeScreen> {
           Positioned(
             left: 18,
             right: 18,
-            bottom: 18,
+            bottom: MediaQuery.paddingOf(context).bottom > 0
+                ? MediaQuery.paddingOf(context).bottom + 8
+                : 16,
             child: ObsidianBottomNav(
               currentIndex: _currentTabIndex,
               onTabSelected: (index) {
@@ -193,6 +195,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildActiveTabBody(BuildContext context) {
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
     switch (_currentTabIndex) {
       case 0:
         final themeProvider = context.read<ThemeProvider>();
@@ -226,7 +229,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 24),
               const TodayPrayersTimeline(),
-              const SizedBox(height: 110), // Standard bottom spacing for slim bar
+              SizedBox(height: 100 + bottomInset), // Dynamic bottom spacing for floating bar
             ],
           ),
         );

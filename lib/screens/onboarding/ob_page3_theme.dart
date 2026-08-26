@@ -115,7 +115,6 @@ class _ObPage3ThemeState extends State<ObPage3Theme>
         ),
       ),
       child: SafeArea(
-        top: false,
         child: FadeTransition(
           opacity: _fadeIn,
           child: Column(
@@ -123,7 +122,7 @@ class _ObPage3ThemeState extends State<ObPage3Theme>
               // ── Header ──
               Padding(
                 padding:
-                    EdgeInsets.fromLTRB(20, isSmall ? 16 : 24, 20, 0),
+                    EdgeInsets.fromLTRB(20, isSmall ? 10 : 16, 20, 0),
                 child: Row(
                   children: [
                     Container(
@@ -212,8 +211,7 @@ class _ObPage3ThemeState extends State<ObPage3Theme>
 
               // ── Continue Button ──
               Padding(
-                padding: EdgeInsets.fromLTRB(
-                    20, 10, 20, MediaQuery.of(context).padding.bottom + 20),
+                padding: const EdgeInsets.fromLTRB(20, 10, 20, 16),
                 child: _ObThemeGlowButton(
                   onTap: () {
                     HapticFeedback.mediumImpact();

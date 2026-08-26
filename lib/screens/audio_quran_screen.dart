@@ -125,6 +125,7 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
 
     showModalBottomSheet(
       context: context,
+      useSafeArea: true,
       backgroundColor: isDark ? JiraTheme.darkSurface : JiraTheme.lightSurface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -211,6 +212,7 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: isDark ? JiraTheme.darkSurface : JiraTheme.lightSurface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),

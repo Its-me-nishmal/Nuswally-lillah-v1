@@ -105,7 +105,7 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
             : ListView(
                 physics: const BouncingScrollPhysics(),
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    EdgeInsets.fromLTRB(16, 10, 16, 24 + MediaQuery.paddingOf(context).bottom),
                 children: [
                   // 1. Version Hero Card
                   _buildVersionHeroCard(isUpdateAvailable),

@@ -169,7 +169,7 @@ class _YoutubePlayerScreenState extends State<YoutubePlayerScreen> {
                 // Video Title & Details
                 Expanded(
                   child: ListView(
-                    padding: const EdgeInsets.all(16),
+                    padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + MediaQuery.paddingOf(context).bottom),
                     children: [
                       Text(
                         displayTitle,

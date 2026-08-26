@@ -7,6 +7,7 @@ import '../providers/adhkaar_provider.dart';
 import '../providers/theme_provider.dart';
 import '../theme/jira_theme.dart';
 import '../widgets/heartbeat_tap.dart';
+import '../widgets/jira_screen.dart';
 import 'dua_detail_screen.dart';
 
 class AdhkaarDuasScreen extends StatelessWidget {
@@ -21,9 +22,10 @@ class AdhkaarDuasScreen extends StatelessWidget {
     final bundle = context.watch<AdhkaarProvider>().bundle;
 
     if (bundle == null) {
-      return const Scaffold(
-        backgroundColor: Color(0xFF0B0E14),
-        body: Center(child: CircularProgressIndicator(color: JiraTheme.primaryBlue)),
+      return JiraScreen(
+        child: Center(
+          child: CircularProgressIndicator(color: tp.primaryAccent),
+        ),
       );
     }
 
@@ -36,75 +38,72 @@ class AdhkaarDuasScreen extends StatelessWidget {
         ? sub.title
         : (sub.titleEn.isNotEmpty ? sub.titleEn : sub.title);
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF0B0E14),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // 1. Top App Bar
-            _buildTopAppBar(context, titleHeader, duas.length),
+    return JiraScreen(
+      child: Column(
+        children: [
+          // 1. Top App Bar
+          _buildTopAppBar(context, tp, titleHeader, duas.length),
 
-            // 2. Subcategory Header Banner if Arabic exists
-            if (sub.titleArabic.trim().isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF161B22),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: const Color(0xFF30363D)),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        sub.titleArabic,
-                        textDirection: TextDirection.rtl,
-                        textAlign: TextAlign.right,
-                        style: const TextStyle(
-                          fontFamily: 'HafsFont',
-                          fontSize: 16,
-                          color: Color(0xFF93C5FD),
-                          height: 1.35,
-                        ),
+          // 2. Subcategory Header Banner if Arabic exists
+          if (sub.titleArabic.trim().isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: tp.surfaceColor,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: tp.borderColor),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      sub.titleArabic,
+                      textDirection: TextDirection.rtl,
+                      textAlign: TextAlign.right,
+                      style: TextStyle(
+                        fontFamily: 'HafsFont',
+                        fontSize: 16,
+                        color: tp.primaryAccent,
+                        height: 1.35,
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        isMl ? '${duas.length} പ്രാർത്ഥനകൾ' : '${duas.length} Authentic Supplications',
-                        style: GoogleFonts.inter(
-                          fontSize: 11.5,
-                          color: const Color(0xFF8B949E),
-                          fontWeight: FontWeight.w500,
-                        ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      isMl ? '${duas.length} പ്രാർത്ഥനകൾ' : '${duas.length} Authentic Supplications',
+                      style: GoogleFonts.inter(
+                        fontSize: 11.5,
+                        color: tp.textSecondary,
+                        fontWeight: FontWeight.w500,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
-
-            const SizedBox(height: 6),
-
-            // 3. Duas List
-            Expanded(
-              child: ListView.separated(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
-                itemCount: duas.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 10),
-                itemBuilder: (context, index) {
-                  return _DuaCard(dua: duas[index], index: index + 1);
-                },
-              ),
             ),
-          ],
-        ),
+
+          const SizedBox(height: 6),
+
+          // 3. Duas List
+          Expanded(
+            child: ListView.separated(
+              physics: const BouncingScrollPhysics(),
+              padding: EdgeInsets.fromLTRB(16, 6, 16, 24 + MediaQuery.paddingOf(context).bottom),
+              itemCount: duas.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 10),
+              itemBuilder: (context, index) {
+                return _DuaCard(dua: duas[index], index: index + 1);
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildTopAppBar(BuildContext context, String title, int count) {
+  Widget _buildTopAppBar(BuildContext context, ThemeProvider tp, String title, int count) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
@@ -112,19 +111,22 @@ class AdhkaarDuasScreen extends StatelessWidget {
         children: [
           // Frosted circular back button
           HeartbeatTap(
-            onTap: () => Navigator.pop(context),
+            onTap: () {
+              HapticFeedback.selectionClick();
+              Navigator.pop(context);
+            },
             child: Container(
-              width: 40,
-              height: 40,
+              width: 38,
+              height: 38,
               decoration: BoxDecoration(
-                color: const Color(0xFF161B22),
+                color: tp.surfaceColor,
                 shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFF30363D)),
+                border: Border.all(color: tp.borderColor),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.arrow_back_rounded,
-                color: Color(0xFFF0F6FC),
-                size: 20,
+                color: tp.textPrimary,
+                size: 18,
               ),
             ),
           ),
@@ -141,7 +143,7 @@ class AdhkaarDuasScreen extends StatelessWidget {
                 style: GoogleFonts.outfit(
                   fontSize: 15,
                   fontWeight: FontWeight.w800,
-                  color: const Color(0xFFF0F6FC),
+                  color: tp.textPrimary,
                   letterSpacing: 0.3,
                 ),
               ),
@@ -152,16 +154,16 @@ class AdhkaarDuasScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: const Color(0xFF1F242C),
+              color: tp.containerColor,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFF30363D)),
+              border: Border.all(color: tp.borderColor),
             ),
             child: Text(
               '$count',
               style: GoogleFonts.outfit(
                 fontSize: 12,
                 fontWeight: FontWeight.w800,
-                color: const Color(0xFF93C5FD),
+                color: tp.primaryAccent,
               ),
             ),
           ),
@@ -179,6 +181,8 @@ class _DuaCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tp = context.watch<ThemeProvider>();
+
     return HeartbeatTap(
       onTap: () {
         HapticFeedback.selectionClick();
@@ -193,16 +197,9 @@ class _DuaCard extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF161B22),
+          color: tp.surfaceColor,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFF30363D)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          border: Border.all(color: tp.borderColor),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -215,7 +212,7 @@ class _DuaCard extends StatelessWidget {
                   width: 32,
                   height: 32,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1F242C),
+                    color: tp.containerColor,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Center(
@@ -224,24 +221,28 @@ class _DuaCard extends StatelessWidget {
                       style: GoogleFonts.outfit(
                         fontSize: 12,
                         fontWeight: FontWeight.w800,
-                        color: const Color(0xFF93C5FD),
+                        color: tp.primaryAccent,
                       ),
                     ),
                   ),
                 ),
                 if (dua.hint.isNotEmpty)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: JiraTheme.secondaryGreen.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      dua.hint,
-                      style: GoogleFonts.outfit(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: JiraTheme.secondaryGreen,
+                  Flexible(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: JiraTheme.secondaryGreen.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        dua.hint,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.outfit(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: JiraTheme.secondaryGreen,
+                        ),
                       ),
                     ),
                   ),
@@ -250,48 +251,61 @@ class _DuaCard extends StatelessWidget {
 
             const SizedBox(height: 12),
 
-            // Sacred Arabic Text
-            Text(
-              dua.dua,
-              maxLines: 4,
-              overflow: TextOverflow.ellipsis,
-              textDirection: TextDirection.rtl,
-              textAlign: TextAlign.right,
-              style: const TextStyle(
-                fontFamily: 'HafsFont',
-                fontSize: 19,
-                height: 1.7,
-                color: Colors.white,
+            // Arabic Calligraphy snippet
+            if (dua.dua.isNotEmpty)
+              Text(
+                dua.dua,
+                textDirection: TextDirection.rtl,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontFamily: 'HafsFont',
+                  fontSize: 20,
+                  height: 1.45,
+                  color: tp.textPrimary,
+                ),
               ),
-            ),
 
-            // Preview Transliteration
             if (dua.transli.isNotEmpty) ...[
               const SizedBox(height: 8),
               Text(
                 dua.transli,
-                maxLines: 3,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontFamily: 'Indulekha',
-                  fontSize: 12.5,
-                  color: Color(0xFF93C5FD),
-                  height: 1.45,
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                  color: tp.textSecondary,
+                  height: 1.35,
                 ),
               ),
             ],
 
-            const SizedBox(height: 10),
-
-            // Bottom Chevron Row
-            const Align(
-              alignment: Alignment.centerRight,
-              child: Icon(
-                Icons.arrow_forward_rounded,
-                size: 16,
-                color: JiraTheme.primaryBlue,
+            if (dua.ref.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Icon(
+                    Icons.menu_book_rounded,
+                    size: 12,
+                    color: tp.textMuted,
+                  ),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      dua.ref,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.inter(
+                        fontSize: 10.5,
+                        color: tp.textMuted,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ),
+            ],
           ],
         ),
       ),

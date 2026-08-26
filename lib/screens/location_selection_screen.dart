@@ -134,7 +134,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
               ),
               Expanded(
                 child: GridView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: EdgeInsets.fromLTRB(16, 8, 16, 16 + MediaQuery.paddingOf(context).bottom),
                   physics: const BouncingScrollPhysics(),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
@@ -347,7 +347,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
 
               // Bottom Confirmation Button
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                padding: EdgeInsets.fromLTRB(16, 8, 16, 16 + MediaQuery.paddingOf(context).bottom),
                 child: Column(
                   children: [
                     HeartbeatTap(

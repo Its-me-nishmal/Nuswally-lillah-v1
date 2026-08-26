@@ -305,7 +305,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 // 2. Settings Group Lists
                 Expanded(
                   child: ListView(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    padding: EdgeInsets.fromLTRB(20, 12, 20, 30 + MediaQuery.paddingOf(context).bottom),
                     physics: const BouncingScrollPhysics(),
                     children: [
                       // Hero App Language Card

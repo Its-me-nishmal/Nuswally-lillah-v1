@@ -42,7 +42,7 @@ class QuranicDuasScreen extends StatelessWidget {
           Expanded(
             child: ListView.separated(
               physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
+              padding: EdgeInsets.fromLTRB(16, 4, 16, 20 + MediaQuery.paddingOf(context).bottom),
               itemCount: duas.length,
               separatorBuilder: (_, __) => const SizedBox(height: 8),
               itemBuilder: (context, index) {
@@ -129,10 +129,10 @@ class _DuaCard extends StatelessWidget {
                       dua.transli,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: 'Indulekha',
                         fontSize: 12,
-                        color: Colors.grey,
+                        color: tp.textSecondary,
                       ),
                     ),
                   ],

@@ -8,6 +8,7 @@ import '../models/quran_model.dart';
 import '../providers/quran_provider.dart';
 import '../providers/theme_provider.dart';
 import '../theme/jira_theme.dart';
+import '../widgets/heartbeat_tap.dart';
 import '../widgets/quran/surah_detail_top_bar.dart';
 import '../widgets/quran/mushaf_continuous_view.dart';
 import '../widgets/quran/ayah_study_list_view.dart';
@@ -114,12 +115,11 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  InkWell(
+                  HeartbeatTap(
                     onTap: () {
                       Navigator.pop(context);
                       ReciterPickerSheet.show(context);
                     },
-                    borderRadius: BorderRadius.circular(12),
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       decoration: BoxDecoration(
@@ -414,7 +414,9 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
           Positioned(
             left: 16,
             right: 16,
-            bottom: 16,
+            bottom: MediaQuery.paddingOf(context).bottom > 0
+                ? MediaQuery.paddingOf(context).bottom + 8
+                : 16,
             child: FloatingQuranAudioDock(
               surah: widget.surah,
               isCollapsed: _isCollapsed,

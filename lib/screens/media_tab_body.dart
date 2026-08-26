@@ -97,7 +97,7 @@ class _MediaTabBodyState extends State<MediaTabBody> {
 
     return ListView(
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 110),
+      padding: EdgeInsets.fromLTRB(16, 12, 16, 100 + MediaQuery.paddingOf(context).bottom),
       children: [
         // 1. Header Title & Badge
         _buildSectionHeader(),

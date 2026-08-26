@@ -12,6 +12,7 @@ class SocialLinksSheet extends StatefulWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (_) => const SocialLinksSheet(),
     );

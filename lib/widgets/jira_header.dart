@@ -69,6 +69,8 @@ class JiraHeader extends StatelessWidget {
             letterSpacing: 1.2,
             color: themeProvider.textPrimary,
           ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           textAlign: centerTitle ? TextAlign.center : TextAlign.start,
         ),
         if (subtitle != null) ...[
@@ -80,6 +82,8 @@ class JiraHeader extends StatelessWidget {
               fontWeight: FontWeight.w600,
               color: themeProvider.textSecondary.withValues(alpha: 0.8),
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             textAlign: centerTitle ? TextAlign.center : TextAlign.start,
           ),
         ],

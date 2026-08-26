@@ -317,110 +317,122 @@ class _SplashScreenState extends State<SplashScreen>
                 opacity: _fadeAnimation,
                 child: ScaleTransition(
                   scale: _scaleAnimation,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Spacer(flex: 3),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      return SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                          child: IntrinsicHeight(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 24),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Spacer(flex: 3),
 
-                        // Glowing Mosque Emblem
-                        Container(
-                          width: 88,
-                          height: 88,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: const Color(0xFF161B22),
-                            border: Border.all(
-                              color: JiraTheme.primaryBlue,
-                              width: 1.5,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color:
-                                    JiraTheme.primaryBlue.withValues(alpha: 0.35),
-                                blurRadius: 28,
-                                spreadRadius: 4,
+                                  // Glowing Mosque Emblem
+                                  Container(
+                                    width: 88,
+                                    height: 88,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: const Color(0xFF161B22),
+                                      border: Border.all(
+                                        color: JiraTheme.primaryBlue,
+                                        width: 1.5,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color:
+                                              JiraTheme.primaryBlue.withValues(alpha: 0.35),
+                                          blurRadius: 28,
+                                          spreadRadius: 4,
+                                        ),
+                                      ],
+                                    ),
+                                    child: const Center(
+                                      child: Icon(
+                                        Icons.mosque_rounded,
+                                        size: 44,
+                                        color: Color(0xFF93C5FD),
+                                      ),
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 24),
+
+                                  // Sacred Arabic Calligraphy
+                                  const Text(
+                                    'نُصَلِّي لِلَّهِ',
+                                    style: TextStyle(
+                                      fontFamily: 'HafsFont',
+                                      fontSize: 32,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFFF0F6FC),
+                                      height: 1.2,
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 8),
+
+                                  // English Title
+                                  Text(
+                                    'NUSWALLY LILLAH',
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: 4.0,
+                                      color: JiraTheme.secondaryGreen,
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 6),
+
+                                  // Subtitle
+                                  Text(
+                                    'YOUR ISLAMIC SANCTUARY',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: 2.0,
+                                      color: const Color(0xFF8B949E),
+                                    ),
+                                  ),
+
+                                  const Spacer(flex: 3),
+
+                                  // Bottom Bismillah Calligraphy
+                                  const Text(
+                                    'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
+                                    style: TextStyle(
+                                      fontFamily: 'HafsFont',
+                                      fontSize: 18,
+                                      color: Color(0xFF64748B),
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 10),
+
+                                  // App Version Tag
+                                  Text(
+                                    'v${AppUpdateService.currentVersionName}',
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      color: const Color(0xFF475569),
+                                      letterSpacing: 1.0,
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 20),
+                                ],
                               ),
-                            ],
-                          ),
-                          child: const Center(
-                            child: Icon(
-                              Icons.mosque_rounded,
-                              size: 44,
-                              color: Color(0xFF93C5FD),
                             ),
                           ),
                         ),
-
-                        const SizedBox(height: 24),
-
-                        // Sacred Arabic Calligraphy
-                        const Text(
-                          'نُصَلِّي لِلَّهِ',
-                          style: TextStyle(
-                            fontFamily: 'HafsFont',
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFFF0F6FC),
-                            height: 1.2,
-                          ),
-                        ),
-
-                        const SizedBox(height: 8),
-
-                        // English Title
-                        Text(
-                          'NUSWALLY LILLAH',
-                          style: GoogleFonts.outfit(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 4.0,
-                            color: JiraTheme.secondaryGreen,
-                          ),
-                        ),
-
-                        const SizedBox(height: 6),
-
-                        // Subtitle
-                        Text(
-                          'YOUR ISLAMIC SANCTUARY',
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 2.0,
-                            color: const Color(0xFF8B949E),
-                          ),
-                        ),
-
-                        const Spacer(flex: 3),
-
-                        // Bottom Bismillah Calligraphy
-                        const Text(
-                          'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
-                          style: TextStyle(
-                            fontFamily: 'HafsFont',
-                            fontSize: 18,
-                            color: Color(0xFF64748B),
-                          ),
-                        ),
-
-                        const SizedBox(height: 10),
-
-                        // App Version Tag
-                        Text(
-                          'v${AppUpdateService.currentVersionName}',
-                          style: GoogleFonts.outfit(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF475569),
-                            letterSpacing: 1.0,
-                          ),
-                        ),
-
-                        const SizedBox(height: 20),
-                      ],
-                    ),
+                      );
+                    },
                   ),
                 ),
               );

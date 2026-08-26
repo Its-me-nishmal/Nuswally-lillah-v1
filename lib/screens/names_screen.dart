@@ -1017,7 +1017,7 @@ class _NamesScreenState extends State<NamesScreen> {
                         )
                       : GridView.builder(
                           physics: const BouncingScrollPhysics(),
-                          padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
+                          padding: EdgeInsets.fromLTRB(16, 6, 16, 24 + MediaQuery.paddingOf(context).bottom),
                           itemCount: filteredNames.length,
                           gridDelegate:
                               const SliverGridDelegateWithFixedCrossAxisCount(

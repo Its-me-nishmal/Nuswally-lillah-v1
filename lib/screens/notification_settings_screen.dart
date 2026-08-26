@@ -136,7 +136,7 @@ class NotificationSettingsScreen extends StatelessWidget {
 
                 Expanded(
                   child: ListView(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    padding: EdgeInsets.fromLTRB(20, 12, 20, 30 + MediaQuery.paddingOf(context).bottom),
                     physics: const BouncingScrollPhysics(),
                     children: [
                       // 1. Hero Main Notification Toggle Card

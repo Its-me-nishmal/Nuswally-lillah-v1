@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../models/adhkaar.dart';
+import '../providers/theme_provider.dart';
 import '../theme/jira_theme.dart';
 import '../widgets/heartbeat_tap.dart';
+import '../widgets/jira_screen.dart';
 
 class DuaDetailScreen extends StatefulWidget {
   final Dua dua;
@@ -15,8 +18,8 @@ class DuaDetailScreen extends StatefulWidget {
 }
 
 class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProviderStateMixin {
-  int _count = 0;
-  int _targetCount = 3;
+  late int _count;
+  late int _targetCount;
   bool _isPlaying = false;
   bool _isBookmarked = false;
   late AnimationController _waveformController;
@@ -24,15 +27,13 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
   @override
   void initState() {
     super.initState();
-    // Parse target repetition count from hint if available
-    final hintDigits = RegExp(r'\d+').firstMatch(widget.dua.hint);
-    if (hintDigits != null) {
-      _targetCount = int.tryParse(hintDigits.group(0) ?? '3') ?? 3;
-    }
+    _count = 0;
+    _targetCount = int.tryParse(RegExp(r'\d+').firstMatch(widget.dua.hint)?.group(0) ?? '') ?? 1;
+    if (_targetCount <= 0) _targetCount = 1;
 
     _waveformController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1000),
+      duration: const Duration(milliseconds: 1200),
     )..repeat(reverse: true);
   }
 
@@ -47,11 +48,8 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
     setState(() {
       if (_count < _targetCount) {
         _count++;
-        if (_count == _targetCount) {
-          HapticFeedback.heavyImpact();
-        }
       } else {
-        _count = 1; // reset cycle
+        _count = 0; // reset on full completion
       }
     });
   }
@@ -72,52 +70,51 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
 
   @override
   Widget build(BuildContext context) {
+    final tp = context.watch<ThemeProvider>();
     final dua = widget.dua;
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF0B0E14),
-      body: Stack(
+    return JiraScreen(
+      child: Stack(
         children: [
-          SafeArea(
-            child: Column(
-              children: [
-                // 1. Top App Bar
-                _buildTopAppBar(context),
+          Column(
+            children: [
+              // 1. Top App Bar
+              _buildTopAppBar(context, tp),
 
-                // 2. Scrollable Detail Content (Focused purely on Arabic & Transliteration)
-                Expanded(
-                  child: ListView(
-                    physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    children: [
-                      const SizedBox(height: 8),
+              // 2. Scrollable Detail Content
+              Expanded(
+                child: ListView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  children: [
+                    const SizedBox(height: 8),
 
-                      // Centerpiece Hero Arabic Recitation & Audio Card
-                      _buildHeroArabicCard(dua),
+                    // Centerpiece Hero Arabic Recitation & Audio Card
+                    _buildHeroArabicCard(dua, tp),
 
+                    const SizedBox(height: 14),
+
+                    // Phonetic Transliteration Card
+                    if (dua.transli.isNotEmpty) ...[
+                      _buildTransliterationCard(dua.transli, tp),
                       const SizedBox(height: 14),
-
-                      // Phonetic Transliteration Card
-                      if (dua.transli.isNotEmpty) ...[
-                        _buildTransliterationCard(dua.transli),
-                        const SizedBox(height: 14),
-                      ],
-
-                      const SizedBox(height: 90), // Bottom clearance for floating counter
                     ],
-                  ),
+
+                    SizedBox(height: 90 + bottomInset), // Bottom clearance for floating counter
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
 
           // 3. Floating Repetition Counter Dock
           Positioned(
             left: 0,
             right: 0,
-            bottom: 24,
+            bottom: bottomInset > 0 ? bottomInset + 12 : 20,
             child: Center(
-              child: _buildFloatingCounterDock(),
+              child: _buildFloatingCounterDock(tp),
             ),
           ),
         ],
@@ -126,27 +123,30 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
   }
 
   // 1. Top App Bar
-  Widget _buildTopAppBar(BuildContext context) {
+  Widget _buildTopAppBar(BuildContext context, ThemeProvider tp) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Left: Circular frosted back button
+          // Left: Circular back button
           HeartbeatTap(
-            onTap: () => Navigator.pop(context),
+            onTap: () {
+              HapticFeedback.selectionClick();
+              Navigator.pop(context);
+            },
             child: Container(
-              width: 40,
-              height: 40,
+              width: 38,
+              height: 38,
               decoration: BoxDecoration(
-                color: const Color(0xFF161B22),
+                color: tp.surfaceColor,
                 shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFF30363D)),
+                border: Border.all(color: tp.borderColor),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.arrow_back_rounded,
-                color: Color(0xFFF0F6FC),
-                size: 20,
+                color: tp.textPrimary,
+                size: 18,
               ),
             ),
           ),
@@ -160,7 +160,7 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
                 style: GoogleFonts.outfit(
                   fontSize: 14,
                   fontWeight: FontWeight.w800,
-                  color: const Color(0xFFF0F6FC),
+                  color: tp.textPrimary,
                   letterSpacing: 1.5,
                 ),
               ),
@@ -169,11 +169,11 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
                 width: 6,
                 height: 6,
                 decoration: BoxDecoration(
-                  color: JiraTheme.primaryBlue,
+                  color: tp.primaryAccent,
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: JiraTheme.primaryBlue.withValues(alpha: 0.8),
+                      color: tp.primaryAccent.withValues(alpha: 0.8),
                       blurRadius: 6,
                       spreadRadius: 1,
                     ),
@@ -193,16 +193,16 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
                   setState(() => _isBookmarked = !_isBookmarked);
                 },
                 child: Container(
-                  width: 40,
-                  height: 40,
+                  width: 38,
+                  height: 38,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF161B22),
+                    color: tp.surfaceColor,
                     shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFF30363D)),
+                    border: Border.all(color: tp.borderColor),
                   ),
                   child: Icon(
                     _isBookmarked ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
-                    color: _isBookmarked ? JiraTheme.primaryBlue : const Color(0xFFF0F6FC),
+                    color: _isBookmarked ? tp.primaryAccent : tp.textSecondary,
                     size: 18,
                   ),
                 ),
@@ -221,16 +221,16 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
                   );
                 },
                 child: Container(
-                  width: 40,
-                  height: 40,
+                  width: 38,
+                  height: 38,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF161B22),
+                    color: tp.surfaceColor,
                     shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFF30363D)),
+                    border: Border.all(color: tp.borderColor),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.share_outlined,
-                    color: Color(0xFFF0F6FC),
+                    color: tp.textSecondary,
                     size: 18,
                   ),
                 ),
@@ -243,21 +243,14 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
   }
 
   // 2. Hero Centerpiece Card (Arabic Recitation & Audio Bar)
-  Widget _buildHeroArabicCard(Dua dua) {
+  Widget _buildHeroArabicCard(Dua dua, ThemeProvider tp) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF161B22),
+        color: tp.surfaceColor,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFF30363D), width: 1.0),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.35),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        border: Border.all(color: tp.borderColor, width: 1.0),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -305,7 +298,7 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
                 style: GoogleFonts.outfit(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF8B949E),
+                  color: tp.textSecondary,
                 ),
               ),
             ],
@@ -318,11 +311,11 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
             dua.dua,
             textAlign: TextAlign.center,
             textDirection: TextDirection.rtl,
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: 'HafsFont',
               fontSize: 24,
               fontWeight: FontWeight.normal,
-              color: Colors.white,
+              color: tp.textPrimary,
               height: 1.8,
             ),
           ),
@@ -333,9 +326,9 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
-              color: const Color(0xFF0B0E14),
+              color: tp.containerColor,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFF30363D), width: 0.8),
+              border: Border.all(color: tp.borderColor, width: 0.8),
             ),
             child: Row(
               children: [
@@ -343,14 +336,14 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
                 HeartbeatTap(
                   onTap: _togglePlay,
                   child: Container(
-                    width: 40,
-                    height: 40,
+                    width: 38,
+                    height: 38,
                     decoration: BoxDecoration(
-                      color: JiraTheme.primaryBlue,
+                      color: tp.primaryAccent,
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: JiraTheme.primaryBlue.withValues(alpha: 0.4),
+                          color: tp.primaryAccent.withValues(alpha: 0.4),
                           blurRadius: 10,
                           offset: const Offset(0, 2),
                         ),
@@ -385,7 +378,7 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
                               width: 3,
                               height: heights[index % heights.length] * factor,
                               decoration: BoxDecoration(
-                                color: isHighlighted ? const Color(0xFF93C5FD) : const Color(0xFF30363D),
+                                color: isHighlighted ? tp.primaryAccent : tp.textMuted.withValues(alpha: 0.3),
                                 borderRadius: BorderRadius.circular(2),
                               ),
                             );
@@ -403,7 +396,7 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
                   style: GoogleFonts.outfit(
                     fontSize: 11.5,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF8B949E),
+                    color: tp.textSecondary,
                   ),
                 ),
               ],
@@ -415,14 +408,14 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
   }
 
   // 3. Phonetic Transliteration Card
-  Widget _buildTransliterationCard(String transliteration) {
+  Widget _buildTransliterationCard(String transliteration, ThemeProvider tp) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFF161B22),
+        color: tp.surfaceColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF30363D)),
+        border: Border.all(color: tp.borderColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -433,7 +426,7 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
               fontSize: 10.5,
               fontWeight: FontWeight.w800,
               letterSpacing: 2.0,
-              color: const Color(0xFF8B949E),
+              color: tp.textSecondary,
             ),
           ),
           const SizedBox(height: 10),
@@ -442,7 +435,7 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
             style: GoogleFonts.inter(
               fontSize: 13.5,
               fontWeight: FontWeight.w400,
-              color: const Color(0xFFC7D2FE),
+              color: tp.textPrimary,
               height: 1.6,
             ),
           ),
@@ -452,7 +445,7 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
   }
 
   // 4. Floating Repetition Counter Dock
-  Widget _buildFloatingCounterDock() {
+  Widget _buildFloatingCounterDock(ThemeProvider tp) {
     final isCompleted = _count >= _targetCount;
 
     return HeartbeatTap(
@@ -460,15 +453,15 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         decoration: BoxDecoration(
-          color: const Color(0xFF161B22).withValues(alpha: 0.95),
+          color: tp.surfaceColor.withValues(alpha: 0.95),
           borderRadius: BorderRadius.circular(25),
           border: Border.all(
-            color: isCompleted ? JiraTheme.secondaryGreen : const Color(0xFF30363D),
+            color: isCompleted ? JiraTheme.secondaryGreen : tp.borderColor,
             width: 1.2,
           ),
           boxShadow: [
             BoxShadow(
-              color: (isCompleted ? JiraTheme.secondaryGreen : Colors.black).withValues(alpha: 0.4),
+              color: (isCompleted ? JiraTheme.secondaryGreen : Colors.black).withValues(alpha: 0.3),
               blurRadius: 16,
               offset: const Offset(0, 4),
             ),
@@ -482,7 +475,7 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
               style: GoogleFonts.outfit(
                 fontSize: 12,
                 fontWeight: FontWeight.w800,
-                color: isCompleted ? JiraTheme.secondaryGreen : Colors.white,
+                color: isCompleted ? JiraTheme.secondaryGreen : tp.textPrimary,
                 letterSpacing: 1.0,
               ),
             ),
@@ -490,7 +483,7 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: isCompleted ? JiraTheme.secondaryGreen : const Color(0xFF1F242C),
+                color: isCompleted ? JiraTheme.secondaryGreen : tp.containerColor,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
@@ -498,7 +491,7 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
                 style: GoogleFonts.outfit(
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
-                  color: isCompleted ? Colors.black : const Color(0xFF93C5FD),
+                  color: isCompleted ? Colors.white : tp.primaryAccent,
                 ),
               ),
             ),

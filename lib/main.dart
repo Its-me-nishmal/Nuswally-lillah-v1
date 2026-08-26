@@ -177,6 +177,18 @@ class AzanApp extends StatelessWidget {
           themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
           theme: lightThemeData,
           darkTheme: darkThemeData,
+          builder: (context, child) {
+            final mediaQuery = MediaQuery.of(context);
+            return MediaQuery(
+              data: mediaQuery.copyWith(
+                textScaler: mediaQuery.textScaler.clamp(
+                  minScaleFactor: 0.85,
+                  maxScaleFactor: 1.20,
+                ),
+              ),
+              child: child ?? const SizedBox.shrink(),
+            );
+          },
           home: SplashScreen(onboardingComplete: onboardingComplete),
         );
       },

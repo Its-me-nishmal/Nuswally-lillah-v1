@@ -109,7 +109,7 @@ class _AwraadScreenState extends State<AwraadScreen> {
                       return _CategoryCard(category: category);
                     },
                   ),
-                const SizedBox(height: 90),
+                SizedBox(height: 24 + MediaQuery.paddingOf(context).bottom),
               ],
             ),
           ),

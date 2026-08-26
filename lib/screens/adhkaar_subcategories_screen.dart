@@ -5,8 +5,8 @@ import 'package:provider/provider.dart';
 import '../models/adhkaar.dart';
 import '../providers/adhkaar_provider.dart';
 import '../providers/theme_provider.dart';
-import '../theme/jira_theme.dart';
 import '../widgets/heartbeat_tap.dart';
+import '../widgets/jira_screen.dart';
 import 'adhkaar_duas_screen.dart';
 
 class AdhkaarSubcategoriesScreen extends StatefulWidget {
@@ -19,9 +19,9 @@ class AdhkaarSubcategoriesScreen extends StatefulWidget {
 }
 
 class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen> {
+  final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   bool _isSearching = false;
-  final TextEditingController _searchController = TextEditingController();
 
   @override
   void dispose() {
@@ -30,35 +30,37 @@ class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen>
   }
 
   IconData _getCategoryIcon(String title) {
-    final lower = title.toLowerCase();
-    if (lower.contains('morning') || lower.contains('evening') || lower.contains('പ്രഭാതം')) {
-      return Icons.wb_sunny_outlined;
-    } else if (lower.contains('salah') || lower.contains('prayer') || lower.contains('നമസ്കാരം')) {
-      return Icons.mosque_outlined;
-    } else if (lower.contains('daily') || lower.contains('life') || lower.contains('ജീവിതം')) {
-      return Icons.directions_walk_rounded;
-    } else if (lower.contains('protection') || lower.contains('ruqyah') || lower.contains('സംരക്ഷണം')) {
-      return Icons.shield_outlined;
-    } else if (lower.contains('names') || lower.contains('asma') || lower.contains('അസ്മാ')) {
-      return Icons.favorite_border_rounded;
-    } else if (lower.contains('quran') || lower.contains('ഖുർആൻ')) {
-      return Icons.menu_book_rounded;
-    }
-    return Icons.auto_stories_outlined;
+    final t = title.toLowerCase();
+    if (t.contains('morning') || t.contains('രാവിലെ')) return Icons.wb_sunny_rounded;
+    if (t.contains('evening') || t.contains('വൈകുന്നേരം')) return Icons.nights_stay_rounded;
+    if (t.contains('prayer') || t.contains('നമസ്കാര')) return Icons.access_time_filled_rounded;
+    if (t.contains('quran') || t.contains('ഖുർആൻ')) return Icons.menu_book_rounded;
+    if (t.contains('protection') || t.contains('സംരക്ഷണം')) return Icons.shield_rounded;
+    if (t.contains('illness') || t.contains('രോഗം')) return Icons.healing_rounded;
+    if (t.contains('sleep') || t.contains('ഉറക്കം')) return Icons.bedtime_rounded;
+    if (t.contains('travel') || t.contains('യാത്ര')) return Icons.explore_rounded;
+    if (t.contains('hajj') || t.contains('ഹജ്ജ്')) return Icons.mosque_rounded;
+    if (t.contains('food') || t.contains('ഭക്ഷണം')) return Icons.restaurant_rounded;
+    if (t.contains('nature') || t.contains('പ്രകൃതി')) return Icons.cloud_rounded;
+    if (t.contains('sorrow') || t.contains('വിഷമം')) return Icons.favorite_rounded;
+    return Icons.auto_awesome_rounded;
   }
 
   String _getCategoryArabicTitle(String title) {
-    final lower = title.toLowerCase();
-    if (lower.contains('morning') || lower.contains('evening')) {
-      return 'أَذْكَارُ\nالصَّبَاحِ\nوَالْمَسَاءِ';
-    } else if (lower.contains('salah') || lower.contains('prayer')) {
-      return 'أَذْكَارُ\nالصَّلَاةِ';
-    } else if (lower.contains('daily')) {
-      return 'أَدْعِيَةُ\nالْيَوْمِ';
-    } else if (lower.contains('protection')) {
-      return 'الرُّقْيَةُ\nوَالْحِمَايَةُ';
-    }
-    return 'الأَذْكَارُ\nوَالأَدْعِيَةُ';
+    final t = title.toLowerCase();
+    if (t.contains('morning') || t.contains('രാവിലെ')) return 'أَذْكَارُ الصَّبَاحِ';
+    if (t.contains('evening') || t.contains('വൈകുന്നേരം')) return 'أَذْكَارُ الْمَسَاءِ';
+    if (t.contains('prayer') || t.contains('നമസ്കാര')) return 'أَدْعِيَةُ الصَّلَاةِ';
+    if (t.contains('quran') || t.contains('ഖുർആൻ')) return 'أَدْعِيَةُ الْقُرْآنِ';
+    if (t.contains('protection') || t.contains('സംരക്ഷണം')) return 'أَدْعِيَةُ الْحِفْظِ';
+    if (t.contains('illness') || t.contains('രോഗം')) return 'أَدْعِيَةُ الْمَرِيضِ';
+    if (t.contains('sleep') || t.contains('ഉറക്കം')) return 'أَذْكَارُ النَّوْمِ';
+    if (t.contains('travel') || t.contains('യാത്ര')) return 'أَدْعِيَةُ السَّفَرِ';
+    if (t.contains('hajj') || t.contains('ഹജ്ജ്')) return 'أَدْعِيَةُ الْحَجِّ';
+    if (t.contains('food') || t.contains('ഭക്ഷണം')) return 'أَدْعِيَةُ الطَّعَامِ';
+    if (t.contains('nature') || t.contains('പ്രകൃതി')) return 'أَدْعِيَةُ الطَّبِيعَةِ';
+    if (t.contains('sorrow') || t.contains('വിഷമം')) return 'أَدْعِيَةُ الْفَرَجِ';
+    return 'أَذْكَارٌ وَأَدْعِيَةٌ';
   }
 
   @override
@@ -68,14 +70,15 @@ class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen>
     final bundle = context.watch<AdhkaarProvider>().bundle;
 
     if (bundle == null) {
-      return const Scaffold(
-        backgroundColor: Color(0xFF0B0E14),
-        body: Center(child: CircularProgressIndicator(color: JiraTheme.primaryBlue)),
+      return JiraScreen(
+        child: Center(
+          child: CircularProgressIndicator(color: tp.primaryAccent),
+        ),
       );
     }
 
     final allSubs = widget.category.subCategoryIds
-        .map((id) => bundle.subCategoryById(id))
+        .map((id) => bundle.subCategories[id])
         .whereType<AdhkaarSubCategory>()
         .toList();
 
@@ -94,98 +97,91 @@ class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen>
         ? widget.category.title
         : (widget.category.titleEn.isNotEmpty ? widget.category.titleEn : widget.category.title);
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF0B0E14),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // 1. Top App Bar
-            _buildTopAppBar(context),
+    return JiraScreen(
+      child: Column(
+        children: [
+          // 1. Top App Bar
+          _buildTopAppBar(context, tp),
 
-            // Search Bar when active
-            if (_isSearching)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                child: Container(
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF161B22),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFF30363D)),
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.search_rounded, color: Color(0xFF38BDF8), size: 18),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: TextField(
-                          controller: _searchController,
-                          autofocus: true,
-                          style: GoogleFonts.outfit(fontSize: 13.5, color: Colors.white),
-                          onChanged: (val) => setState(() => _searchQuery = val),
-                          decoration: InputDecoration(
-                            hintText: 'Search chapters or keywords...',
-                            hintStyle: GoogleFonts.outfit(fontSize: 12.5, color: const Color(0xFF8B949E)),
-                            border: InputBorder.none,
-                            isDense: true,
-                          ),
+          // Search Bar when active
+          if (_isSearching)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              child: Container(
+                height: 44,
+                decoration: BoxDecoration(
+                  color: tp.surfaceColor,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: tp.borderColor),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Row(
+                  children: [
+                    Icon(Icons.search_rounded, color: tp.primaryAccent, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextField(
+                        controller: _searchController,
+                        autofocus: true,
+                        style: GoogleFonts.outfit(fontSize: 13.5, color: tp.textPrimary),
+                        onChanged: (val) => setState(() => _searchQuery = val),
+                        decoration: InputDecoration(
+                          hintText: 'Search chapters or keywords...',
+                          hintStyle: GoogleFonts.outfit(fontSize: 12.5, color: tp.textMuted),
+                          border: InputBorder.none,
+                          isDense: true,
                         ),
                       ),
-                      if (_searchQuery.isNotEmpty)
-                        GestureDetector(
-                          onTap: () {
-                            _searchController.clear();
-                            setState(() => _searchQuery = '');
-                          },
-                          child: const Icon(Icons.close_rounded, color: Color(0xFF8B949E), size: 16),
-                        ),
-                    ],
-                  ),
+                    ),
+                    if (_searchQuery.isNotEmpty)
+                      GestureDetector(
+                        onTap: () {
+                          _searchController.clear();
+                          setState(() => _searchQuery = '');
+                        },
+                        child: Icon(Icons.close_rounded, color: tp.textMuted, size: 16),
+                      ),
+                  ],
                 ),
               ),
-
-            // 2. Scrollable Content
-            Expanded(
-              child: ListView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: [
-                  const SizedBox(height: 8),
-
-                  // Hero Category Summary Card
-                  if (!_isSearching) ...[
-                    _buildHeroCategoryCard(context, categoryTitle, allSubs.length, totalInvocations, allSubs.isNotEmpty ? allSubs.first : null),
-                    const SizedBox(height: 20),
-                  ],
-
-                  // Section Header: CHAPTERS & OCCASIONS
-                  _buildSectionHeader(subs.length),
-
-                  const SizedBox(height: 12),
-
-                  // Chapters List
-                  if (subs.isEmpty)
-                    _buildEmptySearchState(query)
-                  else
-                    ...subs.asMap().entries.map((entry) {
-                      final index = entry.key + 1;
-                      final sub = entry.value;
-                      return _buildChapterCard(context, sub, index, isMl);
-                    }),
-
-                  const SizedBox(height: 30),
-                ],
-              ),
             ),
-          ],
-        ),
+
+          // 2. Scrollable Content
+          Expanded(
+            child: ListView(
+              physics: const BouncingScrollPhysics(),
+              padding: EdgeInsets.fromLTRB(16, 8, 16, 24 + MediaQuery.paddingOf(context).bottom),
+              children: [
+                // Hero Category Summary Card
+                if (!_isSearching) ...[
+                  _buildHeroCategoryCard(context, tp, categoryTitle, allSubs.length, totalInvocations, allSubs.isNotEmpty ? allSubs.first : null),
+                  const SizedBox(height: 20),
+                ],
+
+                // Section Header: CHAPTERS & OCCASIONS
+                _buildSectionHeader(tp, subs.length),
+
+                const SizedBox(height: 12),
+
+                // Chapters List
+                if (subs.isEmpty)
+                  _buildEmptySearchState(tp, query)
+                else
+                  ...subs.asMap().entries.map((entry) {
+                    final index = entry.key + 1;
+                    final sub = entry.value;
+                    return _buildChapterCard(context, tp, sub, index, isMl);
+                  }),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
   // 1. Top App Bar
-  Widget _buildTopAppBar(BuildContext context) {
+  Widget _buildTopAppBar(BuildContext context, ThemeProvider tp) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
@@ -193,31 +189,42 @@ class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen>
         children: [
           // Circular frosted back button
           HeartbeatTap(
-            onTap: () => Navigator.pop(context),
+            onTap: () {
+              HapticFeedback.selectionClick();
+              Navigator.pop(context);
+            },
             child: Container(
-              width: 40,
-              height: 40,
+              width: 38,
+              height: 38,
               decoration: BoxDecoration(
-                color: const Color(0xFF161B22),
+                color: tp.surfaceColor,
                 shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFF30363D)),
+                border: Border.all(color: tp.borderColor),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.arrow_back_rounded,
-                color: Color(0xFFF0F6FC),
-                size: 20,
+                color: tp.textPrimary,
+                size: 18,
               ),
             ),
           ),
 
           // Center: Title
-          Text(
-            'Nuswally Lillah',
-            style: GoogleFonts.outfit(
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
-              color: const Color(0xFFF0F6FC),
-              letterSpacing: 0.5,
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Text(
+                'Nuswally Lillah',
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.outfit(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: tp.textPrimary,
+                  letterSpacing: 0.5,
+                ),
+              ),
             ),
           ),
 
@@ -234,16 +241,16 @@ class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen>
               });
             },
             child: Container(
-              width: 40,
-              height: 40,
+              width: 38,
+              height: 38,
               decoration: BoxDecoration(
-                color: const Color(0xFF161B22),
+                color: tp.surfaceColor,
                 shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFF30363D)),
+                border: Border.all(color: tp.borderColor),
               ),
               child: Icon(
                 _isSearching ? Icons.close_rounded : Icons.search_rounded,
-                color: const Color(0xFFF0F6FC),
+                color: tp.textPrimary,
                 size: 18,
               ),
             ),
@@ -254,21 +261,14 @@ class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen>
   }
 
   // 2. Hero Category Summary Card
-  Widget _buildHeroCategoryCard(BuildContext context, String title, int chapterCount, int invocationCount, AdhkaarSubCategory? firstSub) {
+  Widget _buildHeroCategoryCard(BuildContext context, ThemeProvider tp, String title, int chapterCount, int invocationCount, AdhkaarSubCategory? firstSub) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF161B22),
+        color: tp.surfaceColor,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFF30363D)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.35),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        border: Border.all(color: tp.borderColor),
       ),
       child: Column(
         children: [
@@ -284,13 +284,13 @@ class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen>
                       width: 44,
                       height: 44,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1F242C),
+                        color: tp.containerColor,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFF30363D)),
+                        border: Border.all(color: tp.borderColor),
                       ),
                       child: Icon(
                         _getCategoryIcon(title),
-                        color: const Color(0xFF38BDF8),
+                        color: tp.primaryAccent,
                         size: 22,
                       ),
                     ),
@@ -300,32 +300,36 @@ class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen>
                       style: GoogleFonts.outfit(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
-                        color: const Color(0xFFF0F6FC),
+                        color: tp.textPrimary,
                         height: 1.2,
                       ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 6),
                     Text(
                       '$chapterCount Chapters • $invocationCount Invocations',
                       style: GoogleFonts.inter(
                         fontSize: 12,
-                        color: const Color(0xFF8B949E),
+                        color: tp.textSecondary,
                       ),
                     ),
                   ],
                 ),
               ),
 
+              const SizedBox(width: 8),
+
               // Right: Large Arabic Calligraphy
               Text(
                 _getCategoryArabicTitle(title),
                 textAlign: TextAlign.right,
                 textDirection: TextDirection.rtl,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'HafsFont',
-                  fontSize: 22,
+                  fontSize: 20,
                   fontWeight: FontWeight.normal,
-                  color: Color(0xFF93C5FD),
+                  color: tp.primaryAccent,
                   height: 1.45,
                 ),
               ),
@@ -351,16 +355,16 @@ class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen>
               width: double.infinity,
               height: 44,
               decoration: BoxDecoration(
-                color: const Color(0xFF0B0E14),
+                color: tp.containerColor,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: JiraTheme.primaryBlue.withValues(alpha: 0.6), width: 1.2),
+                border: Border.all(color: tp.primaryAccent.withValues(alpha: 0.6), width: 1.2),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.play_arrow_outlined,
-                    color: Color(0xFF93C5FD),
+                    color: tp.primaryAccent,
                     size: 18,
                   ),
                   const SizedBox(width: 6),
@@ -369,7 +373,7 @@ class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen>
                     style: GoogleFonts.outfit(
                       fontSize: 13.5,
                       fontWeight: FontWeight.w800,
-                      color: const Color(0xFF93C5FD),
+                      color: tp.primaryAccent,
                       letterSpacing: 0.5,
                     ),
                   ),
@@ -383,7 +387,7 @@ class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen>
   }
 
   // 3. Section Header
-  Widget _buildSectionHeader(int count) {
+  Widget _buildSectionHeader(ThemeProvider tp, int count) {
     return Row(
       children: [
         Text(
@@ -392,14 +396,14 @@ class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen>
             fontSize: 10.5,
             fontWeight: FontWeight.w800,
             letterSpacing: 1.8,
-            color: const Color(0xFF8B949E),
+            color: tp.textSecondary,
           ),
         ),
         const SizedBox(width: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
           decoration: BoxDecoration(
-            color: const Color(0xFF1F242C),
+            color: tp.containerColor,
             borderRadius: BorderRadius.circular(10),
           ),
           child: Text(
@@ -407,7 +411,7 @@ class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen>
             style: GoogleFonts.outfit(
               fontSize: 10.5,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF8B949E),
+              color: tp.textSecondary,
             ),
           ),
         ),
@@ -415,15 +419,15 @@ class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen>
         Expanded(
           child: Container(
             height: 1,
-            color: const Color(0xFF30363D).withValues(alpha: 0.5),
+            color: tp.borderColor.withValues(alpha: 0.5),
           ),
         ),
       ],
     );
   }
 
-  // 4. Chapter Card (Matching Stitch Screenshot)
-  Widget _buildChapterCard(BuildContext context, AdhkaarSubCategory sub, int index, bool isMl) {
+  // 4. Chapter Card
+  Widget _buildChapterCard(BuildContext context, ThemeProvider tp, AdhkaarSubCategory sub, int index, bool isMl) {
     final title = isMl ? sub.title : (sub.titleEn.isNotEmpty ? sub.titleEn : sub.title);
     final estMins = (sub.duaIds.length * 0.8).ceil().clamp(1, 20);
 
@@ -442,16 +446,9 @@ class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen>
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFF161B22),
+            color: tp.surfaceColor,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFF30363D)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
+            border: Border.all(color: tp.borderColor),
           ),
           child: Row(
             children: [
@@ -460,7 +457,7 @@ class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen>
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1F242C),
+                  color: tp.containerColor,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Center(
@@ -469,7 +466,7 @@ class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen>
                     style: GoogleFonts.outfit(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w800,
-                      color: const Color(0xFF93C5FD),
+                      color: tp.primaryAccent,
                     ),
                   ),
                 ),
@@ -485,9 +482,9 @@ class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen>
                       title,
                       style: TextStyle(
                         fontFamily: isMl ? 'BalooChettan2' : GoogleFonts.outfit().fontFamily,
-                        fontSize: isMl ? 14.5 : 14.5,
+                        fontSize: 14.5,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFFF0F6FC),
+                        color: tp.textPrimary,
                         height: isMl ? 1.35 : 1.25,
                       ),
                       maxLines: 2,
@@ -498,10 +495,10 @@ class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen>
                       Text(
                         sub.titleArabic,
                         textDirection: TextDirection.rtl,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: 'HafsFont',
                           fontSize: 13.5,
-                          color: Color(0xFF93C5FD),
+                          color: tp.primaryAccent,
                           height: 1.3,
                         ),
                       ),
@@ -511,7 +508,7 @@ class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen>
                       '${sub.duaIds.length} Invocations • $estMins Mins',
                       style: GoogleFonts.inter(
                         fontSize: 11.5,
-                        color: const Color(0xFF8B949E),
+                        color: tp.textSecondary,
                       ),
                     ),
                   ],
@@ -519,10 +516,10 @@ class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen>
               ),
 
               const SizedBox(width: 8),
-              const Icon(
+              Icon(
                 Icons.chevron_right_rounded,
                 size: 20,
-                color: Color(0xFF64748B),
+                color: tp.textMuted,
               ),
             ],
           ),
@@ -531,20 +528,20 @@ class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen>
     );
   }
 
-  Widget _buildEmptySearchState(String query) {
+  Widget _buildEmptySearchState(ThemeProvider tp, String query) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 40),
         child: Column(
           children: [
-            const Icon(Icons.search_off_rounded, size: 40, color: Color(0xFF64748B)),
+            Icon(Icons.search_off_rounded, size: 40, color: tp.textMuted),
             const SizedBox(height: 10),
             Text(
               'No chapters matching "$query"',
               style: GoogleFonts.outfit(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF8B949E),
+                color: tp.textSecondary,
               ),
             ),
           ],
