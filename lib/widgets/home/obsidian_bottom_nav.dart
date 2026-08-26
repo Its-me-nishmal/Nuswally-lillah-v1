@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../theme/jira_theme.dart';
@@ -43,102 +44,86 @@ class ObsidianBottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
     final isDark = themeProvider.isDarkMode;
-    final surfaceColor = isDark
-        ? JiraTheme.darkSurface.withValues(alpha: 0.94)
-        : Colors.white.withValues(alpha: 0.96);
-    final borderColor = isDark ? JiraTheme.darkBorderSubtle : JiraTheme.lightBorderSubtle;
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(28),
+    final surfaceColor = (isDark ? JiraTheme.darkSurface : JiraTheme.lightSurface)
+        .withValues(alpha: 0.90);
+    final borderColor = isDark ? JiraTheme.darkBorderSubtle : JiraTheme.lightBorderSubtle;
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+
+    return ClipRect(
       child: BackdropFilter(
-        filter: ui.ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+        filter: ui.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
-          height: 64,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          width: double.infinity,
+          padding: EdgeInsets.only(
+            top: 8,
+            bottom: bottomInset > 0 ? bottomInset : 8,
+          ),
           decoration: BoxDecoration(
             color: surfaceColor,
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(
-              color: borderColor,
-              width: 1.0,
+            border: Border(
+              top: BorderSide(
+                color: borderColor,
+                width: 1.0,
+              ),
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
+                color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.04),
+                blurRadius: 16,
+                offset: const Offset(0, -4),
               ),
             ],
           ),
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final tabWidth = constraints.maxWidth / _items.length;
-              final isWithinTabs = currentIndex >= 0 && currentIndex < _items.length;
+          child: Row(
+            children: List.generate(_items.length, (index) {
+              final item = _items[index];
+              final isActive = currentIndex == index;
+              final activeColor = JiraTheme.primaryBlue;
+              final inactiveColor = isDark
+                  ? const Color(0xFF8B949E)
+                  : const Color(0xFF64748B);
 
-              return Stack(
-                alignment: Alignment.centerLeft,
-                children: [
-                  // 1. Smooth Sliding Active Pill
-                  if (isWithinTabs)
-                    AnimatedPositioned(
-                      duration: const Duration(milliseconds: 240),
-                      curve: Curves.easeOutCubic,
-                      left: currentIndex * tabWidth + (tabWidth - 44) / 2,
-                      top: (constraints.maxHeight - 44) / 2,
-                      child: Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: JiraTheme.primaryBlue,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: JiraTheme.primaryBlue.withValues(alpha: 0.35),
-                              blurRadius: 10,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                  // 2. Interactive Navigation Icons
-                  Row(
-                    children: List.generate(_items.length, (index) {
-                      final item = _items[index];
-                      final isActive = currentIndex == index;
-
-                      return Expanded(
-                        child: HeartbeatTap(
-                          onTap: () {
-                            HapticFeedback.selectionClick();
-                            onTabSelected(index);
-                          },
-                          child: Container(
-                            height: 48,
-                            color: Colors.transparent,
-                            child: Center(
-                              child: AnimatedScale(
-                                duration: const Duration(milliseconds: 200),
-                                scale: isActive ? 1.06 : 1.0,
-                                curve: Curves.easeOutBack,
-                                child: Icon(
-                                  isActive ? item.activeIcon : item.icon,
-                                  size: 22,
-                                  color: isActive
-                                      ? Colors.white
-                                      : (isDark ? const Color(0xFF8B949E) : const Color(0xFF626F86)),
-                                ),
-                              ),
-                            ),
+              return Expanded(
+                child: HeartbeatTap(
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    onTabSelected(index);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    color: Colors.transparent,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Icon with subtle scale animation
+                        AnimatedScale(
+                          duration: const Duration(milliseconds: 200),
+                          scale: isActive ? 1.08 : 1.0,
+                          curve: Curves.easeOutBack,
+                          child: Icon(
+                            isActive ? item.activeIcon : item.icon,
+                            size: 22,
+                            color: isActive ? activeColor : inactiveColor,
                           ),
                         ),
-                      );
-                    }),
+                        const SizedBox(height: 3),
+                        // Label
+                        Text(
+                          item.label,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 10.5,
+                            fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                            color: isActive ? activeColor : inactiveColor,
+                            letterSpacing: 0.1,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ],
+                ),
               );
-            },
+            }),
           ),
         ),
       ),

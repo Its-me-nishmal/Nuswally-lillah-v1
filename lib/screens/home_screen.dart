@@ -167,13 +167,11 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
-          // Floating Glassmorphic Bottom Navigation Bar
+          // Full-Width Frosted Bottom Navigation Bar (Attached with SafeArea)
           Positioned(
-            left: 18,
-            right: 18,
-            bottom: MediaQuery.paddingOf(context).bottom > 0
-                ? MediaQuery.paddingOf(context).bottom + 8
-                : 16,
+            left: 0,
+            right: 0,
+            bottom: 0,
             child: ObsidianBottomNav(
               currentIndex: _currentTabIndex,
               onTabSelected: (index) {
@@ -229,7 +227,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 24),
               const TodayPrayersTimeline(),
-              SizedBox(height: 100 + bottomInset), // Dynamic bottom spacing for floating bar
+              SizedBox(height: 80 + bottomInset), // Bottom clearance for full-width attached bar
             ],
           ),
         );

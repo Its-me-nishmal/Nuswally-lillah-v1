@@ -157,7 +157,7 @@ class _QuranTabBodyState extends State<QuranTabBody> {
                 }),
             ],
 
-            SizedBox(height: 100 + MediaQuery.paddingOf(context).bottom), // Dynamic bottom clearance for floating bar
+            SizedBox(height: 80 + MediaQuery.paddingOf(context).bottom), // Bottom clearance for attached bar
           ],
         );
       },

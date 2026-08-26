@@ -253,7 +253,7 @@ class _LibraryTabBodyState extends State<LibraryTabBody> {
             ),
           ],
 
-          SizedBox(height: 100 + MediaQuery.paddingOf(context).bottom), // Dynamic clearance for floating dock
+          SizedBox(height: 80 + MediaQuery.paddingOf(context).bottom), // Bottom clearance for attached bar
         ],
       );
   }
