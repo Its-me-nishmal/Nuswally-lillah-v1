@@ -374,6 +374,48 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             _showAsrCalculationInfo(context);
                           },
                         ),
+                        const Divider(height: 1, color: Color(0xFF30363D)),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          child: Row(
+                            children: [
+                              Icon(Icons.pin_drop_outlined, color: themeProvider.primaryAccent, size: 20),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Lock Screen Prayer Bar',
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: const Color(0xFFF0F6FC),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Live ongoing countdown on lock screen',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 11.5,
+                                        color: const Color(0xFF8B949E),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Switch.adaptive(
+                                value: prayerProvider.stickyNotificationEnabled,
+                                onChanged: (val) {
+                                  HapticFeedback.selectionClick();
+                                  prayerProvider.setStickyNotificationEnabled(val);
+                                },
+                                activeThumbColor: themeProvider.primaryAccent,
+                                activeTrackColor: themeProvider.primaryAccent.withValues(alpha: 0.4),
+                              ),
+                            ],
+                          ),
+                        ),
                       ]),
 
                       const SizedBox(height: 24),

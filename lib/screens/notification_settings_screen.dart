@@ -226,6 +226,93 @@ class NotificationSettingsScreen extends StatelessWidget {
                         ),
                       ),
 
+                      const SizedBox(height: 12),
+
+                      // Sticky Lock Screen Prayer Bar Card
+                      Container(
+                        padding: const EdgeInsets.all(18),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF161B22),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: provider.stickyNotificationEnabled
+                                ? JiraTheme.primaryBlue.withValues(alpha: 0.5)
+                                : const Color(0xFF30363D),
+                            width: 1.0,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: provider.stickyNotificationEnabled
+                                  ? JiraTheme.primaryBlue.withValues(alpha: 0.10)
+                                  : Colors.black.withValues(alpha: 0.3),
+                              blurRadius: 18,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: provider.stickyNotificationEnabled
+                                    ? JiraTheme.primaryBlue.withValues(alpha: 0.15)
+                                    : const Color(0xFF1F242C),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: provider.stickyNotificationEnabled
+                                      ? JiraTheme.primaryBlue.withValues(alpha: 0.4)
+                                      : const Color(0xFF30363D),
+                                ),
+                              ),
+                              child: Icon(
+                                Icons.pin_drop_rounded,
+                                color: provider.stickyNotificationEnabled
+                                    ? JiraTheme.primaryBlue
+                                    : const Color(0xFF8B949E),
+                                size: 22,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Lock Screen Prayer Bar',
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w800,
+                                      color: const Color(0xFFF0F6FC),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Live ongoing countdown pinned to lock screen',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 12,
+                                      color: const Color(0xFF8B949E),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Switch.adaptive(
+                              value: provider.stickyNotificationEnabled,
+                              onChanged: (val) {
+                                HapticFeedback.selectionClick();
+                                provider.setStickyNotificationEnabled(val);
+                              },
+                              activeThumbColor: JiraTheme.primaryBlue,
+                              activeTrackColor: JiraTheme.primaryBlue.withValues(alpha: 0.35),
+                              inactiveThumbColor: const Color(0xFF8B949E),
+                              inactiveTrackColor: const Color(0xFF1F242C),
+                            ),
+                          ],
+                        ),
+                      ),
+
                       const SizedBox(height: 24),
 
                       // 2. Pre-Azan Timing / Delay Selection

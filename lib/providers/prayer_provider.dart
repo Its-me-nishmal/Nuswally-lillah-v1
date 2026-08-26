@@ -53,9 +53,11 @@ class PrayerProvider with ChangeNotifier {
 
   bool _azanNotificationsEnabled = true;
   int _preAzanReminderMinutes = 0;
+  bool _stickyNotificationEnabled = true;
 
   bool get azanNotificationsEnabled => _azanNotificationsEnabled;
   int get preAzanReminderMinutes => _preAzanReminderMinutes;
+  bool get stickyNotificationEnabled => _stickyNotificationEnabled;
 
   final Map<String, int> _iqamahOffsets = {
     'Fajr': 20,
@@ -164,6 +166,7 @@ class PrayerProvider with ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     _azanNotificationsEnabled = prefs.getBool('azan_notifications_enabled') ?? true;
     _preAzanReminderMinutes = prefs.getInt('pre_azan_reminder_minutes') ?? 0;
+    _stickyNotificationEnabled = prefs.getBool('sticky_prayer_notification_enabled') ?? true;
 
     const prayers = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
     for (var prayer in prayers) {
@@ -483,6 +486,8 @@ class PrayerProvider with ChangeNotifier {
         }
       }
     }
+
+    _updateStickyNotification();
   }
 
   Future<void> playAlertSound(String soundType) async {
@@ -529,6 +534,64 @@ class PrayerProvider with ChangeNotifier {
       );
     } catch (e) {
       debugPrint('Error scheduling native alarms: $e');
+    }
+  }
+
+  String _getHijriDateString() {
+    final now = DateTime.now();
+    final hijriMonths = [
+      'Muharram', 'Safar', 'Rabi al-Awwal', 'Rabi al-Thani',
+      'Jumada al-Awwal', 'Jumada al-Thani', 'Rajab', 'Sha\'ban',
+      'Ramadan', 'Shawwal', 'Dhu al-Qi\'dah', 'Dhu al-Hijjah'
+    ];
+    final refDate = DateTime(2026, 8, 2);
+    final diffDays = now.difference(refDate).inDays;
+    var day = 18 + diffDays;
+    var monthIdx = 1;
+    if (day > 29) {
+      day = day - 29;
+      monthIdx = (monthIdx + 1) % 12;
+    }
+    return '$day ${hijriMonths[monthIdx]} 1448 AH';
+  }
+
+  void _updateStickyNotification() {
+    if (!_stickyNotificationEnabled || _todayPrayerTimes == null) {
+      NotificationService.cancelStickyPrayerNotification();
+      return;
+    }
+
+    final locName = _selectedLocation?.nameEn ?? 'Kerala';
+    final remainingMins = _timeToNextPrayer.inMinutes;
+    final remainingSecs = _timeToNextPrayer.inSeconds % 60;
+    final formattedCountdown = remainingMins > 60
+        ? '${_timeToNextPrayer.inHours}h ${remainingMins % 60}m'
+        : (remainingMins > 0 ? '${remainingMins}m' : '${remainingSecs}s');
+
+    final title = 'Next: $_nextPrayerName in $formattedCountdown';
+    final body = 'Fajr ${_todayPrayerTimes!.fajr} • Dhuhr ${_todayPrayerTimes!.dhuhr} • Asr ${_todayPrayerTimes!.asr} • Maghrib ${_todayPrayerTimes!.maghrib} • Isha ${_todayPrayerTimes!.isha}';
+
+    NotificationService.updateStickyPrayerNotification(
+      title: title,
+      body: body,
+      hijriDate: _getHijriDateString(),
+      locationName: locName,
+      enabled: _stickyNotificationEnabled,
+    );
+  }
+
+  Future<void> setStickyNotificationEnabled(bool enabled) async {
+    if (_stickyNotificationEnabled == enabled) return;
+    _stickyNotificationEnabled = enabled;
+    notifyListeners();
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('sticky_prayer_notification_enabled', enabled);
+
+    if (enabled) {
+      _updateStickyNotification();
+    } else {
+      await NotificationService.cancelStickyPrayerNotification();
     }
   }
 

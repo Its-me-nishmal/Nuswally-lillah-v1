@@ -129,6 +129,23 @@ class NotificationService {
       } catch (e) {
         debugPrint('NotificationService: Failed to create app_update_channel: $e');
       }
+
+      try {
+        // Create channel for sticky lock screen prayer bar
+        await androidImplementation.createNotificationChannel(
+          const AndroidNotificationChannel(
+            'sticky_prayer_channel',
+            'Sticky Lock Screen Prayer Bar',
+            description: 'Live ongoing prayer times and countdown pinned to lock screen',
+            importance: Importance.low,
+            playSound: false,
+            enableVibration: false,
+            showBadge: false,
+          ),
+        );
+      } catch (e) {
+        debugPrint('NotificationService: Failed to create sticky_prayer_channel: $e');
+      }
     }
   }
 
@@ -497,6 +514,71 @@ class NotificationService {
       }
     } catch (e) {
       debugPrint('NotificationService: scheduleDaily6AMUpdateCheck error: $e');
+    }
+  }
+
+  static const int stickyNotificationId = 8888;
+
+  /// Updates or posts the persistent sticky notification on lock screen and notification shade
+  static Future<void> updateStickyPrayerNotification({
+    required String title,
+    required String body,
+    required String hijriDate,
+    required String locationName,
+    required bool enabled,
+  }) async {
+    if (!enabled) {
+      await cancelStickyPrayerNotification();
+      return;
+    }
+
+    try {
+      final bigTextStyleInformation = BigTextStyleInformation(
+        body,
+        htmlFormatBigText: false,
+        contentTitle: title,
+        htmlFormatContentTitle: false,
+        summaryText: '$hijriDate • $locationName',
+        htmlFormatSummaryText: false,
+      );
+
+      final androidDetails = AndroidNotificationDetails(
+        'sticky_prayer_channel',
+        'Sticky Lock Screen Prayer Bar',
+        channelDescription: 'Live ongoing prayer times and countdown pinned to lock screen',
+        importance: Importance.low,
+        priority: Priority.low,
+        ongoing: true,
+        autoCancel: false,
+        playSound: false,
+        enableVibration: false,
+        showWhen: false,
+        visibility: NotificationVisibility.public,
+        styleInformation: bigTextStyleInformation,
+        color: const Color(0xFF14B8A6),
+        icon: '@mipmap/launcher_icon',
+      );
+
+      final notificationDetails = NotificationDetails(android: androidDetails);
+
+      await _notificationsPlugin.show(
+        id: stickyNotificationId,
+        title: title,
+        body: body,
+        notificationDetails: notificationDetails,
+        payload: 'sticky_prayer',
+      );
+    } catch (e) {
+      debugPrint('NotificationService: updateStickyPrayerNotification error: $e');
+    }
+  }
+
+  /// Cancels the sticky ongoing lock screen prayer notification
+  static Future<void> cancelStickyPrayerNotification() async {
+    try {
+      await _notificationsPlugin.cancel(id: stickyNotificationId);
+    } catch (e) {
+      debugPrint('NotificationService: cancelStickyPrayerNotification error: $e');
     }
   }
 }
