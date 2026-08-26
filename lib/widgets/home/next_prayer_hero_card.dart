@@ -189,8 +189,8 @@ class _NextPrayerHeroCardState extends State<NextPrayerHeroCard> {
                               Container(
                                 width: 6,
                                 height: 6,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFF60A5FA),
+                                decoration: BoxDecoration(
+                                  color: themeProvider.primaryAccent,
                                   shape: BoxShape.circle,
                                 ),
                               ),

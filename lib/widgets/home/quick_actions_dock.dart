@@ -29,7 +29,7 @@ class QuickActionsDock extends StatelessWidget {
             context: context,
             label: 'Audio',
             icon: Icons.headphones_rounded,
-            accentColor: const Color(0xFF38BDF8),
+            accentColor: const Color(0xFF2DD4BF),
             onTap: () {
               HapticFeedback.selectionClick();
               Navigator.push(
@@ -44,7 +44,7 @@ class QuickActionsDock extends StatelessWidget {
             context: context,
             label: 'Tasbeeh',
             icon: Icons.fingerprint_rounded,
-            accentColor: JiraTheme.secondaryGreen,
+            accentColor: const Color(0xFF10B981),
             onTap: () {
               HapticFeedback.selectionClick();
               Navigator.push(
@@ -59,7 +59,7 @@ class QuickActionsDock extends StatelessWidget {
             context: context,
             label: 'Quran',
             icon: Icons.menu_book_rounded,
-            accentColor: const Color(0xFF818CF8),
+            accentColor: const Color(0xFF14B8A6),
             onTap: () {
               HapticFeedback.selectionClick();
               if (onNavigateTab != null) {
@@ -73,7 +73,7 @@ class QuickActionsDock extends StatelessWidget {
             context: context,
             label: '99 Names',
             icon: Icons.auto_awesome_rounded,
-            accentColor: const Color(0xFFFBBF24),
+            accentColor: const Color(0xFFF59E0B),
             onTap: () {
               HapticFeedback.selectionClick();
               Navigator.push(

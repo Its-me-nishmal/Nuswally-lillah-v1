@@ -4,31 +4,30 @@ import 'package:flutter/material.dart';
 class JiraTheme {
   // Brand Name: Obsidian Sanctuary
 
-  // 1. Primary Tones (#0C66E4) - Electric Jira Blue
-  static const Color primaryBlue = Color(0xFF0C66E4);
-  static const Color primary = Color(0xFF0C66E4);
-  static const Color primaryHover = Color(0xFF0052CC);
-  static const Color primaryLightTint = Color(0xFFE9F2FF);
-  static const Color primaryDarkTint = Color(0xFF1C2B42);
+  // 1. Primary Tones: Restful Islamic Teal (#14B8A6 / #0D9488)
+  static const Color primaryBlue = Color(0xFF14B8A6);
+  static const Color primary = Color(0xFF14B8A6);
+  static const Color primaryHover = Color(0xFF0D9488);
+  static const Color primaryBlueBgDark = Color(0xFF0F2624);
+  static const Color primaryBlueBgLight = Color(0xFFE6FFFA);
 
   // Primary Color Swatch Ramp
-  static const Color primary50 = Color(0xFFF0F6FE);
-  static const Color primary100 = Color(0xFFD6E6FD);
-  static const Color primary200 = Color(0xFFAECDFC);
-  static const Color primary300 = Color(0xFF7CB0FA);
-  static const Color primary400 = Color(0xFF468DF0);
-  static const Color primary500 = Color(0xFF0C66E4);
-  static const Color primary600 = Color(0xFF0052CC);
-  static const Color primary700 = Color(0xFF0747A6);
-  static const Color primary800 = Color(0xFF052B66);
-  static const Color primary900 = Color(0xFF031633);
+  static const Color primary50 = Color(0xFFE6FFFA);
+  static const Color primary100 = Color(0xFFB2F5EA);
+  static const Color primary200 = Color(0xFF81E6D9);
+  static const Color primary300 = Color(0xFF4FD1C5);
+  static const Color primary400 = Color(0xFF2DD4BF);
+  static const Color primary500 = Color(0xFF14B8A6);
+  static const Color primary600 = Color(0xFF0D9488);
+  static const Color primary700 = Color(0xFF0F766E);
+  static const Color primary800 = Color(0xFF115E59);
+  static const Color primary900 = Color(0xFF134E4A);
 
-  // 2. Secondary Tones (#10B981) - Emerald Green
+  // 2. Secondary Tones (Emerald / Sage)
   static const Color secondary = Color(0xFF10B981);
   static const Color secondaryGreen = Color(0xFF10B981);
-  static const Color successGreen = Color(0xFF10B981);
-  static const Color successGreenBgDark = Color(0xFF064E3B);
-  static const Color successGreenBgLight = Color(0xFFD1FAE5);
+  static const Color secondaryGreenBgDark = Color(0xFF0D281E);
+  static const Color secondaryGreenBgLight = Color(0xFFD1FAE5);
 
   // Secondary Color Swatch Ramp
   static const Color secondary50 = Color(0xFFECFDF5);
@@ -42,12 +41,12 @@ class JiraTheme {
   static const Color secondary800 = Color(0xFF065F46);
   static const Color secondary900 = Color(0xFF064E3B);
 
-  // 3. Tertiary Tones (#BD4600) - Vibrant Rust / Warm Amber
-  static const Color tertiary = Color(0xFFBD4600);
-  static const Color tertiaryOrange = Color(0xFFBD4600);
-  static const Color warningOrange = Color(0xFFBD4600);
-  static const Color warningOrangeBgDark = Color(0xFF331300);
-  static const Color warningOrangeBgLight = Color(0xFFFFE5D3);
+  // 3. Tertiary Accent (Warm Amber / Gold)
+  static const Color tertiary = Color(0xFFF59E0B);
+  static const Color tertiaryOrange = Color(0xFFF59E0B);
+  static const Color warningOrange = Color(0xFFF59E0B);
+  static const Color warningOrangeBgDark = Color(0xFF3B2A10);
+  static const Color warningOrangeBgLight = Color(0xFFFEF3C7);
 
   // Tertiary Color Swatch Ramp
   static const Color tertiary50 = Color(0xFFFFF4ED);
@@ -61,16 +60,16 @@ class JiraTheme {
   static const Color tertiary800 = Color(0xFF521E00);
   static const Color tertiary900 = Color(0xFF331300);
 
-  // 4. Neutral Tones (#0B0E14) - Obsidian Midnight
-  static const Color neutral = Color(0xFF0B0E14);
-  static const Color darkBackground = Color(0xFF0B0E14);
-  static const Color darkSurface = Color(0xFF141920);
-  static const Color darkContainer = Color(0xFF1B222C);
-  static const Color darkBorder = Color(0xFF262C36);
-  static const Color darkBorderSubtle = Color(0xFF1C222B);
-  static const Color darkTextPrimary = Color(0xFFF0F6FC);
-  static const Color darkTextSecondary = Color(0xFF8B949E);
-  static const Color darkTextMuted = Color(0xFF6E7681);
+  // 4. Restful Matte Charcoal-Teal Dark Tokens
+  static const Color neutral = Color(0xFF0E1418);
+  static const Color darkBackground = Color(0xFF0E1418);
+  static const Color darkSurface = Color(0xFF151D24);
+  static const Color darkContainer = Color(0xFF1A242C);
+  static const Color darkBorder = Color(0xFF232E38);
+  static const Color darkBorderSubtle = Color(0xFF1B242D);
+  static const Color darkTextPrimary = Color(0xFFE6ECF2);
+  static const Color darkTextSecondary = Color(0xFF8FA0AF);
+  static const Color darkTextMuted = Color(0xFF627280);
 
   // Neutral Color Swatch Ramp
   static const Color neutral950 = Color(0xFF0B0E14);
