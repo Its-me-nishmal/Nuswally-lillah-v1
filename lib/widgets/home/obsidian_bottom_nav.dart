@@ -107,7 +107,7 @@ class ObsidianBottomNav extends StatelessWidget {
                             color: isActive ? activeColor : inactiveColor,
                           ),
                         ),
-                        const SizedBox(height: 3),
+                        const SizedBox(height: 4),
                         // Label
                         Text(
                           item.label,
@@ -118,6 +118,7 @@ class ObsidianBottomNav extends StatelessWidget {
                             letterSpacing: 0.1,
                           ),
                         ),
+                        const SizedBox(height: 3),
                       ],
                     ),
                   ),
