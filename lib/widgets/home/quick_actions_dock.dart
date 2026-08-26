@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../providers/theme_provider.dart';
-import '../../theme/jira_theme.dart';
 import '../heartbeat_tap.dart';
 import '../../screens/audio_quran_screen.dart';
 import '../../screens/names_screen.dart';

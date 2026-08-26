@@ -28,6 +28,9 @@ class JiraTheme {
   static const Color secondaryGreen = Color(0xFF10B981);
   static const Color secondaryGreenBgDark = Color(0xFF0D281E);
   static const Color secondaryGreenBgLight = Color(0xFFD1FAE5);
+  static const Color successGreen = secondaryGreen;
+  static const Color successGreenBgDark = secondaryGreenBgDark;
+  static const Color successGreenBgLight = secondaryGreenBgLight;
 
   // Secondary Color Swatch Ramp
   static const Color secondary50 = Color(0xFFECFDF5);
