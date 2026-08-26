@@ -57,7 +57,7 @@ class ObsidianBottomNav extends StatelessWidget {
           width: double.infinity,
           padding: EdgeInsets.only(
             top: 8,
-            bottom: bottomInset > 0 ? bottomInset : 8,
+            bottom: bottomInset > 0 ? bottomInset + 6 : 12,
           ),
           decoration: BoxDecoration(
             color: surfaceColor,

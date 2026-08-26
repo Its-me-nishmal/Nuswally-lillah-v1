@@ -192,13 +192,6 @@ class _NextPrayerHeroCardState extends State<NextPrayerHeroCard> {
                                 decoration: const BoxDecoration(
                                   color: Color(0xFF60A5FA),
                                   shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Color(0xFF60A5FA),
-                                      blurRadius: 6,
-                                      spreadRadius: 1,
-                                    ),
-                                  ],
                                 ),
                               ),
                               const SizedBox(width: 6),
@@ -276,32 +269,14 @@ class _CelestialOrbitsPainter extends CustomPainter {
     // Outer Orbit 1
     canvas.drawCircle(center, 78, linePaint);
 
-    // Inner Orbit 2 (slightly offset ellipse/arc)
-    final rect2 = Rect.fromCenter(
-      center: Offset(center.dx - 12, center.dy + 8),
-      width: 140,
-      height: 155,
-    );
-    canvas.drawOval(rect2, linePaint);
+    // Clean subtle dashed or solid geometric orbital arcs
+    final arcPaint = Paint()
+      ..color = orbitColor.withValues(alpha: isDark ? 0.35 : 0.5)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
 
-    // Glowing Celestial Orb on orbit
-    final orbCenter = Offset(center.dx + 4, center.dy - 6);
-
-    // Ambient radial glow
-    final glowPaint = Paint()
-      ..color = const Color(0xFF60A5FA).withValues(alpha: 0.35)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
-    canvas.drawCircle(orbCenter, 14, glowPaint);
-
-    // Outer white halo
-    final haloPaint = Paint()
-      ..color = const Color(0xFF93C5FD).withValues(alpha: 0.8)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
-    canvas.drawCircle(orbCenter, 7, haloPaint);
-
-    // Solid core dot
-    final corePaint = Paint()..color = const Color(0xFFEFF6FF);
-    canvas.drawCircle(orbCenter, 4.5, corePaint);
+    // Subtle third concentric ring for depth
+    canvas.drawCircle(center, 46, arcPaint);
   }
 
   @override

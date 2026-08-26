@@ -57,11 +57,18 @@ class TodayPrayersTimeline extends StatelessWidget {
     final journalProvider = context.watch<JournalProvider>();
     final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
-    return Selector<PrayerProvider, (PrayerTime?, String)>(
-      selector: (_, provider) => (provider.todayPrayerTimes, provider.highlightedPrayerName),
+    return Selector<PrayerProvider, (PrayerTime?, String, String, bool)>(
+      selector: (_, provider) => (
+        provider.todayPrayerTimes,
+        provider.nextPrayerName,
+        provider.activePrayerName,
+        provider.isPrayerActive,
+      ),
       builder: (context, data, child) {
         final todayTimes = data.$1;
-        final highlightedName = data.$2.isNotEmpty ? data.$2 : 'Asr';
+        final nextName = data.$2;
+        final activeName = data.$3;
+        final isPrayerActive = data.$4;
 
         final prayers = [
           _PrayerRowData(
@@ -69,35 +76,40 @@ class TodayPrayersTimeline extends StatelessWidget {
             name: 'Fajr',
             time: todayTimes != null ? _formatPrayerTime('Fajr', todayTimes.fajr) : '05:08 AM',
             isCompleted: journalProvider.isPrayerCompleted(todayStr, 'Fajr'),
-            isCurrent: highlightedName == 'Fajr',
+            isOngoing: isPrayerActive && activeName == 'Fajr',
+            isNext: !isPrayerActive && nextName == 'Fajr',
           ),
           _PrayerRowData(
             id: 'Dhuhr',
             name: 'Dhuhr',
             time: todayTimes != null ? _formatPrayerTime('Dhuhr', todayTimes.dhuhr) : '12:28 PM',
             isCompleted: journalProvider.isPrayerCompleted(todayStr, 'Dhuhr'),
-            isCurrent: highlightedName == 'Dhuhr',
+            isOngoing: isPrayerActive && activeName == 'Dhuhr',
+            isNext: !isPrayerActive && nextName == 'Dhuhr',
           ),
           _PrayerRowData(
             id: 'Asr',
             name: 'Asr',
             time: todayTimes != null ? _formatPrayerTime('Asr', todayTimes.asr) : '04:32 PM',
             isCompleted: journalProvider.isPrayerCompleted(todayStr, 'Asr'),
-            isCurrent: highlightedName == 'Asr',
+            isOngoing: isPrayerActive && activeName == 'Asr',
+            isNext: !isPrayerActive && nextName == 'Asr',
           ),
           _PrayerRowData(
             id: 'Maghrib',
             name: 'Maghrib',
             time: todayTimes != null ? _formatPrayerTime('Maghrib', todayTimes.maghrib) : '06:44 PM',
             isCompleted: journalProvider.isPrayerCompleted(todayStr, 'Maghrib'),
-            isCurrent: highlightedName == 'Maghrib',
+            isOngoing: isPrayerActive && activeName == 'Maghrib',
+            isNext: !isPrayerActive && nextName == 'Maghrib',
           ),
           _PrayerRowData(
             id: 'Isha',
             name: 'Isha',
             time: todayTimes != null ? _formatPrayerTime('Isha', todayTimes.isha) : '08:02 PM',
             isCompleted: journalProvider.isPrayerCompleted(todayStr, 'Isha'),
-            isCurrent: highlightedName == 'Isha',
+            isOngoing: isPrayerActive && activeName == 'Isha',
+            isNext: !isPrayerActive && nextName == 'Isha',
           ),
         ];
 
@@ -181,14 +193,16 @@ class _PrayerRowData {
   final String name;
   final String time;
   final bool isCompleted;
-  final bool isCurrent;
+  final bool isOngoing;
+  final bool isNext;
 
   _PrayerRowData({
     required this.id,
     required this.name,
     required this.time,
     required this.isCompleted,
-    required this.isCurrent,
+    required this.isOngoing,
+    required this.isNext,
   });
 }
 
@@ -211,7 +225,7 @@ class _PrayerTimelineRow extends StatelessWidget {
     final isDark = themeProvider.isDarkMode;
     final surfaceColor = isDark ? JiraTheme.darkSurface : JiraTheme.lightSurface;
     final containerColor = isDark ? JiraTheme.darkContainer : JiraTheme.lightContainer;
-    final borderColor = isDark ? JiraTheme.darkBorder : JiraTheme.lightBorder;
+    final borderColor = isDark ? JiraTheme.darkBorderSubtle : JiraTheme.lightBorderSubtle;
 
     return IntrinsicHeight(
       child: Row(
@@ -219,19 +233,19 @@ class _PrayerTimelineRow extends StatelessWidget {
         children: [
           // Left Connected Timeline Track
           SizedBox(
-            width: 44,
+            width: 36,
             child: Stack(
               alignment: Alignment.center,
               children: [
                 // Connecting Vertical Line
                 Positioned(
-                  top: isFirst ? 24 : 0,
-                  bottom: isLast ? 24 : 0,
+                  top: isFirst ? 22 : 0,
+                  bottom: isLast ? 22 : 0,
                   child: Container(
-                    width: 1.5,
+                    width: 1.0,
                     color: isDark
-                        ? const Color(0xFF30363D).withValues(alpha: 0.6)
-                        : const Color(0xFFD0D7DE),
+                        ? JiraTheme.darkBorderSubtle
+                        : const Color(0xFFE2E8F0),
                   ),
                 ),
 
@@ -251,37 +265,34 @@ class _PrayerTimelineRow extends StatelessWidget {
           // Right Prayer Card
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
+              padding: const EdgeInsets.symmetric(vertical: 3.5),
               child: HeartbeatTap(
                 onTap: onToggleCompleted,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
                   decoration: BoxDecoration(
                     color: surfaceColor,
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: data.isCurrent
-                          ? (isDark ? JiraTheme.darkBorder.withValues(alpha: 0.9) : JiraTheme.primaryBlue)
-                          : borderColor.withValues(alpha: isDark ? 0.6 : 0.9),
-                      width: data.isCurrent ? 1.4 : 1.0,
+                      color: data.isOngoing
+                          ? JiraTheme.primaryBlue.withValues(alpha: 0.6)
+                          : (data.isNext
+                              ? JiraTheme.primaryBlue.withValues(alpha: 0.3)
+                              : borderColor),
+                      width: data.isOngoing ? 1.2 : 1.0,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
-                        blurRadius: 10,
-                        offset: const Offset(0, 3),
+                        color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.02),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
                       ),
-                      if (data.isCurrent && isDark)
-                        BoxShadow(
-                          color: JiraTheme.primaryBlue.withValues(alpha: 0.05),
-                          blurRadius: 12,
-                        ),
                     ],
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Prayer Name + Optional "NOW" Badge
+                      // Prayer Name + Optional "NOW" or "NEXT" Badge
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -289,19 +300,19 @@ class _PrayerTimelineRow extends StatelessWidget {
                             data.name,
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 15,
-                              fontWeight: data.isCurrent ? FontWeight.w600 : FontWeight.w500,
+                              fontWeight: (data.isOngoing || data.isNext) ? FontWeight.w600 : FontWeight.w500,
                               color: themeProvider.textPrimary,
                             ),
                           ),
-                          if (data.isCurrent) ...[
+                          if (data.isOngoing) ...[
                             const SizedBox(width: 8),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                               decoration: BoxDecoration(
-                                color: containerColor,
+                                color: JiraTheme.primaryBlue.withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(6),
                                 border: Border.all(
-                                  color: borderColor.withValues(alpha: 0.5),
+                                  color: JiraTheme.primaryBlue.withValues(alpha: 0.4),
                                   width: 1.0,
                                 ),
                               ),
@@ -310,7 +321,7 @@ class _PrayerTimelineRow extends StatelessWidget {
                                 style: GoogleFonts.inter(
                                   fontSize: 9.5,
                                   fontWeight: FontWeight.w600,
-                                  color: themeProvider.textSecondary,
+                                  color: JiraTheme.primaryBlue,
                                   letterSpacing: 0.4,
                                 ),
                               ),
@@ -323,9 +334,9 @@ class _PrayerTimelineRow extends StatelessWidget {
                       Text(
                         data.time,
                         style: GoogleFonts.plusJakartaSans(
-                          fontSize: data.isCurrent ? 14.5 : 13.5,
-                          fontWeight: data.isCurrent ? FontWeight.w600 : FontWeight.w400,
-                          color: data.isCurrent
+                          fontSize: data.isOngoing ? 14.5 : 13.5,
+                          fontWeight: data.isOngoing ? FontWeight.w600 : FontWeight.w400,
+                          color: (data.isOngoing || data.isNext)
                               ? themeProvider.textPrimary
                               : themeProvider.textSecondary.withValues(alpha: 0.85),
                         ),
@@ -348,60 +359,60 @@ class _PrayerTimelineRow extends StatelessWidget {
     if (data.isCompleted) {
       // Completed Checked Node
       return Container(
-        width: 32,
-        height: 32,
+        width: 30,
+        height: 30,
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF0F291E) : const Color(0xFFDCFCE7),
           shape: BoxShape.circle,
           border: Border.all(
             color: JiraTheme.secondaryGreen.withValues(alpha: 0.5),
-            width: 1.5,
+            width: 1.2,
           ),
         ),
         child: const Center(
           child: Icon(
             Icons.check_rounded,
-            size: 16,
+            size: 15,
             color: JiraTheme.secondaryGreen,
           ),
         ),
       );
     }
 
-    if (data.isCurrent) {
-      // Active "NOW" Clean Modern Node (No harsh neon glow)
+    if (data.isOngoing) {
+      // Ongoing "NOW" Node
       return Container(
-        width: 32,
-        height: 32,
+        width: 30,
+        height: 30,
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF0C2B59) : const Color(0xFFE0EDFE),
           shape: BoxShape.circle,
           border: Border.all(
             color: JiraTheme.primaryBlue.withValues(alpha: 0.6),
-            width: 1.5,
+            width: 1.2,
           ),
         ),
         child: const Center(
           child: Icon(
             Icons.access_time_filled_rounded,
-            size: 15,
+            size: 14,
             color: JiraTheme.primaryBlue,
           ),
         ),
       );
     }
 
-    // Upcoming Node with center dot
+    // Upcoming / Normal Node with center dot
     return Container(
-      width: 30,
-      height: 30,
+      width: 28,
+      height: 28,
       decoration: BoxDecoration(
         color: containerColor,
         shape: BoxShape.circle,
         border: Border.all(
-          color: isDark
-              ? const Color(0xFF30363D).withValues(alpha: 0.6)
-              : const Color(0xFFD0D7DE),
+          color: data.isNext
+              ? JiraTheme.primaryBlue.withValues(alpha: 0.5)
+              : (isDark ? JiraTheme.darkBorderSubtle : const Color(0xFFD0D7DE)),
           width: 1.0,
         ),
       ),
@@ -410,7 +421,9 @@ class _PrayerTimelineRow extends StatelessWidget {
           width: 5,
           height: 5,
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF484F58) : const Color(0xFF8B949E),
+            color: data.isNext
+                ? JiraTheme.primaryBlue
+                : (isDark ? const Color(0xFF484F58) : const Color(0xFF8B949E)),
             shape: BoxShape.circle,
           ),
         ),
