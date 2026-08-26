@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-import '../../models/prayer_times_model.dart';
+import '../../models/prayer_time_model.dart';
 import '../../providers/journal_provider.dart';
 import '../../providers/prayer_provider.dart';
 import '../../providers/theme_provider.dart';
