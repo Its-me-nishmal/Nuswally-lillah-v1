@@ -259,24 +259,28 @@ class _CelestialOrbitsPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width * 0.58, size.height * 0.52);
+    final center = Offset(size.width * 0.60, size.height * 0.52);
 
     final linePaint = Paint()
-      ..color = orbitColor
+      ..color = orbitColor.withValues(alpha: isDark ? 0.30 : 0.40)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0;
 
-    // Outer Orbit 1
-    canvas.drawCircle(center, 78, linePaint);
+    // Outer and inner rings
+    canvas.drawCircle(center, 70, linePaint);
+    canvas.drawCircle(center, 44, linePaint);
 
-    // Clean subtle dashed or solid geometric orbital arcs
-    final arcPaint = Paint()
-      ..color = orbitColor.withValues(alpha: isDark ? 0.35 : 0.5)
+    // Subtle 4 axis tick marks on the outer ring
+    final tickPaint = Paint()
+      ..color = glowColor.withValues(alpha: isDark ? 0.35 : 0.45)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0;
+      ..strokeWidth = 1.5
+      ..strokeCap = StrokeCap.round;
 
-    // Subtle third concentric ring for depth
-    canvas.drawCircle(center, 46, arcPaint);
+    canvas.drawLine(Offset(center.dx, center.dy - 74), Offset(center.dx, center.dy - 66), tickPaint);
+    canvas.drawLine(Offset(center.dx, center.dy + 66), Offset(center.dx, center.dy + 74), tickPaint);
+    canvas.drawLine(Offset(center.dx - 74, center.dy), Offset(center.dx - 66, center.dy), tickPaint);
+    canvas.drawLine(Offset(center.dx + 66, center.dy), Offset(center.dx + 74, center.dy), tickPaint);
   }
 
   @override

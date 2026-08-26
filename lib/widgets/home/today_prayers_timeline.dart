@@ -23,12 +23,15 @@ class TodayPrayersTimeline extends StatelessWidget {
       final displayMin = min.toString().padLeft(2, '0');
 
       var isPM = false;
-      if (prayerName == 'Sunrise') {
+      if (prayerName == 'Sunrise' || prayerName == 'Fajr') {
         isPM = false;
-      } else if (prayerName == 'Dhuhr') {
-        isPM = hour < 11 ? true : false;
-      } else if (prayerName == 'Asr' || prayerName == 'Maghrib' || prayerName == 'Isha') {
-        isPM = true;
+      } else {
+        // Dhuhr, Asr, Maghrib, Isha are all PM (unless Dhuhr is 11:xx AM)
+        if (prayerName == 'Dhuhr' && hour == 11) {
+          isPM = false;
+        } else {
+          isPM = true;
+        }
       }
 
       var displayHour = hour;
