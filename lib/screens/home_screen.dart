@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/prayer_provider.dart';
@@ -10,7 +12,6 @@ import 'library_tab_body.dart';
 import 'media_tab_body.dart';
 import 'quran_tab_body.dart';
 import '../services/notification_service.dart';
-import '../theme/jira_theme.dart';
 import '../widgets/heartbeat_tap.dart';
 import '../widgets/home/home_top_header.dart';
 import '../widgets/home/next_prayer_hero_card.dart';
@@ -33,10 +34,26 @@ class _HomeScreenState extends State<HomeScreen> {
 
   bool _isSearchingLibrary = false;
   String _librarySearchQuery = '';
-  final TextEditingController _librarySearchController = TextEditingController();
+  final TextEditingController _librarySearchController =
+      TextEditingController();
+
+  bool _handleHardwareKey(KeyEvent event) {
+    if (event is KeyDownEvent) {
+      final key = event.logicalKey;
+      if (key == LogicalKeyboardKey.audioVolumeDown ||
+          key == LogicalKeyboardKey.audioVolumeUp ||
+          key == LogicalKeyboardKey.audioVolumeMute ||
+          key == LogicalKeyboardKey.mediaStop ||
+          key == LogicalKeyboardKey.mediaPause) {
+        NotificationService.silenceAllAlarmsAndAzan();
+      }
+    }
+    return false;
+  }
 
   @override
   void dispose() {
+    HardwareKeyboard.instance.removeHandler(_handleHardwareKey);
     _quranSearchController.dispose();
     _librarySearchController.dispose();
     super.dispose();
@@ -45,6 +62,17 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    HardwareKeyboard.instance.addHandler(_handleHardwareKey);
+    // Schedule local daily prayer notifications
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final prayerProvider = context.read<PrayerProvider>();
+      if (prayerProvider.todayPrayerTimes != null) {
+        NotificationService.schedulePrayerNotifications(
+          prayerTimes: [prayerProvider.todayPrayerTimes!],
+        );
+        NotificationService.scheduleDaily6AMUpdateCheck();
+      }
+    });
 
     // Check if the prayer provider has finished its async initialization.
     final provider = context.read<PrayerProvider>();
@@ -85,6 +113,10 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
+    final isDark = themeProvider.isDarkMode;
+    final topInset = MediaQuery.paddingOf(context).top;
+    const topHeaderHeight = 56.0;
+
     return Scaffold(
       backgroundColor: themeProvider.backgroundBottom,
       extendBody: true,
@@ -103,70 +135,78 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-          // Subtle Islamic geometric overlay
+          // Islamic geometric overlay - clearly visible elegant watermark
           Positioned.fill(
             child: Opacity(
-              opacity: 0.01,
+              opacity: 0.035,
               child: Image.asset(
                 'assets/images/islamic_bg.png',
                 fit: BoxFit.cover,
               ),
             ),
           ),
-          // Main Scrollable Content
-          SafeArea(
-            child: Column(
-              children: [
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 250),
-                  switchInCurve: Curves.easeOutCubic,
-                  switchOutCurve: Curves.easeInCubic,
-                  transitionBuilder: (child, animation) {
-                    return FadeTransition(
-                      opacity: animation,
-                      child: SlideTransition(
-                        position: Tween<Offset>(
-                          begin: const Offset(0, -0.15),
-                          end: Offset.zero,
-                        ).animate(animation),
-                        child: child,
-                      ),
-                    );
-                  },
-                  child: _buildNewAppBar(context),
-                ),
-                Expanded(
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 220),
-                    switchInCurve: Curves.easeOutCubic,
-                    switchOutCurve: Curves.easeInCubic,
-                    transitionBuilder: (child, animation) {
-                      final fadeAnim = CurvedAnimation(
-                        parent: animation,
-                        curve: Curves.easeInOutCubic,
-                      );
-                      final slideAnim = Tween<Offset>(
-                        begin: const Offset(0, 0.02),
-                        end: Offset.zero,
-                      ).animate(fadeAnim);
+          // Main Scrollable Content Body with Top Clearance for Fixed Bar
+          Positioned.fill(
+            child: Padding(
+              padding: EdgeInsets.only(
+                top: _currentTabIndex == 3 ? topInset : topInset + topHeaderHeight,
+              ),
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 220),
+                switchInCurve: Curves.easeOutCubic,
+                switchOutCurve: Curves.easeInCubic,
+                transitionBuilder: (child, animation) {
+                  final fadeAnim = CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeInOutCubic,
+                  );
+                  final slideAnim = Tween<Offset>(
+                    begin: const Offset(0, 0.02),
+                    end: Offset.zero,
+                  ).animate(fadeAnim);
 
-                      return FadeTransition(
-                        opacity: fadeAnim,
-                        child: SlideTransition(
-                          position: slideAnim,
-                          child: child,
-                        ),
-                      );
-                    },
-                    child: KeyedSubtree(
-                      key: ValueKey<int>(_currentTabIndex),
-                      child: _buildActiveTabBody(context),
+                  return FadeTransition(
+                    opacity: fadeAnim,
+                    child: SlideTransition(
+                      position: slideAnim,
+                      child: child,
                     ),
-                  ),
+                  );
+                },
+                child: KeyedSubtree(
+                  key: ValueKey<int>(_currentTabIndex),
+                  child: _buildActiveTabBody(context),
                 ),
-              ],
+              ),
             ),
           ),
+          // Fixed Frosted Top App Bar (Pinned with Blur)
+          if (_currentTabIndex != 3)
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: ClipRect(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                  child: Container(
+                    padding: EdgeInsets.only(top: topInset),
+                    decoration: BoxDecoration(
+                      color: themeProvider.backgroundTop.withValues(
+                        alpha: isDark ? 0.85 : 0.90,
+                      ),
+                      border: Border(
+                        bottom: BorderSide(
+                          color: themeProvider.borderColor.withValues(alpha: 0.35),
+                          width: 0.8,
+                        ),
+                      ),
+                    ),
+                    child: _buildNewAppBar(context),
+                  ),
+                ),
+              ),
+            ),
           // Full-Width Frosted Bottom Navigation Bar (Attached with SafeArea)
           Positioned(
             left: 0,
@@ -227,7 +267,9 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 24),
               const TodayPrayersTimeline(),
-              SizedBox(height: 80 + bottomInset), // Bottom clearance for full-width attached bar
+              SizedBox(
+                height: 80 + bottomInset,
+              ), // Bottom clearance for full-width attached bar
             ],
           ),
         );
@@ -252,17 +294,19 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_currentTabIndex == 1) {
       // Holy Quran App Bar Mode
       if (_isSearchingQuran) {
-        return Padding(
+        return Container(
           key: const ValueKey('quran_search_bar'),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          height: 56.0,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          alignment: Alignment.center,
           child: Row(
             children: [
               Expanded(
                 child: Container(
-                  height: 40,
+                  height: 38,
                   decoration: BoxDecoration(
                     color: themeProvider.containerColor,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(10),
                     border: Border.all(color: themeProvider.borderColor),
                   ),
                   child: TextField(
@@ -273,15 +317,22 @@ class _HomeScreenState extends State<HomeScreen> {
                         _quranSearchQuery = v;
                       });
                     },
-                    style: GoogleFonts.outfit(fontSize: 14, color: themeProvider.textPrimary),
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13.5,
+                      color: themeProvider.textPrimary,
+                    ),
                     decoration: InputDecoration(
                       isDense: true,
                       hintText: 'Search surah name or number...',
-                      hintStyle: GoogleFonts.outfit(
+                      hintStyle: GoogleFonts.plusJakartaSans(
                         color: themeProvider.textMuted,
-                        fontSize: 13,
+                        fontSize: 12.5,
                       ),
-                      prefixIcon: Icon(Icons.search_rounded, color: themeProvider.primaryAccent, size: 18),
+                      prefixIcon: Icon(
+                        Icons.search_rounded,
+                        color: themeProvider.primaryAccent,
+                        size: 18,
+                      ),
                       suffixIcon: _quranSearchQuery.isNotEmpty
                           ? HeartbeatTap(
                               onTap: () {
@@ -292,17 +343,24 @@ class _HomeScreenState extends State<HomeScreen> {
                               },
                               child: Padding(
                                 padding: const EdgeInsets.all(8),
-                                child: Icon(Icons.close_rounded, color: themeProvider.primaryAccent, size: 16),
+                                child: Icon(
+                                  Icons.close_rounded,
+                                  color: themeProvider.primaryAccent,
+                                  size: 16,
+                                ),
                               ),
                             )
                           : null,
                       border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                     ),
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               HeartbeatTap(
                 onTap: () {
                   _quranSearchController.clear();
@@ -312,19 +370,19 @@ class _HomeScreenState extends State<HomeScreen> {
                   });
                 },
                 child: Container(
-                  height: 40,
+                  height: 38,
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     color: themeProvider.containerColor,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(10),
                     border: Border.all(color: themeProvider.borderColor),
                   ),
                   child: Text(
                     'Cancel',
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 12,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       color: themeProvider.primaryAccent,
                     ),
                   ),
@@ -335,38 +393,34 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       }
 
-      return Padding(
+      return Container(
         key: const ValueKey('quran_title_bar'),
-        padding: const EdgeInsets.only(left: 20, right: 20, top: 12, bottom: 8),
+        height: 56.0,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        alignment: Alignment.center,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   'HOLY QURAN',
-                  style: GoogleFonts.outfit(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
                     color: themeProvider.textPrimary,
-                    letterSpacing: 1.2,
+                    letterSpacing: 0.8,
                   ),
                 ),
                 const SizedBox(width: 6),
                 Container(
-                  width: 7,
-                  height: 7,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF60A5FA),
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: themeProvider.primaryAccent,
                     shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Color(0xFF60A5FA),
-                        blurRadius: 6,
-                        spreadRadius: 1,
-                      ),
-                    ],
                   ),
                 ),
               ],
@@ -380,8 +434,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     });
                   },
                   child: Container(
-                    width: 38,
-                    height: 38,
+                    width: 36,
+                    height: 36,
                     decoration: BoxDecoration(
                       color: themeProvider.surfaceColor,
                       shape: BoxShape.circle,
@@ -393,7 +447,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Center(
                       child: Icon(
                         Icons.search_rounded,
-                        size: 19,
+                        size: 18,
                         color: themeProvider.textPrimary,
                       ),
                     ),
@@ -403,11 +457,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 HeartbeatTap(
                   onTap: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                    MaterialPageRoute(
+                      builder: (context) => const SettingsScreen(),
+                    ),
                   ),
                   child: Container(
-                    width: 38,
-                    height: 38,
+                    width: 36,
+                    height: 36,
                     decoration: BoxDecoration(
                       color: themeProvider.surfaceColor,
                       shape: BoxShape.circle,
@@ -419,7 +475,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Center(
                       child: Icon(
                         Icons.tune_rounded,
-                        size: 19,
+                        size: 18,
                         color: themeProvider.textPrimary,
                       ),
                     ),
@@ -435,17 +491,19 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_currentTabIndex == 2) {
       // Library App Bar Mode
       if (_isSearchingLibrary) {
-        return Padding(
+        return Container(
           key: const ValueKey('library_search_bar'),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          height: 56.0,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          alignment: Alignment.center,
           child: Row(
             children: [
               Expanded(
                 child: Container(
-                  height: 40,
+                  height: 38,
                   decoration: BoxDecoration(
                     color: themeProvider.containerColor,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(10),
                     border: Border.all(color: themeProvider.borderColor),
                   ),
                   child: TextField(
@@ -456,15 +514,22 @@ class _HomeScreenState extends State<HomeScreen> {
                         _librarySearchQuery = v;
                       });
                     },
-                    style: GoogleFonts.outfit(fontSize: 14, color: themeProvider.textPrimary),
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13.5,
+                      color: themeProvider.textPrimary,
+                    ),
                     decoration: InputDecoration(
                       isDense: true,
                       hintText: 'Search duas, adhkaar, 99 names...',
-                      hintStyle: GoogleFonts.outfit(
+                      hintStyle: GoogleFonts.plusJakartaSans(
                         color: themeProvider.textMuted,
-                        fontSize: 13,
+                        fontSize: 12.5,
                       ),
-                      prefixIcon: const Icon(Icons.search_rounded, color: JiraTheme.secondaryGreen, size: 18),
+                      prefixIcon: Icon(
+                        Icons.search_rounded,
+                        color: themeProvider.primaryAccent,
+                        size: 18,
+                      ),
                       suffixIcon: _librarySearchQuery.isNotEmpty
                           ? HeartbeatTap(
                               onTap: () {
@@ -473,19 +538,26 @@ class _HomeScreenState extends State<HomeScreen> {
                                   _librarySearchQuery = '';
                                 });
                               },
-                              child: const Padding(
-                                padding: EdgeInsets.all(8),
-                                child: Icon(Icons.close_rounded, color: JiraTheme.secondaryGreen, size: 16),
+                              child: Padding(
+                                padding: const EdgeInsets.all(8),
+                                child: Icon(
+                                  Icons.close_rounded,
+                                  color: themeProvider.primaryAccent,
+                                  size: 16,
+                                ),
                               ),
                             )
                           : null,
                       border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                     ),
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               HeartbeatTap(
                 onTap: () {
                   _librarySearchController.clear();
@@ -495,20 +567,20 @@ class _HomeScreenState extends State<HomeScreen> {
                   });
                 },
                 child: Container(
-                  height: 40,
+                  height: 38,
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     color: themeProvider.containerColor,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(10),
                     border: Border.all(color: themeProvider.borderColor),
                   ),
                   child: Text(
                     'Cancel',
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: JiraTheme.secondaryGreen,
+                      fontWeight: FontWeight.w600,
+                      color: themeProvider.primaryAccent,
                     ),
                   ),
                 ),
@@ -518,38 +590,34 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       }
 
-      return Padding(
+      return Container(
         key: const ValueKey('library_title_bar'),
-        padding: const EdgeInsets.only(left: 20, right: 20, top: 12, bottom: 8),
+        height: 56.0,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        alignment: Alignment.center,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   'ISLAMIC LIBRARY',
-                  style: GoogleFonts.outfit(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
                     color: themeProvider.textPrimary,
-                    letterSpacing: 1.2,
+                    letterSpacing: 0.8,
                   ),
                 ),
                 const SizedBox(width: 6),
                 Container(
-                  width: 7,
-                  height: 7,
-                  decoration: const BoxDecoration(
-                    color: JiraTheme.secondaryGreen,
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: themeProvider.primaryAccent,
                     shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: JiraTheme.secondaryGreen,
-                        blurRadius: 6,
-                        spreadRadius: 1,
-                      ),
-                    ],
                   ),
                 ),
               ],
@@ -563,8 +631,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     });
                   },
                   child: Container(
-                    width: 38,
-                    height: 38,
+                    width: 36,
+                    height: 36,
                     decoration: BoxDecoration(
                       color: themeProvider.surfaceColor,
                       shape: BoxShape.circle,
@@ -576,7 +644,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Center(
                       child: Icon(
                         Icons.search_rounded,
-                        size: 19,
+                        size: 18,
                         color: themeProvider.textPrimary,
                       ),
                     ),
@@ -586,11 +654,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 HeartbeatTap(
                   onTap: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                    MaterialPageRoute(
+                      builder: (context) => const SettingsScreen(),
+                    ),
                   ),
                   child: Container(
-                    width: 38,
-                    height: 38,
+                    width: 36,
+                    height: 36,
                     decoration: BoxDecoration(
                       color: themeProvider.surfaceColor,
                       shape: BoxShape.circle,
@@ -602,7 +672,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Center(
                       child: Icon(
                         Icons.tune_rounded,
-                        size: 19,
+                        size: 18,
                         color: themeProvider.textPrimary,
                       ),
                     ),

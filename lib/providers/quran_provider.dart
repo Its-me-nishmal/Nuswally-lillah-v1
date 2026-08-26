@@ -12,6 +12,7 @@ import '../models/quran_model.dart';
 import '../services/alquran_service.dart';
 import '../services/notification_service.dart';
 import '../services/quran_audio_cache_service.dart';
+import '../services/quran_page_helper.dart';
 
 class QuranProvider with ChangeNotifier {
   static AudioPlayer? activeQuranPlayer;
@@ -30,6 +31,7 @@ class QuranProvider with ChangeNotifier {
   PlayerState? _playerState;
   double _fontSize = 30.0;
   double _autoScrollSpeed = 30.0;
+  String _readingViewMode = 'mushaf';
   
   // Qari & QuranicAudio Integration
   List<Qari> _qaris = [];
@@ -107,6 +109,7 @@ class QuranProvider with ChangeNotifier {
   int? get lastReadSurahNumber => _lastReadSurahNumber;
   String? get lastReadSurahName => _lastReadSurahName;
   int get lastReadAyahIndex => _lastReadAyahIndex;
+  String get readingViewMode => _readingViewMode;
 
   // Hifz & Speed Getters
   int get hifzLoopCount => _hifzLoopCount;
@@ -190,6 +193,7 @@ class QuranProvider with ChangeNotifier {
     _lastReadSurahNumber = prefs.getInt('last_read_surah');
     _lastReadSurahName = prefs.getString('last_read_surah_name');
     _lastReadAyahIndex = prefs.getInt('last_read_ayah') ?? 0;
+    _readingViewMode = prefs.getString('quran_reading_view_mode') ?? 'mushaf';
 
     // Hifz & Speed Settings
     _hifzLoopCount = prefs.getInt('quran_hifz_loop_count') ?? 1;
@@ -279,6 +283,13 @@ class QuranProvider with ChangeNotifier {
   }
 
   bool isBookmarked(int surahNumber) => _bookmarkedSurahNumbers.contains(surahNumber);
+
+  Future<void> updateReadingViewMode(String mode) async {
+    _readingViewMode = mode;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('quran_reading_view_mode', mode);
+  }
 
   Future<void> updateFontSize(double newSize) async {
     _fontSize = newSize;
@@ -425,12 +436,15 @@ class QuranProvider with ChangeNotifier {
         int verseNum = v['id'];
         int globalNumber = getGlobalAyahNumber(surahNumber, verseNum);
         String audioUrl = qari.getAyahAudioUrl(surahNumber, verseNum, globalNumber: globalNumber);
-        
+        int pageNum = QuranPageHelper.getPage(surahNumber, verseNum);
+        int juzNum = v['juz'] ?? QuranPageHelper.getJuzFromPage(pageNum);
+
         return Ayah(
           number: globalNumber,
           text: v['text'] ?? '', 
           numberInSurah: verseNum,
-          juz: v['juz'] ?? 1,
+          juz: juzNum,
+          page: pageNum,
           audio: audioUrl,
           translationEn: v['translation'] ?? '',
           translationMl: v['translation_ml'] ?? '',

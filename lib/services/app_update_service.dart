@@ -72,8 +72,8 @@ class AppUpdateService {
   static const String _spCachedUpdateKey = 'cached_app_update_json';
 
   /// Current installed version of the app
-  static const int currentVersionCode = 101;
-  static const String currentVersionName = '1.1.0';
+  static const int currentVersionCode = 200;
+  static const String currentVersionName = '2.0.0';
 
   /// Remote API/Gist endpoint for checking app updates (hash-free for live sync)
   static String? apiUrl =

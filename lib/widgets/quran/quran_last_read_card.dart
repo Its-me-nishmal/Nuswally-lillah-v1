@@ -58,19 +58,19 @@ class QuranLastReadCard extends StatelessWidget {
       },
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
         decoration: BoxDecoration(
           color: surfaceColor,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(18),
           border: Border.all(
             color: borderColor,
-            width: 1.0,
+            width: 0.8,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.04),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
+              color: Colors.black.withValues(alpha: isDark ? 0.22 : 0.03),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -83,10 +83,14 @@ class QuranLastReadCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
                   decoration: BoxDecoration(
-                    color: JiraTheme.secondaryGreen.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
+                    color: themeProvider.primaryAccent.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: themeProvider.primaryAccent.withValues(alpha: 0.25),
+                      width: 0.8,
+                    ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -94,8 +98,8 @@ class QuranLastReadCard extends StatelessWidget {
                       Container(
                         width: 5,
                         height: 5,
-                        decoration: const BoxDecoration(
-                          color: JiraTheme.secondaryGreen,
+                        decoration: BoxDecoration(
+                          color: themeProvider.primaryAccent,
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -105,7 +109,7 @@ class QuranLastReadCard extends StatelessWidget {
                         style: GoogleFonts.inter(
                           fontSize: 10.5,
                           fontWeight: FontWeight.w600,
-                          color: JiraTheme.secondaryGreen,
+                          color: themeProvider.primaryAccent,
                           letterSpacing: 0.3,
                         ),
                       ),
@@ -113,16 +117,16 @@ class QuranLastReadCard extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '2h ago',
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w400,
-                    color: themeProvider.textSecondary.withValues(alpha: 0.8),
+                  'Continue',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
+                    color: themeProvider.primaryAccent,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
 
             // Center: Surah Name on Left + Arabic Calligraphy on Right
             Row(
@@ -137,18 +141,17 @@ class QuranLastReadCard extends StatelessWidget {
                       Text(
                         surahName,
                         style: GoogleFonts.plusJakartaSans(
-                          fontSize: 22,
+                          fontSize: 21,
                           fontWeight: FontWeight.w700,
                           color: themeProvider.textPrimary,
                           letterSpacing: -0.2,
-                          height: 1.15,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 3),
                       Text(
-                        '$surahMeaning • Page 23',
+                        surahMeaning,
                         style: GoogleFonts.inter(
-                          fontSize: 12,
+                          fontSize: 11.5,
                           fontWeight: FontWeight.w400,
                           color: themeProvider.textSecondary.withValues(alpha: 0.85),
                         ),
@@ -157,51 +160,19 @@ class QuranLastReadCard extends StatelessWidget {
                   ),
                 ),
 
-                // Right Arabic Calligraphy
+                // Right Arabic Calligraphy in restful off-white
                 Text(
                   'فَاذْكُرُونِي\nأَذْكُرْكُمْ',
                   textAlign: TextAlign.right,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'HafsFont',
-                    fontSize: 21,
+                    fontSize: 20,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFFC7D2FE),
-                    height: 1.35,
+                    color: isDark ? const Color(0xFFE2E8F0) : themeProvider.primaryAccent,
+                    height: 1.3,
                   ),
                 ),
               ],
-            ),
-            const SizedBox(height: 12),
-
-            // Bottom Action: Forward Arrow Button
-            Align(
-              alignment: Alignment.bottomRight,
-              child: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: isDark ? JiraTheme.darkContainer : JiraTheme.lightContainer,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: borderColor.withValues(alpha: 0.7),
-                    width: 1.0,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Center(
-                  child: Icon(
-                    Icons.arrow_forward_rounded,
-                    size: 18,
-                    color: themeProvider.textPrimary,
-                  ),
-                ),
-              ),
             ),
           ],
         ),

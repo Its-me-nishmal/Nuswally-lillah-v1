@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../models/quran_model.dart';
 import '../../providers/theme_provider.dart';
-import '../../theme/jira_theme.dart';
 import '../heartbeat_tap.dart';
 import '../../screens/surah_detail_screen.dart';
 
@@ -33,10 +32,6 @@ class SurahDirectoryCard extends StatelessWidget {
     final themeProvider = context.watch<ThemeProvider>();
     final isDark = themeProvider.isDarkMode;
 
-    final surfaceColor = isDark ? JiraTheme.darkSurface : JiraTheme.lightSurface;
-    final containerColor = isDark ? JiraTheme.darkContainer : JiraTheme.lightContainer;
-    final borderColor = isDark ? JiraTheme.darkBorderSubtle : JiraTheme.lightBorderSubtle;
-
     final formattedNumber = surah.number.toString().padLeft(2, '0');
     final meaningText = _formatMeaning(surah.englishNameTranslation);
     final revelationText = _formatRevelation(surah.revelationType);
@@ -55,32 +50,22 @@ class SurahDirectoryCard extends StatelessWidget {
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-        decoration: BoxDecoration(
-          color: surfaceColor,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: borderColor,
-            width: 1.0,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.02),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
+        color: Colors.transparent,
         child: Row(
           children: [
-            // Left Squircle Number Badge
+            // Left Squircle Number Badge with Islamic Teal Accent
             Container(
-              width: 42,
-              height: 42,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
-                color: containerColor,
+                color: themeProvider.primaryAccent.withValues(
+                  alpha: isDark ? 0.10 : 0.12,
+                ),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: borderColor,
+                  color: themeProvider.primaryAccent.withValues(
+                    alpha: isDark ? 0.22 : 0.30,
+                  ),
                   width: 1.0,
                 ),
               ),
@@ -88,9 +73,9 @@ class SurahDirectoryCard extends StatelessWidget {
                 child: Text(
                   formattedNumber,
                   style: GoogleFonts.plusJakartaSans(
-                    fontSize: 14,
+                    fontSize: 13.5,
                     fontWeight: FontWeight.w600,
-                    color: isDark ? const Color(0xFFD0D7DE) : JiraTheme.primaryBlue,
+                    color: themeProvider.primaryAccent,
                   ),
                 ),
               ),
@@ -106,20 +91,20 @@ class SurahDirectoryCard extends StatelessWidget {
                   Text(
                     surah.englishName,
                     style: GoogleFonts.plusJakartaSans(
-                      fontSize: 15.5,
+                      fontSize: 15,
                       fontWeight: FontWeight.w600,
                       color: themeProvider.textPrimary,
                       letterSpacing: 0.1,
                     ),
                   ),
-                  const SizedBox(height: 3),
+                  const SizedBox(height: 2),
                   Text(
                     subtitleText,
                     style: GoogleFonts.inter(
-                      fontSize: 10,
+                      fontSize: 10.5,
                       fontWeight: FontWeight.w500,
                       color: themeProvider.textSecondary.withValues(alpha: 0.85),
-                      letterSpacing: 0.3,
+                      letterSpacing: 0.2,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -129,7 +114,7 @@ class SurahDirectoryCard extends StatelessWidget {
             ),
             const SizedBox(width: 10),
 
-            // Right Arabic Name
+            // Right Arabic Name (Soft Off-White Calligraphy)
             Text(
               surah.name.replaceAll('سُورَةُ ', ''),
               textAlign: TextAlign.right,
@@ -137,7 +122,7 @@ class SurahDirectoryCard extends StatelessWidget {
                 fontFamily: 'HafsFont',
                 fontSize: 20,
                 fontWeight: FontWeight.w500,
-                color: isDark ? const Color(0xFFC7D2FE) : JiraTheme.primaryBlue,
+                color: isDark ? const Color(0xFFE2E8F0) : themeProvider.primaryAccent,
               ),
             ),
           ],

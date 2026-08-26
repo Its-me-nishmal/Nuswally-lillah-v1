@@ -194,12 +194,14 @@ class TodayPrayersTimeline extends StatelessWidget {
                           },
                         ),
                         if (!isLast)
-                          Divider(
-                            height: 1,
-                            thickness: 0.6,
-                            indent: 52,
-                            endIndent: 16,
-                            color: borderColor.withValues(alpha: 0.35),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Container(
+                              height: 1.0,
+                              color: isDark
+                                  ? const Color(0xFF222D38)
+                                  : const Color(0xFFE5E9EE),
+                            ),
                           ),
                       ],
                     );

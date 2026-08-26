@@ -6,7 +6,6 @@ import '../models/adhkaar.dart';
 import '../models/allah_name.dart';
 import '../providers/adhkaar_provider.dart';
 import '../providers/theme_provider.dart';
-import '../theme/jira_theme.dart';
 import '../widgets/heartbeat_tap.dart';
 import 'adhkaar_subcategories_screen.dart';
 import 'adhkaar_duas_screen.dart';
@@ -93,22 +92,6 @@ class _LibraryTabBodyState extends State<LibraryTabBody> {
     return Icons.auto_stories_outlined;
   }
 
-  Color _getCategoryIconColor(String title) {
-    final lower = title.toLowerCase();
-    if (lower.contains('daily') || lower.contains('ദിനചര്യ')) {
-      return const Color(0xFF38BDF8);
-    } else if (lower.contains('salah') || lower.contains('prayer')) {
-      return JiraTheme.primaryBlue;
-    } else if (lower.contains('protection')) {
-      return const Color(0xFF38BDF8);
-    } else if (lower.contains('life') || lower.contains('family')) {
-      return const Color(0xFF60A5FA);
-    } else if (lower.contains('guidance')) {
-      return JiraTheme.secondaryGreen;
-    }
-    return const Color(0xFF38BDF8);
-  }
-
   String _getCategorySubtitle(AdhkaarCategory cat, bool isMl) {
     final lower = cat.titleEn.toLowerCase();
     if (lower.contains('daily')) {
@@ -130,13 +113,14 @@ class _LibraryTabBodyState extends State<LibraryTabBody> {
   @override
   Widget build(BuildContext context) {
     final tp = context.watch<ThemeProvider>();
+    final isDark = tp.isDarkMode;
     final isMl = tp.isMalayalam;
     final adhkaar = context.watch<AdhkaarProvider>();
     final bundle = adhkaar.bundle;
 
     if (adhkaar.isLoading && bundle == null) {
-      return const Center(
-        child: CircularProgressIndicator(color: JiraTheme.primaryBlue),
+      return Center(
+        child: CircularProgressIndicator(color: tp.primaryAccent),
       );
     }
 
@@ -160,106 +144,248 @@ class _LibraryTabBodyState extends State<LibraryTabBody> {
       children: [
         const SizedBox(height: 12),
 
-          // 1. Clean Text Filter Pills (Emoji-Free)
-          _buildFilterPills(),
+        // 1. Sleek Filter Capsules Bar (Aligned with list margin)
+        _buildFilterPills(tp, isDark),
 
-          const SizedBox(height: 18),
+        const SizedBox(height: 14),
 
-          // Search Mode: Display live matching invocations
-          if (query.isNotEmpty) ...[
-            _buildSectionHeader('MATCHING INVOCATIONS (${matchingSubs.length})'),
-            const SizedBox(height: 12),
-            if (matchingSubs.isEmpty)
-              _buildEmptySearchState(query)
-            else
-              ...matchingSubs.map((sub) => _buildSubCategoryCard(context, bundle, sub, isMl)),
-          ]
-          // Filter Specific Modes
-          else if (_selectedFilterKey == 'names') ...[
-            _buildSectionHeader('ASMAUL HUSNA (99 NAMES OF ALLAH)'),
-            const SizedBox(height: 12),
-            _buildNamesShortcutCard(context, isMl),
-            const SizedBox(height: 14),
-            _buildNamesInlineList(context, adhkaar.allahNames, isMl),
-          ] else if (_selectedFilterKey == 'quranic') ...[
-            _buildSectionHeader('QURANIC RABBANA DUAS'),
-            const SizedBox(height: 12),
-            _buildQuranicDuasShortcutCard(context, isMl),
-            const SizedBox(height: 14),
-            _buildQuranicDuasInlineList(context, bundle, isMl),
-          ] else if (_selectedFilterKey == 'adhkaar') ...[
-            _buildSectionHeader('DAILY ADHKAAR & REMEMBRANCE'),
-            const SizedBox(height: 12),
-            _buildFilteredSubList(context, bundle, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 24, 25, 30, 31, 32], isMl),
-          ] else if (_selectedFilterKey == 'supplications') ...[
-            _buildSectionHeader('PRAYER & WORSHIP SUPPLICATIONS'),
-            const SizedBox(height: 12),
-            _buildFilteredSubList(context, bundle, [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 34, 35], isMl),
-          ] else if (_selectedFilterKey == 'protection') ...[
-            _buildSectionHeader('PROTECTION & RUQYAH'),
-            const SizedBox(height: 12),
-            _buildFilteredSubList(context, bundle, [36, 37, 38, 39, 41, 42, 43, 44, 45, 47, 48, 157, 158, 161, 162], isMl),
-          ] else if (_selectedFilterKey == 'bookmarks') ...[
-            _buildSectionHeader('SAVED BOOKMARKS (${_bookmarkedKeys.length})'),
-            const SizedBox(height: 12),
-            _buildBookmarksList(context, bundle, isMl),
-          ] else ...[
-            // Default "All Collections" View:
-            _buildSectionHeader(isMl ? 'വിഷയ വിഭാഗങ്ങൾ (${allCategories.length} എണ്ണം)' : 'TOPIC DIRECTORY (${allCategories.length} CATEGORIES)'),
-            const SizedBox(height: 12),
-
-            // 1. All Root Categories from Dataset (100% Clickable -> opens AdhkaarSubcategoriesScreen)
-            ...allCategories.map((cat) {
-              final catTitle = isMl ? cat.title : (cat.titleEn.isNotEmpty ? cat.titleEn : cat.title);
-              return _buildUniformCard(
-                context: context,
-                icon: _getCategoryIcon(catTitle),
-                iconColor: _getCategoryIconColor(catTitle),
-                title: catTitle,
-                subtitle: _getCategorySubtitle(cat, isMl),
-                onTap: () => _openCategory(context, cat),
-              );
-            }),
-
-            // 2. Curated Sacred Vault Collections
-            _buildUniformCard(
-              context: context,
-              icon: Icons.favorite_border_rounded,
-              iconColor: const Color(0xFF38BDF8),
-              title: isMl ? 'അസ്മാഉൽ ഹുസ്ന' : '99 Names of Allah',
-              subtitle: isMl ? 'അല്ലാഹുവിന്റെ 99 നാമങ്ങൾ അർത്ഥ സഹിതം' : 'Asma ul Husna sacred attributes & audio',
-              onTap: () {
-                HapticFeedback.selectionClick();
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const NamesScreen()),
-                );
-              },
-            ),
-
-            _buildUniformCard(
-              context: context,
-              icon: Icons.menu_book_rounded,
-              iconColor: JiraTheme.secondaryGreen,
-              title: isMl ? 'ഖുർആനിക റബ്ബനാ പ്രാർത്ഥനകൾ' : 'Quranic Rabbana Duas',
-              subtitle: isMl ? 'വിശുദ്ധ ഖുർആനിലെ 40 റബ്ബനാ പ്രാർത്ഥനകൾ' : '40 Rabbana supplications from Holy Quran',
-              onTap: () {
-                HapticFeedback.selectionClick();
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const QuranicDuasScreen()),
-                );
-              },
-            ),
-          ],
-
-          SizedBox(height: 80 + MediaQuery.paddingOf(context).bottom), // Bottom clearance for attached bar
+        // 2. Quick Vault Shortcuts Bar
+        if (query.isEmpty && _selectedFilterKey == 'all') ...[
+          _buildQuickShortcutsBar(context, tp, bundle, isDark, isMl),
+          const SizedBox(height: 16),
         ],
-      );
+
+        // 3. Search Mode: Display live matching invocations
+        if (query.isNotEmpty) ...[
+          _buildSectionHeader('MATCHING INVOCATIONS (${matchingSubs.length})', tp),
+          const SizedBox(height: 10),
+          if (matchingSubs.isEmpty)
+            _buildEmptySearchState(query, tp)
+          else
+            _buildGroupedCard(
+              isDark: isDark,
+              surfaceColor: tp.surfaceColor,
+              borderColor: tp.borderColor,
+              children: matchingSubs.asMap().entries.map((entry) {
+                final isLast = entry.key == matchingSubs.length - 1;
+                return Column(
+                  children: [
+                    _buildSubCategoryRowItem(context, bundle, entry.value, isMl, tp, isDark),
+                    if (!isLast) _buildHairlineDivider(isDark),
+                  ],
+                );
+              }).toList(),
+            ),
+        ]
+        // Filter Specific Modes
+        else if (_selectedFilterKey == 'names') ...[
+          _buildSectionHeader('ASMAUL HUSNA (99 NAMES OF ALLAH)', tp),
+          const SizedBox(height: 10),
+          _buildNamesShortcutCard(context, isMl, tp, isDark),
+          const SizedBox(height: 12),
+          _buildNamesGroupedList(context, adhkaar.allahNames, isMl, tp, isDark),
+        ] else if (_selectedFilterKey == 'quranic') ...[
+          _buildSectionHeader('QURANIC RABBANA DUAS', tp),
+          const SizedBox(height: 10),
+          _buildQuranicDuasShortcutCard(context, isMl, tp, isDark),
+          const SizedBox(height: 12),
+          _buildQuranicDuasGroupedList(context, bundle, isMl, tp, isDark),
+        ] else if (_selectedFilterKey == 'adhkaar') ...[
+          _buildSectionHeader('DAILY ADHKAAR & REMEMBRANCE', tp),
+          const SizedBox(height: 10),
+          _buildFilteredGroupedList(context, bundle, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 24, 25, 30, 31, 32], isMl, tp, isDark),
+        ] else if (_selectedFilterKey == 'supplications') ...[
+          _buildSectionHeader('PRAYER & WORSHIP SUPPLICATIONS', tp),
+          const SizedBox(height: 10),
+          _buildFilteredGroupedList(context, bundle, [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 34, 35], isMl, tp, isDark),
+        ] else if (_selectedFilterKey == 'protection') ...[
+          _buildSectionHeader('PROTECTION & RUQYAH', tp),
+          const SizedBox(height: 10),
+          _buildFilteredGroupedList(context, bundle, [36, 37, 38, 39, 41, 42, 43, 44, 45, 47, 48, 157, 158, 161, 162], isMl, tp, isDark),
+        ] else if (_selectedFilterKey == 'bookmarks') ...[
+          _buildSectionHeader('SAVED BOOKMARKS (${_bookmarkedKeys.length})', tp),
+          const SizedBox(height: 10),
+          _buildBookmarksGroupedList(context, bundle, isMl, tp, isDark),
+        ] else ...[
+          // Default "All Collections" View:
+          _buildSectionHeader(
+            isMl ? 'വിഷയ വിഭാഗങ്ങൾ (${allCategories.length} എണ്ണം)' : 'TOPIC DIRECTORY (${allCategories.length} CATEGORIES)',
+            tp,
+          ),
+          const SizedBox(height: 10),
+
+          // Unified Grouped Card with Hairlines
+          _buildGroupedCard(
+            isDark: isDark,
+            surfaceColor: tp.surfaceColor,
+            borderColor: tp.borderColor,
+            children: [
+              ...allCategories.asMap().entries.map((entry) {
+                final cat = entry.value;
+                final catTitle = isMl ? cat.title : (cat.titleEn.isNotEmpty ? cat.titleEn : cat.title);
+
+                return Column(
+                  children: [
+                    _buildCategoryRowItem(
+                      context: context,
+                      icon: _getCategoryIcon(catTitle),
+                      title: catTitle,
+                      subtitle: _getCategorySubtitle(cat, isMl),
+                      tp: tp,
+                      isDark: isDark,
+                      onTap: () => _openCategory(context, cat),
+                    ),
+                    _buildHairlineDivider(isDark),
+                  ],
+                );
+              }),
+
+              // Curated Sacred Vault Shortcuts inside the Grouped Card
+              _buildCategoryRowItem(
+                context: context,
+                icon: Icons.favorite_border_rounded,
+                title: isMl ? 'അസ്മാഉൽ ഹുസ്ന' : '99 Names of Allah',
+                subtitle: isMl ? 'അല്ലാഹുവിന്റെ 99 നാമങ്ങൾ അർത്ഥ സഹിതം' : 'Asma ul Husna sacred attributes & audio',
+                tp: tp,
+                isDark: isDark,
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const NamesScreen()),
+                  );
+                },
+              ),
+              _buildHairlineDivider(isDark),
+
+              _buildCategoryRowItem(
+                context: context,
+                icon: Icons.menu_book_rounded,
+                title: isMl ? 'ഖുർആനിക റബ്ബനാ പ്രാർത്ഥനകൾ' : 'Quranic Rabbana Duas',
+                subtitle: isMl ? 'വിശുദ്ധ ഖുർആനിലെ 40 റബ്ബനാ പ്രാർത്ഥനകൾ' : '40 Rabbana supplications from Holy Quran',
+                tp: tp,
+                isDark: isDark,
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const QuranicDuasScreen()),
+                  );
+                },
+              ),
+            ],
+          ),
+        ],
+
+        SizedBox(height: 80 + MediaQuery.paddingOf(context).bottom),
+      ],
+    );
   }
 
-  // 1. Clean Text Filter Pills (NO EMOJIS)
-  Widget _buildFilterPills() {
+  // Quick Shortcuts Mini-Pills Bar
+  Widget _buildQuickShortcutsBar(
+    BuildContext context,
+    ThemeProvider tp,
+    AdhkaarBundle? bundle,
+    bool isDark,
+    bool isMl,
+  ) {
+    final shortcuts = [
+      {
+        'title': isMl ? 'അസ്മാഉൽ ഹുസ്ന' : '99 Names',
+        'icon': Icons.auto_awesome_rounded,
+        'action': () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => const NamesScreen()));
+        },
+      },
+      {
+        'title': isMl ? 'റബ്ബനാ ദുആകൾ' : '40 Rabbana',
+        'icon': Icons.menu_book_rounded,
+        'action': () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => const QuranicDuasScreen()));
+        },
+      },
+      {
+        'title': isMl ? 'പ്രഭാത ദിക്റുകൾ' : 'Morning',
+        'icon': Icons.wb_sunny_outlined,
+        'action': () => _openSubCategory(context, bundle, 1),
+      },
+      {
+        'title': isMl ? 'പ്രദോഷ ദിക്റുകൾ' : 'Evening',
+        'icon': Icons.nights_stay_outlined,
+        'action': () => _openSubCategory(context, bundle, 2),
+      },
+      {
+        'title': isMl ? 'നമസ്കാര ശേഷം' : 'After Salah',
+        'icon': Icons.mosque_outlined,
+        'action': () => _openSubCategory(context, bundle, 30),
+      },
+      {
+        'title': isMl ? 'ഉറങ്ങുമ്പോൾ' : 'Sleep Duas',
+        'icon': Icons.bedtime_outlined,
+        'action': () => _openSubCategory(context, bundle, 24),
+      },
+      {
+        'title': isMl ? 'റുഖ്‌യ & രക്ഷ' : 'Ruqyah',
+        'icon': Icons.shield_outlined,
+        'action': () => _openSubCategory(context, bundle, 41),
+      },
+    ];
+
+    return SizedBox(
+      height: 38,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        itemCount: shortcuts.length,
+        itemBuilder: (context, index) {
+          final item = shortcuts[index];
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: HeartbeatTap(
+              onTap: () {
+                HapticFeedback.selectionClick();
+                (item['action'] as VoidCallback)();
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF151D24) : const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: isDark ? const Color(0xFF222D38) : const Color(0xFFE2E8F0),
+                    width: 0.8,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      item['icon'] as IconData,
+                      size: 14,
+                      color: tp.primaryAccent,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      item['title'] as String,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: tp.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // Filter Capsules Bar
+  Widget _buildFilterPills(ThemeProvider tp, bool isDark) {
     final filters = [
       {'key': 'all', 'label': 'All Collections'},
       {'key': 'adhkaar', 'label': 'Daily Adhkaar'},
@@ -271,7 +397,7 @@ class _LibraryTabBodyState extends State<LibraryTabBody> {
     ];
 
     return SizedBox(
-      height: 38,
+      height: 36,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
@@ -288,32 +414,27 @@ class _LibraryTabBodyState extends State<LibraryTabBody> {
                 setState(() => _selectedFilterKey = filter['key']!);
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                 decoration: BoxDecoration(
-                  color: isSelected ? JiraTheme.primaryBlue : JiraTheme.darkSurface,
-                  borderRadius: BorderRadius.circular(18),
+                  color: isSelected
+                      ? tp.primaryAccent.withValues(alpha: isDark ? 0.14 : 0.12)
+                      : tp.surfaceColor,
+                  borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: isSelected ? JiraTheme.primaryBlue : JiraTheme.darkBorderSubtle,
-                    width: 1.0,
+                    color: isSelected
+                        ? tp.primaryAccent.withValues(alpha: isDark ? 0.35 : 0.4)
+                        : tp.borderColor,
+                    width: 0.8,
                   ),
-                  boxShadow: isSelected
-                      ? [
-                          BoxShadow(
-                            color: JiraTheme.primaryBlue.withValues(alpha: 0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ]
-                      : null,
                 ),
                 child: Center(
                   child: Text(
                     filter['label']!,
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 12,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                      color: isSelected ? Colors.white : const Color(0xFF8B949E),
-                      letterSpacing: 0.2,
+                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                      color: isSelected ? tp.primaryAccent : tp.textSecondary,
+                      letterSpacing: 0.1,
                     ),
                   ),
                 ),
@@ -325,189 +446,250 @@ class _LibraryTabBodyState extends State<LibraryTabBody> {
     );
   }
 
-  // 2. Uniform Category Card
-  Widget _buildUniformCard({
-    required BuildContext context,
-    required IconData icon,
-    required Color iconColor,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
+  // Unified Grouped Card Container (iOS Style)
+  Widget _buildGroupedCard({
+    required bool isDark,
+    required Color surfaceColor,
+    required Color borderColor,
+    required List<Widget> children,
   }) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      child: HeartbeatTap(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: JiraTheme.darkSurface,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: JiraTheme.darkBorderSubtle),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.15),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
+      decoration: BoxDecoration(
+        color: surfaceColor,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: borderColor,
+          width: 0.8,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.03),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
           ),
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1F242C),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFF30363D)),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: children,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHairlineDivider(bool isDark) {
+    return Container(
+      height: 1.0,
+      margin: const EdgeInsets.only(left: 68),
+      color: isDark ? const Color(0xFF222D38) : const Color(0xFFE2E8F0),
+    );
+  }
+
+  // Category Row Item
+  Widget _buildCategoryRowItem({
+    required BuildContext context,
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required ThemeProvider tp,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    return HeartbeatTap(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        color: Colors.transparent,
+        child: Row(
+          children: [
+            // Left Teal Squircle Badge
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: tp.primaryAccent.withValues(alpha: isDark ? 0.12 : 0.14),
+                borderRadius: BorderRadius.circular(11),
+                border: Border.all(
+                  color: tp.primaryAccent.withValues(alpha: isDark ? 0.25 : 0.35),
+                  width: 0.8,
                 ),
+              ),
+              child: Center(
                 child: Icon(
                   icon,
-                  color: iconColor,
+                  color: tp.primaryAccent,
                   size: 20,
                 ),
               ),
-              const SizedBox(width: 14),
+            ),
+            const SizedBox(width: 14),
 
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: GoogleFonts.outfit(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFFF0F6FC),
-                      ),
+            // Titles
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w700,
+                      color: tp.textPrimary,
                     ),
-                    const SizedBox(height: 3),
-                    Text(
-                      subtitle,
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        color: const Color(0xFF8B949E),
-                      ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: GoogleFonts.inter(
+                      fontSize: 11.5,
+                      color: tp.textSecondary.withValues(alpha: 0.85),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
+            ),
 
-              const Icon(
-                Icons.chevron_right_rounded,
-                size: 20,
-                color: Color(0xFF64748B),
-              ),
-            ],
-          ),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 20,
+              color: tp.textMuted,
+            ),
+          ],
         ),
       ),
     );
   }
 
-  // 3. SubCategory Card (Sleek layout for search / filtered results)
-  Widget _buildSubCategoryCard(BuildContext context, AdhkaarBundle? bundle, AdhkaarSubCategory sub, bool isMl) {
+  // Subcategory Row Item (Search / Filter)
+  Widget _buildSubCategoryRowItem(
+    BuildContext context,
+    AdhkaarBundle? bundle,
+    AdhkaarSubCategory sub,
+    bool isMl,
+    ThemeProvider tp,
+    bool isDark,
+  ) {
     final title = isMl ? sub.title : (sub.titleEn.isNotEmpty ? sub.titleEn : sub.title);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      child: HeartbeatTap(
-        onTap: () => _openSubCategory(context, bundle, sub.id),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: const Color(0xFF161B22),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFF30363D)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1F242C),
-                  borderRadius: BorderRadius.circular(10),
+    return HeartbeatTap(
+      onTap: () => _openSubCategory(context, bundle, sub.id),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        color: Colors.transparent,
+        child: Row(
+          children: [
+            // Number Badge
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: tp.primaryAccent.withValues(alpha: isDark ? 0.12 : 0.14),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: tp.primaryAccent.withValues(alpha: isDark ? 0.22 : 0.30),
+                  width: 0.8,
                 ),
-                child: Center(
-                  child: Text(
-                    sub.id.toString(),
-                    style: GoogleFonts.outfit(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                      color: const Color(0xFF93C5FD),
-                    ),
+              ),
+              child: Center(
+                child: Text(
+                  sub.id.toString(),
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w700,
+                    color: tp.primaryAccent,
                   ),
                 ),
               ),
-              const SizedBox(width: 14),
+            ),
+            const SizedBox(width: 14),
 
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontFamily: isMl ? 'BalooChettan2' : GoogleFonts.outfit().fontFamily,
-                        fontSize: isMl ? 14.5 : 14.5,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFFF0F6FC),
-                        height: isMl ? 1.35 : 1.25,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: tp.textPrimary,
                     ),
-                    if (sub.titleArabic.isNotEmpty) ...[
-                      const SizedBox(height: 3),
-                      Text(
-                        sub.titleArabic,
-                        textDirection: TextDirection.rtl,
-                        style: const TextStyle(
-                          fontFamily: 'HafsFont',
-                          fontSize: 13.5,
-                          color: Color(0xFF93C5FD),
-                          height: 1.3,
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 4),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (sub.titleArabic.isNotEmpty) ...[
+                    const SizedBox(height: 2),
                     Text(
-                      '${sub.duaIds.length} authentic prayers',
-                      style: GoogleFonts.inter(
-                        fontSize: 11.5,
-                        color: const Color(0xFF8B949E),
+                      sub.titleArabic,
+                      textDirection: TextDirection.rtl,
+                      style: TextStyle(
+                        fontFamily: 'HafsFont',
+                        fontSize: 13,
+                        color: isDark ? const Color(0xFFE2E8F0) : tp.primaryAccent,
                       ),
                     ),
                   ],
-                ),
+                  const SizedBox(height: 3),
+                  Text(
+                    '${sub.duaIds.length} authentic prayers',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      color: tp.textSecondary,
+                    ),
+                  ),
+                ],
               ),
+            ),
 
-              const Icon(
-                Icons.chevron_right_rounded,
-                size: 20,
-                color: Color(0xFF64748B),
-              ),
-            ],
-          ),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 20,
+              color: tp.textMuted,
+            ),
+          ],
         ),
       ),
     );
   }
 
-  // 4. Filtered Subcategories List
-  Widget _buildFilteredSubList(BuildContext context, AdhkaarBundle? bundle, List<int> subIds, bool isMl) {
+  // Filtered Subcategories List in Grouped Card
+  Widget _buildFilteredGroupedList(
+    BuildContext context,
+    AdhkaarBundle? bundle,
+    List<int> subIds,
+    bool isMl,
+    ThemeProvider tp,
+    bool isDark,
+  ) {
     if (bundle == null) return const SizedBox();
     final subs = subIds.map((id) => bundle.subCategoryById(id)).whereType<AdhkaarSubCategory>().toList();
 
-    return Column(
-      children: subs.map((s) => _buildSubCategoryCard(context, bundle, s, isMl)).toList(),
+    return _buildGroupedCard(
+      isDark: isDark,
+      surfaceColor: tp.surfaceColor,
+      borderColor: tp.borderColor,
+      children: subs.asMap().entries.map((entry) {
+        final isLast = entry.key == subs.length - 1;
+        return Column(
+          children: [
+            _buildSubCategoryRowItem(context, bundle, entry.value, isMl, tp, isDark),
+            if (!isLast) _buildHairlineDivider(isDark),
+          ],
+        );
+      }).toList(),
     );
   }
 
-  // 5. Bookmarks List
-  Widget _buildBookmarksList(BuildContext context, AdhkaarBundle? bundle, bool isMl) {
+  // Bookmarks List in Grouped Card
+  Widget _buildBookmarksGroupedList(
+    BuildContext context,
+    AdhkaarBundle? bundle,
+    bool isMl,
+    ThemeProvider tp,
+    bool isDark,
+  ) {
     if (bundle == null) return const SizedBox();
     final subs = _bookmarkedKeys.map((k) => int.tryParse(k) ?? 0).map((id) => bundle.subCategoryById(id)).whereType<AdhkaarSubCategory>().toList();
 
@@ -517,11 +699,11 @@ class _LibraryTabBodyState extends State<LibraryTabBody> {
           padding: const EdgeInsets.symmetric(vertical: 40),
           child: Column(
             children: [
-              const Icon(Icons.bookmark_border_rounded, size: 36, color: Color(0xFF64748B)),
+              Icon(Icons.bookmark_border_rounded, size: 36, color: tp.textMuted),
               const SizedBox(height: 10),
               Text(
                 'No bookmarked invocations yet',
-                style: GoogleFonts.outfit(fontSize: 14, color: const Color(0xFF8B949E)),
+                style: GoogleFonts.plusJakartaSans(fontSize: 14, color: tp.textSecondary),
               ),
             ],
           ),
@@ -529,12 +711,24 @@ class _LibraryTabBodyState extends State<LibraryTabBody> {
       );
     }
 
-    return Column(
-      children: subs.map((s) => _buildSubCategoryCard(context, bundle, s, isMl)).toList(),
+    return _buildGroupedCard(
+      isDark: isDark,
+      surfaceColor: tp.surfaceColor,
+      borderColor: tp.borderColor,
+      children: subs.asMap().entries.map((entry) {
+        final isLast = entry.key == subs.length - 1;
+        return Column(
+          children: [
+            _buildSubCategoryRowItem(context, bundle, entry.value, isMl, tp, isDark),
+            if (!isLast) _buildHairlineDivider(isDark),
+          ],
+        );
+      }).toList(),
     );
   }
 
-  Widget _buildNamesShortcutCard(BuildContext context, bool isMl) {
+  // 99 Names Shortcut Card
+  Widget _buildNamesShortcutCard(BuildContext context, bool isMl, ThemeProvider tp, bool isDark) {
     return HeartbeatTap(
       onTap: () {
         HapticFeedback.selectionClick();
@@ -546,13 +740,13 @@ class _LibraryTabBodyState extends State<LibraryTabBody> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF161B22),
+          color: tp.surfaceColor,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: JiraTheme.primaryBlue.withValues(alpha: 0.6)),
+          border: Border.all(color: tp.primaryAccent.withValues(alpha: 0.4)),
         ),
         child: Row(
           children: [
-            const Icon(Icons.auto_awesome_rounded, color: Color(0xFF93C5FD), size: 26),
+            Icon(Icons.auto_awesome_rounded, color: tp.primaryAccent, size: 24),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
@@ -560,96 +754,112 @@ class _LibraryTabBodyState extends State<LibraryTabBody> {
                 children: [
                   Text(
                     'Asmaul Husna • 99 Names of Allah',
-                    style: GoogleFonts.outfit(fontSize: 14.5, fontWeight: FontWeight.w800, color: Colors.white),
+                    style: GoogleFonts.plusJakartaSans(fontSize: 14.5, fontWeight: FontWeight.w700, color: tp.textPrimary),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     'View all 99 sacred names with calligraphy & audio',
-                    style: GoogleFonts.inter(fontSize: 11.5, color: const Color(0xFF8B949E)),
+                    style: GoogleFonts.inter(fontSize: 11.5, color: tp.textSecondary),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.arrow_forward_ios_rounded, size: 15, color: JiraTheme.primaryBlue),
+            Icon(Icons.arrow_forward_ios_rounded, size: 14, color: tp.primaryAccent),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildNamesInlineList(BuildContext context, List<AllahName> allNames, bool isMl) {
+  // 99 Names Grouped List
+  Widget _buildNamesGroupedList(BuildContext context, List<AllahName> allNames, bool isMl, ThemeProvider tp, bool isDark) {
     final names = allNames.take(20).toList();
-    return Column(
-      children: names.map((name) {
-        return HeartbeatTap(
-          onTap: () {
-            HapticFeedback.selectionClick();
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const NamesScreen()),
-            );
-          },
-          child: Container(
-            margin: const EdgeInsets.only(bottom: 8),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: const Color(0xFF161B22),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFF30363D)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
+
+    return _buildGroupedCard(
+      isDark: isDark,
+      surfaceColor: tp.surfaceColor,
+      borderColor: tp.borderColor,
+      children: names.asMap().entries.map((entry) {
+        final name = entry.value;
+        final isLast = entry.key == names.length - 1;
+
+        return Column(
+          children: [
+            HeartbeatTap(
+              onTap: () {
+                HapticFeedback.selectionClick();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const NamesScreen()),
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                color: Colors.transparent,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF1F242C),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Center(
-                        child: Text(
-                          name.number.toString().padLeft(2, '0'),
-                          style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF93C5FD)),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    Row(
                       children: [
-                        Text(
-                          name.transliteration,
-                          style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w700, color: const Color(0xFFF0F6FC)),
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: tp.primaryAccent.withValues(alpha: isDark ? 0.12 : 0.14),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Center(
+                            child: Text(
+                              name.number.toString().padLeft(2, '0'),
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w700,
+                                color: tp.primaryAccent,
+                              ),
+                            ),
+                          ),
                         ),
-                        Text(
-                          name.meaning,
-                          style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF8B949E)),
+                        const SizedBox(width: 12),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              name.transliteration,
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w700,
+                                color: tp.textPrimary,
+                              ),
+                            ),
+                            Text(
+                              name.meaning,
+                              style: GoogleFonts.inter(fontSize: 11, color: tp.textSecondary),
+                            ),
+                          ],
                         ),
                       ],
                     ),
+                    Text(
+                      name.name,
+                      style: TextStyle(
+                        fontFamily: 'HafsFont',
+                        fontSize: 19,
+                        color: isDark ? const Color(0xFFE2E8F0) : tp.primaryAccent,
+                      ),
+                    ),
                   ],
                 ),
-                Text(
-                  name.name,
-                  style: const TextStyle(
-                    fontFamily: 'HafsFont',
-                    fontSize: 20,
-                    fontWeight: FontWeight.normal,
-                    color: Color(0xFF93C5FD),
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
+            if (!isLast) _buildHairlineDivider(isDark),
+          ],
         );
       }).toList(),
     );
   }
 
-  Widget _buildQuranicDuasShortcutCard(BuildContext context, bool isMl) {
+  // Quranic Duas Shortcut Card
+  Widget _buildQuranicDuasShortcutCard(BuildContext context, bool isMl, ThemeProvider tp, bool isDark) {
     return HeartbeatTap(
       onTap: () {
         HapticFeedback.selectionClick();
@@ -661,13 +871,13 @@ class _LibraryTabBodyState extends State<LibraryTabBody> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF161B22),
+          color: tp.surfaceColor,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: JiraTheme.secondaryGreen.withValues(alpha: 0.6)),
+          border: Border.all(color: tp.primaryAccent.withValues(alpha: 0.4)),
         ),
         child: Row(
           children: [
-            const Icon(Icons.menu_book_rounded, color: JiraTheme.secondaryGreen, size: 26),
+            Icon(Icons.menu_book_rounded, color: tp.primaryAccent, size: 24),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
@@ -675,107 +885,116 @@ class _LibraryTabBodyState extends State<LibraryTabBody> {
                 children: [
                   Text(
                     '40 Rabbana Quranic Duas',
-                    style: GoogleFonts.outfit(fontSize: 14.5, fontWeight: FontWeight.w800, color: Colors.white),
+                    style: GoogleFonts.plusJakartaSans(fontSize: 14.5, fontWeight: FontWeight.w700, color: tp.textPrimary),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     'Sacred prayers revealed in the Holy Quran',
-                    style: GoogleFonts.inter(fontSize: 11.5, color: const Color(0xFF8B949E)),
+                    style: GoogleFonts.inter(fontSize: 11.5, color: tp.textSecondary),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.arrow_forward_ios_rounded, size: 15, color: JiraTheme.secondaryGreen),
+            Icon(Icons.arrow_forward_ios_rounded, size: 14, color: tp.primaryAccent),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildQuranicDuasInlineList(BuildContext context, AdhkaarBundle? bundle, bool isMl) {
+  // Quranic Duas Grouped List
+  Widget _buildQuranicDuasGroupedList(BuildContext context, AdhkaarBundle? bundle, bool isMl, ThemeProvider tp, bool isDark) {
     if (bundle == null) return const SizedBox();
     final duas = bundle.quranicDuaIds.take(15).map((id) => bundle.duas[id]).whereType<Dua>().toList();
 
-    return Column(
-      children: duas.map((d) {
-        return Container(
-          margin: const EdgeInsets.only(bottom: 10),
-          child: HeartbeatTap(
-            onTap: () => _openDua(context, bundle, d.id),
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFF161B22),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFF30363D)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    d.dua,
-                    style: const TextStyle(
-                      fontFamily: 'HafsFont',
-                      fontSize: 18,
-                      color: Color(0xFFC7D2FE),
-                      height: 1.5,
-                    ),
-                    textDirection: TextDirection.rtl,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    isMl ? d.trans : (d.descEn.isNotEmpty ? d.descEn : d.transli),
-                    style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF8B949E)),
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        d.ref.isNotEmpty ? d.ref : 'Holy Quran',
-                        style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.bold, color: JiraTheme.secondaryGreen),
+    return _buildGroupedCard(
+      isDark: isDark,
+      surfaceColor: tp.surfaceColor,
+      borderColor: tp.borderColor,
+      children: duas.asMap().entries.map((entry) {
+        final d = entry.value;
+        final isLast = entry.key == duas.length - 1;
+
+        return Column(
+          children: [
+            HeartbeatTap(
+              onTap: () => _openDua(context, bundle, d.id),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                color: Colors.transparent,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      d.dua,
+                      style: TextStyle(
+                        fontFamily: 'HafsFont',
+                        fontSize: 17,
+                        color: isDark ? const Color(0xFFF0F6FC) : const Color(0xFF0F172A),
+                        height: 1.6,
                       ),
-                      const Icon(Icons.chevron_right_rounded, size: 18, color: Color(0xFF64748B)),
-                    ],
-                  ),
-                ],
+                      textDirection: TextDirection.rtl,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      isMl ? d.trans : (d.descEn.isNotEmpty ? d.descEn : d.transli),
+                      style: GoogleFonts.inter(fontSize: 12, color: tp.textSecondary),
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          d.ref.isNotEmpty ? d.ref : 'Holy Quran',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: tp.primaryAccent,
+                          ),
+                        ),
+                        Icon(Icons.chevron_right_rounded, size: 18, color: tp.textMuted),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
+            if (!isLast) _buildHairlineDivider(isDark),
+          ],
         );
       }).toList(),
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(String title, ThemeProvider tp) {
     return Padding(
       padding: const EdgeInsets.only(left: 2),
       child: Text(
         title,
-        style: GoogleFonts.outfit(
+        style: GoogleFonts.plusJakartaSans(
           fontSize: 10.5,
           fontWeight: FontWeight.w800,
-          letterSpacing: 2.0,
-          color: const Color(0xFF8B949E),
+          letterSpacing: 1.5,
+          color: tp.textSecondary,
         ),
       ),
     );
   }
 
-  Widget _buildEmptySearchState(String query) {
+  Widget _buildEmptySearchState(String query, ThemeProvider tp) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 40),
         child: Column(
           children: [
-            const Icon(Icons.search_off_rounded, size: 40, color: Color(0xFF64748B)),
+            Icon(Icons.search_off_rounded, size: 40, color: tp.textMuted),
             const SizedBox(height: 12),
             Text(
               'No collections found for "$query"',
-              style: GoogleFonts.outfit(
+              style: GoogleFonts.plusJakartaSans(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF8B949E),
+                color: tp.textSecondary,
               ),
             ),
           ],

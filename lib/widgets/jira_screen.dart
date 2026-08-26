@@ -50,10 +50,10 @@ class JiraScreen extends StatelessWidget {
               ),
             ),
           ),
-          // Subtle Islamic geometric overlay
+          // Islamic geometric overlay - clearly visible elegant watermark
           Positioned.fill(
             child: Opacity(
-              opacity: 0.015,
+              opacity: 0.035,
               child: Image.asset(
                 'assets/images/islamic_bg.png',
                 fit: BoxFit.cover,

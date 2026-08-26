@@ -6,7 +6,6 @@ import '../../models/juz_model.dart';
 import '../../providers/quran_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../screens/surah_detail_screen.dart';
-import '../../theme/jira_theme.dart';
 import '../heartbeat_tap.dart';
 
 class JuzDirectoryCard extends StatelessWidget {
@@ -27,10 +26,6 @@ class JuzDirectoryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
     final isDark = themeProvider.isDarkMode;
-
-    final surfaceColor = isDark ? JiraTheme.darkSurface : JiraTheme.lightSurface;
-    final containerColor = isDark ? JiraTheme.darkContainer : JiraTheme.lightContainer;
-    final borderColor = isDark ? JiraTheme.darkBorderSubtle : JiraTheme.lightBorderSubtle;
 
     final arabicDigit = (juz.id >= 1 && juz.id <= 30) ? _arabicNumerals[juz.id - 1] : juz.id.toString();
 
@@ -59,62 +54,34 @@ class JuzDirectoryCard extends StatelessWidget {
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-        decoration: BoxDecoration(
-          color: surfaceColor,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: borderColor,
-            width: 1.0,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.02),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
+        color: Colors.transparent,
         child: Row(
           children: [
-            // Left Medallion Number Badge
+            // Left Squircle Number Badge
             Container(
-              width: 44,
-              height: 44,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
-                color: containerColor,
+                color: themeProvider.primaryAccent.withValues(
+                  alpha: isDark ? 0.10 : 0.12,
+                ),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: isDark ? const Color(0xFF388BFD).withValues(alpha: 0.25) : const Color(0xFF0C66E4).withValues(alpha: 0.15),
+                  color: themeProvider.primaryAccent.withValues(
+                    alpha: isDark ? 0.22 : 0.30,
+                  ),
                   width: 1.0,
                 ),
               ),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Positioned(
-                    top: 4,
-                    child: Text(
-                      'JUZ',
-                      style: GoogleFonts.inter(
-                        fontSize: 8,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.8,
-                        color: isDark ? const Color(0xFF8B949E) : const Color(0xFF656F7D),
-                      ),
-                    ),
+              child: Center(
+                child: Text(
+                  juz.id.toString(),
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w600,
+                    color: themeProvider.primaryAccent,
                   ),
-                  Positioned(
-                    bottom: 4,
-                    child: Text(
-                      juz.id.toString(),
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: isDark ? const Color(0xFFD0D7DE) : JiraTheme.primaryBlue,
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
             const SizedBox(width: 14),
@@ -129,18 +96,18 @@ class JuzDirectoryCard extends StatelessWidget {
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 14.5,
                       fontWeight: FontWeight.w600,
-                      color: isDark ? const Color(0xFFF0F6FC) : const Color(0xFF1F2328),
+                      color: themeProvider.textPrimary,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 3),
+                  const SizedBox(height: 2),
                   Text(
                     juz.rangeDisplay,
                     style: GoogleFonts.inter(
-                      fontSize: 11,
+                      fontSize: 10.5,
                       fontWeight: FontWeight.w400,
-                      color: isDark ? const Color(0xFF8B949E) : const Color(0xFF656F7D),
+                      color: themeProvider.textSecondary.withValues(alpha: 0.85),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -151,14 +118,14 @@ class JuzDirectoryCard extends StatelessWidget {
 
             const SizedBox(width: 12),
 
-            // Right Column: Arabic Script Calligraphy
+            // Right Column: Arabic Script Calligraphy in soft off-white
             Text(
               juz.nameAr,
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'HafsFont',
-                fontSize: 17,
+                fontSize: 18,
                 fontWeight: FontWeight.w500,
-                color: Color(0xFF10B981), // Emerald Arabic highlight
+                color: isDark ? const Color(0xFFE2E8F0) : themeProvider.primaryAccent,
               ),
               textDirection: TextDirection.rtl,
             ),

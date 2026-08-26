@@ -1,10 +1,12 @@
 import 'dart:convert';
 import 'dart:math' as math;
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../theme/jira_theme.dart';
+import '../providers/theme_provider.dart';
 import '../widgets/heartbeat_tap.dart';
 
 class DhikrPhrase {
@@ -55,7 +57,7 @@ class _TasbeehScreenState extends State<TasbeehScreen> {
   static const String _spCustomDhikrKey = 'custom_tasbeeh_phrases_json';
 
   int _counter = 0;
-  int _target = 33; // 33, 99, 100, custom, or 0 for infinity
+  int _target = 33;
   int _totalToday = 0;
   int _currentLap = 1;
   int _streakDays = 7;
@@ -133,61 +135,86 @@ class _TasbeehScreenState extends State<TasbeehScreen> {
 
   Future<void> _loadTasbeehData() async {
     final prefs = await SharedPreferences.getInstance();
+    final now = DateTime.now();
+    final todayStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    final lastDateStr = prefs.getString('tasbeeh_last_active_date');
+    int savedStreak = prefs.getInt('tasbeeh_streak_days') ?? 1;
+    int todayTotal = prefs.getInt('tasbeeh_total_today') ?? 0;
 
-    // Load custom phrases
-    final customRaw = prefs.getString(_spCustomDhikrKey);
-    final List<DhikrPhrase> customPhrases = [];
-    if (customRaw != null && customRaw.isNotEmpty) {
-      try {
-        final decoded = json.decode(customRaw) as List<dynamic>;
-        customPhrases.addAll(
-            decoded.map((e) => DhikrPhrase.fromJson(e as Map<String, dynamic>)));
-      } catch (e) {
-        debugPrint('Error loading custom tasbeeh: $e');
+    if (lastDateStr == null) {
+      savedStreak = 1;
+      todayTotal = 0;
+    } else if (lastDateStr == todayStr) {
+      // Same day, keep current counts
+    } else {
+      final lastDate = DateTime.tryParse(lastDateStr);
+      if (lastDate != null) {
+        final diffDays = DateTime(now.year, now.month, now.day)
+            .difference(DateTime(lastDate.year, lastDate.month, lastDate.day))
+            .inDays;
+        if (diffDays == 1) {
+          savedStreak += 1;
+        } else if (diffDays > 1) {
+          savedStreak = 1;
+        }
+      } else {
+        savedStreak = 1;
       }
+      todayTotal = 0;
     }
 
-    final hasSeenTip = prefs.getBool(_spTipSeenKey) ?? false;
+    setState(() {
+      _counter = prefs.getInt('tasbeeh_current_counter') ?? 0;
+      _target = prefs.getInt('tasbeeh_current_target') ?? 33;
+      _totalToday = todayTotal;
+      _streakDays = savedStreak;
+      _currentLap = prefs.getInt('tasbeeh_current_lap') ?? 1;
+      _hapticEnabled = prefs.getBool('tasbeeh_haptic_enabled') ?? true;
+      _soundEnabled = prefs.getBool('tasbeeh_sound_enabled') ?? true;
+      _selectedPhraseIndex = prefs.getInt('tasbeeh_selected_phrase_idx') ?? 0;
 
-    if (mounted) {
-      setState(() {
-        _allPhrases = [..._defaultPhrases, ...customPhrases];
-        _counter = prefs.getInt('tasbeeh_counter') ?? 0;
-        _target = prefs.getInt('tasbeeh_target') ?? 33;
-        _totalToday = prefs.getInt('tasbeeh_total_today') ?? 165;
-        _currentLap = prefs.getInt('tasbeeh_current_lap') ?? 1;
-        _streakDays = prefs.getInt('tasbeeh_streak_days') ?? 7;
-        _hapticEnabled = prefs.getBool('tasbeeh_haptic') ?? true;
-        _soundEnabled = prefs.getBool('tasbeeh_sound') ?? true;
-        _selectedPhraseIndex = (prefs.getInt('tasbeeh_phrase_idx') ?? 0)
-            .clamp(0, _allPhrases.length - 1);
-      });
-
-      // Show tip automatically on first opening
-      if (!hasSeenTip) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            _showTasbeehTipDialog(context, autoOpened: true);
-          }
-        });
+      final customJson = prefs.getString(_spCustomDhikrKey);
+      if (customJson != null && customJson.isNotEmpty) {
+        try {
+          final List decoded = jsonDecode(customJson);
+          final customList = decoded.map((e) => DhikrPhrase.fromJson(e)).toList();
+          _allPhrases = [..._defaultPhrases, ...customList];
+        } catch (_) {}
       }
+
+      if (_selectedPhraseIndex >= _allPhrases.length) {
+        _selectedPhraseIndex = 0;
+      }
+    });
+
+    final hasSeenTip = prefs.getBool(_spTipSeenKey) ?? false;
+    if (!hasSeenTip && mounted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showTasbeehTipDialog(context);
+      });
     }
   }
 
   Future<void> _saveTasbeehData() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('tasbeeh_counter', _counter);
-    await prefs.setInt('tasbeeh_target', _target);
+    final now = DateTime.now();
+    final todayStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+
+    await prefs.setString('tasbeeh_last_active_date', todayStr);
+    await prefs.setInt('tasbeeh_streak_days', _streakDays);
+    await prefs.setInt('tasbeeh_current_counter', _counter);
+    await prefs.setInt('tasbeeh_current_target', _target);
     await prefs.setInt('tasbeeh_total_today', _totalToday);
     await prefs.setInt('tasbeeh_current_lap', _currentLap);
-    await prefs.setBool('tasbeeh_haptic', _hapticEnabled);
-    await prefs.setBool('tasbeeh_sound', _soundEnabled);
-    await prefs.setInt('tasbeeh_phrase_idx', _selectedPhraseIndex);
+    await prefs.setBool('tasbeeh_haptic_enabled', _hapticEnabled);
+    await prefs.setBool('tasbeeh_sound_enabled', _soundEnabled);
+    await prefs.setInt('tasbeeh_selected_phrase_idx', _selectedPhraseIndex);
 
-    // Save custom phrases
     final customPhrases = _allPhrases.where((p) => p.isCustom).toList();
-    final customJson = json.encode(customPhrases.map((e) => e.toJson()).toList());
-    await prefs.setString(_spCustomDhikrKey, customJson);
+    if (customPhrases.isNotEmpty) {
+      final jsonStr = jsonEncode(customPhrases.map((e) => e.toJson()).toList());
+      await prefs.setString(_spCustomDhikrKey, jsonStr);
+    }
   }
 
   void _onIncrement() {
@@ -199,13 +226,15 @@ class _TasbeehScreenState extends State<TasbeehScreen> {
       _counter++;
       _totalToday++;
 
-      if (_target > 0) {
-        if (_counter >= _target) {
-          _counter = 0;
-          _currentLap++;
-          if (_hapticEnabled) {
-            HapticFeedback.heavyImpact();
-          }
+      if (_target > 0 && _counter >= _target) {
+        if (_hapticEnabled) {
+          HapticFeedback.heavyImpact();
+        }
+        _counter = 0;
+        _currentLap++;
+      } else {
+        if (_hapticEnabled) {
+          HapticFeedback.lightImpact();
         }
       }
     });
@@ -214,35 +243,42 @@ class _TasbeehScreenState extends State<TasbeehScreen> {
   }
 
   void _onReset() {
-    if (_hapticEnabled) {
-      HapticFeedback.mediumImpact();
-    }
+    HapticFeedback.selectionClick();
+    final tp = context.read<ThemeProvider>();
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF161B22),
+        backgroundColor: tp.surfaceColor,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: Color(0xFF30363D)),
+          side: BorderSide(color: tp.borderColor, width: 0.8),
         ),
         title: Text(
-          'Reset Counter',
-          style: GoogleFonts.outfit(
-              fontWeight: FontWeight.w800, color: const Color(0xFFF0F6FC)),
+          'Reset Counter?',
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: tp.textPrimary,
+          ),
         ),
         content: Text(
-          'Reset current Dhikr count and lap back to 0?',
-          style:
-              GoogleFonts.inter(color: const Color(0xFF8B949E), fontSize: 13.5),
+          'Do you want to reset the current count to 0? Your daily total will be preserved.',
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            color: tp.textSecondary,
+          ),
         ),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
               'Cancel',
-              style: GoogleFonts.outfit(
-                  color: const Color(0xFF8B949E), fontWeight: FontWeight.bold),
+              style: GoogleFonts.plusJakartaSans(
+                color: tp.textSecondary,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
           ElevatedButton(
@@ -258,10 +294,10 @@ class _TasbeehScreenState extends State<TasbeehScreen> {
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.redAccent,
+              backgroundColor: const Color(0xFFEF4444),
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
             child: const Text('Reset'),
           ),
@@ -270,7 +306,184 @@ class _TasbeehScreenState extends State<TasbeehScreen> {
     );
   }
 
-  void _showAddCustomDhikrDialog(BuildContext context) {
+  // Set Custom Goal & Starting Counter Value Dialog
+  void _showSetCustomGoalAndCountDialog(BuildContext context, ThemeProvider tp) {
+    HapticFeedback.selectionClick();
+    final targetCtrl = TextEditingController(text: _target.toString());
+    final countCtrl = TextEditingController(text: _counter.toString());
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (ctx) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom,
+          ),
+          child: Container(
+            padding: EdgeInsets.fromLTRB(
+              22,
+              14,
+              22,
+              math.max(MediaQuery.paddingOf(ctx).bottom + 22.0, 40.0),
+            ),
+            decoration: BoxDecoration(
+              color: tp.surfaceColor,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+              border: Border.all(color: tp.borderColor, width: 0.8),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 44,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: tp.borderColor,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+
+                Row(
+                  children: [
+                    Icon(Icons.tune_rounded, color: tp.primaryAccent, size: 22),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Custom Goal & Starting Count',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                        color: tp.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Set any target (e.g. 167, 313, 1000) or resume from an existing count.',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: tp.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Target Input Field
+                _buildInputField(
+                  controller: targetCtrl,
+                  label: 'Target / Goal (Enter 0 for ∞ unlimited)',
+                  hint: 'e.g. 167',
+                  keyboardType: TextInputType.number,
+                  tp: tp,
+                ),
+                const SizedBox(height: 12),
+
+                // Starting Count Field
+                _buildInputField(
+                  controller: countCtrl,
+                  label: 'Current Starting Count',
+                  hint: 'e.g. 0 or 167',
+                  keyboardType: TextInputType.number,
+                  tp: tp,
+                ),
+                const SizedBox(height: 16),
+
+                // Quick Presets Chips
+                Text(
+                  'Quick Presets:',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: tp.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [33, 99, 100, 167, 313, 500, 1000, 0].map((val) {
+                    final label = val == 0 ? '∞ Unlimited' : '$val';
+                    return HeartbeatTap(
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        targetCtrl.text = val.toString();
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: tp.containerColor,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: tp.borderColor, width: 0.8),
+                        ),
+                        child: Text(
+                          label,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600,
+                            color: tp.primaryAccent,
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 22),
+
+                // Save Action Button
+                HeartbeatTap(
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    final newTarget = int.tryParse(targetCtrl.text.trim()) ?? 33;
+                    final newCount = int.tryParse(countCtrl.text.trim()) ?? 0;
+
+                    setState(() {
+                      _target = newTarget < 0 ? 0 : newTarget;
+                      _counter = newCount < 0 ? 0 : newCount;
+                    });
+                    _saveTasbeehData();
+                    Navigator.pop(ctx);
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: tp.primaryAccent,
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: [
+                        BoxShadow(
+                          color: tp.primaryAccent.withValues(alpha: 0.35),
+                          blurRadius: 12,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Text(
+                        'Apply Target & Count',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showAddCustomDhikrDialog(BuildContext context, ThemeProvider tp) {
     HapticFeedback.selectionClick();
     final arabicCtrl = TextEditingController();
     final transliterationCtrl = TextEditingController();
@@ -281,33 +494,34 @@ class _TasbeehScreenState extends State<TasbeehScreen> {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (ctx) {
         return Padding(
           padding: EdgeInsets.only(
             bottom: MediaQuery.of(ctx).viewInsets.bottom,
           ),
           child: Container(
-            padding: const EdgeInsets.fromLTRB(22, 14, 22, 28),
-            decoration: const BoxDecoration(
-              color: Color(0xFF161B22),
-              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-              border: Border(
-                top: BorderSide(color: Color(0xFF30363D), width: 1),
-                left: BorderSide(color: Color(0xFF30363D), width: 1),
-                right: BorderSide(color: Color(0xFF30363D), width: 1),
-              ),
+            padding: EdgeInsets.fromLTRB(
+              22,
+              14,
+              22,
+              math.max(MediaQuery.paddingOf(ctx).bottom + 22.0, 40.0),
+            ),
+            decoration: BoxDecoration(
+              color: tp.surfaceColor,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+              border: Border.all(color: tp.borderColor, width: 0.8),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Handle
                 Center(
                   child: Container(
                     width: 44,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF484F58),
+                      color: tp.borderColor,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -316,10 +530,10 @@ class _TasbeehScreenState extends State<TasbeehScreen> {
 
                 Text(
                   'Add Custom Dhikr / Dua',
-                  style: GoogleFonts.outfit(
-                    fontSize: 18,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 17,
                     fontWeight: FontWeight.w800,
-                    color: const Color(0xFFF0F6FC),
+                    color: tp.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -327,46 +541,45 @@ class _TasbeehScreenState extends State<TasbeehScreen> {
                   'Personalize your digital Tasbeeh with your favorite Adhkaar',
                   style: GoogleFonts.inter(
                     fontSize: 12,
-                    color: const Color(0xFF8B949E),
+                    color: tp.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 16),
 
-                // Arabic Input
                 _buildInputField(
                   controller: arabicCtrl,
                   label: 'Arabic Text (Optional)',
                   hint: 'e.g. يَا حَيُّ يَا قَيُّومُ',
                   isArabic: true,
+                  tp: tp,
                 ),
                 const SizedBox(height: 12),
 
-                // Transliteration
                 _buildInputField(
                   controller: transliterationCtrl,
                   label: 'Transliteration / Name',
                   hint: 'e.g. Ya Hayyu Ya Qayyum',
+                  tp: tp,
                 ),
                 const SizedBox(height: 12),
 
-                // Meaning
                 _buildInputField(
                   controller: translationCtrl,
                   label: 'Meaning / Translation',
                   hint: 'e.g. O Ever-Living, O Sustainer',
+                  tp: tp,
                 ),
                 const SizedBox(height: 12),
 
-                // Target
                 _buildInputField(
                   controller: targetCtrl,
                   label: 'Target Count (0 for ∞ unlimited)',
-                  hint: 'e.g. 100',
+                  hint: 'e.g. 100 or 167',
                   keyboardType: TextInputType.number,
+                  tp: tp,
                 ),
                 const SizedBox(height: 22),
 
-                // Save Button
                 HeartbeatTap(
                   onTap: () {
                     final name = transliterationCtrl.text.trim();
@@ -399,16 +612,23 @@ class _TasbeehScreenState extends State<TasbeehScreen> {
                     width: double.infinity,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: JiraTheme.secondaryGreen,
+                      color: tp.primaryAccent,
                       borderRadius: BorderRadius.circular(14),
+                      boxShadow: [
+                        BoxShadow(
+                          color: tp.primaryAccent.withValues(alpha: 0.35),
+                          blurRadius: 12,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
                     ),
                     child: Center(
                       child: Text(
                         'Save & Select Dhikr',
-                        style: GoogleFonts.outfit(
+                        style: GoogleFonts.plusJakartaSans(
                           fontSize: 14.5,
                           fontWeight: FontWeight.w800,
-                          color: Colors.black,
+                          color: Colors.white,
                         ),
                       ),
                     ),
@@ -426,6 +646,7 @@ class _TasbeehScreenState extends State<TasbeehScreen> {
     required TextEditingController controller,
     required String label,
     required String hint,
+    required ThemeProvider tp,
     bool isArabic = false,
     TextInputType keyboardType = TextInputType.text,
   }) {
@@ -434,40 +655,33 @@ class _TasbeehScreenState extends State<TasbeehScreen> {
       children: [
         Text(
           label,
-          style: GoogleFonts.outfit(
+          style: GoogleFonts.plusJakartaSans(
             fontSize: 11.5,
             fontWeight: FontWeight.w700,
-            color: const Color(0xFFC9D1D9),
+            color: tp.textPrimary,
           ),
         ),
         const SizedBox(height: 5),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
-            color: const Color(0xFF0D121D),
+            color: tp.containerColor,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFF30363D)),
+            border: Border.all(color: tp.borderColor, width: 0.8),
           ),
           child: TextField(
             controller: controller,
             keyboardType: keyboardType,
+            textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
             style: isArabic
-                ? const TextStyle(
-                    fontFamily: 'HafsFont',
-                    fontSize: 16,
-                    color: Color(0xFFF0F6FC),
-                  )
-                : GoogleFonts.inter(
-                    fontSize: 13,
-                    color: const Color(0xFFF0F6FC),
-                  ),
+                ? const TextStyle(fontFamily: 'HafsFont', fontSize: 16)
+                : GoogleFonts.plusJakartaSans(fontSize: 13.5, color: tp.textPrimary),
             decoration: InputDecoration(
               hintText: hint,
-              hintStyle: GoogleFonts.inter(
-                  fontSize: 12, color: const Color(0xFF64748B)),
+              hintStyle: GoogleFonts.plusJakartaSans(fontSize: 12.5, color: tp.textMuted),
               border: InputBorder.none,
               isDense: true,
-              contentPadding: const EdgeInsets.symmetric(vertical: 11),
+              contentPadding: const EdgeInsets.symmetric(vertical: 12),
             ),
           ),
         ),
@@ -475,54 +689,56 @@ class _TasbeehScreenState extends State<TasbeehScreen> {
     );
   }
 
-  void _showTasbeehTipDialog(BuildContext context, {bool autoOpened = false}) {
-    HapticFeedback.lightImpact();
+  void _showTasbeehTipDialog(BuildContext context) {
+    HapticFeedback.selectionClick();
+    final tp = context.read<ThemeProvider>();
+    final isDark = tp.isDarkMode;
 
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (ctx) {
         return Container(
-          padding: const EdgeInsets.fromLTRB(22, 14, 22, 28),
-          decoration: const BoxDecoration(
-            color: Color(0xFF161B22),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-            border: Border(
-              top: BorderSide(color: Color(0xFF30363D), width: 1),
-              left: BorderSide(color: Color(0xFF30363D), width: 1),
-              right: BorderSide(color: Color(0xFF30363D), width: 1),
-            ),
+          padding: EdgeInsets.fromLTRB(
+            22,
+            14,
+            22,
+            math.max(MediaQuery.paddingOf(ctx).bottom + 22.0, 40.0),
+          ),
+          decoration: BoxDecoration(
+            color: tp.surfaceColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            border: Border.all(color: tp.borderColor, width: 0.8),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Drag Handle
               Container(
                 width: 44,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF484F58),
+                  color: tp.borderColor,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
               const SizedBox(height: 20),
 
-              // Glowing Orb Emblem
               Container(
                 width: 52,
                 height: 52,
                 decoration: BoxDecoration(
-                  color: JiraTheme.secondaryGreen.withValues(alpha: 0.15),
+                  color: tp.primaryAccent.withValues(alpha: isDark ? 0.12 : 0.15),
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: JiraTheme.secondaryGreen.withValues(alpha: 0.4),
+                    color: tp.primaryAccent.withValues(alpha: 0.4),
                   ),
                 ),
-                child: const Center(
+                child: Center(
                   child: Icon(
                     Icons.fingerprint_rounded,
-                    color: JiraTheme.secondaryGreen,
+                    color: tp.primaryAccent,
                     size: 28,
                   ),
                 ),
@@ -531,31 +747,30 @@ class _TasbeehScreenState extends State<TasbeehScreen> {
 
               Text(
                 'Tasbeeh & Dhikr Guide',
-                style: GoogleFonts.outfit(
-                  fontSize: 18,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 17,
                   fontWeight: FontWeight.w800,
-                  color: const Color(0xFFF0F6FC),
+                  color: tp.textPrimary,
                 ),
               ),
               const SizedBox(height: 8),
 
-              // Hadith Quote
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0D121D),
+                  color: isDark ? const Color(0xFF151D24) : const Color(0xFFF1F5F9),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFF30363D)),
+                  border: Border.all(color: tp.borderColor, width: 0.8),
                 ),
                 child: Column(
                   children: [
-                    const Text(
+                    Text(
                       'أَحَبُّ الْكَلَامِ إِلَى اللَّهِ أَرْبَعٌ: سُبْحَانَ اللَّهِ، وَالْحَمْدُ لِلَّهِ، وَلَا إِلَهَ إِلَّا اللَّهُ، وَاللَّهُ أَكْبَرُ',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontFamily: 'HafsFont',
                         fontSize: 15.5,
-                        color: Color(0xFF93C5FD),
+                        color: isDark ? const Color(0xFFE2E8F0) : tp.primaryAccent,
                         height: 1.5,
                       ),
                     ),
@@ -566,17 +781,17 @@ class _TasbeehScreenState extends State<TasbeehScreen> {
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         fontStyle: FontStyle.italic,
-                        color: const Color(0xFFC9D1D9),
+                        color: tp.textSecondary,
                         height: 1.4,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       '— Sahih Muslim 2137',
-                      style: GoogleFonts.outfit(
+                      style: GoogleFonts.plusJakartaSans(
                         fontSize: 10.5,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF8B949E),
+                        color: tp.textSecondary,
                       ),
                     ),
                   ],
@@ -584,35 +799,33 @@ class _TasbeehScreenState extends State<TasbeehScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Feature Highlights
               _buildTipRow(
                 icon: Icons.touch_app_rounded,
-                iconColor: const Color(0xFF60A5FA),
+                iconColor: tp.primaryAccent,
                 title: 'Haptic Counting',
-                subtitle:
-                    'Tap anywhere on the giant glowing orb to count with tactile vibration feedback.',
+                subtitle: 'Tap anywhere on the giant glowing orb to count with tactile vibration feedback.',
+                tp: tp,
+              ),
+              const SizedBox(height: 10),
+
+              _buildTipRow(
+                icon: Icons.tune_rounded,
+                iconColor: tp.primaryAccent,
+                title: 'Custom Target & Jump Count',
+                subtitle: 'Tap on the target bar or status pill to set any custom goal (e.g. 167) or start count.',
+                tp: tp,
               ),
               const SizedBox(height: 10),
 
               _buildTipRow(
                 icon: Icons.add_circle_outline_rounded,
-                iconColor: JiraTheme.secondaryGreen,
+                iconColor: tp.primaryAccent,
                 title: 'Custom Dhikr & Salawat',
-                subtitle:
-                    'Tap the “+ Custom” pill to add your own prayers with customized target counts.',
-              ),
-              const SizedBox(height: 10),
-
-              _buildTipRow(
-                icon: Icons.track_changes_rounded,
-                iconColor: const Color(0xFFFBBF24),
-                title: 'Targets & Infinity Mode (∞)',
-                subtitle:
-                    'Switch between 33, 99, 100, or unlimited count (∞) using the quick selector bar.',
+                subtitle: 'Tap the “+ Custom” pill to add your own prayers with customized target counts.',
+                tp: tp,
               ),
               const SizedBox(height: 22),
 
-              // Action Button
               HeartbeatTap(
                 onTap: () async {
                   final prefs = await SharedPreferences.getInstance();
@@ -623,16 +836,23 @@ class _TasbeehScreenState extends State<TasbeehScreen> {
                   width: double.infinity,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: JiraTheme.secondaryGreen,
+                    color: tp.primaryAccent,
                     borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: tp.primaryAccent.withValues(alpha: 0.35),
+                        blurRadius: 12,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
                   ),
                   child: Center(
                     child: Text(
                       'Got It • Begin Tasbeeh',
-                      style: GoogleFonts.outfit(
+                      style: GoogleFonts.plusJakartaSans(
                         fontSize: 14.5,
                         fontWeight: FontWeight.w800,
-                        color: Colors.black,
+                        color: Colors.white,
                       ),
                     ),
                   ),
@@ -650,6 +870,7 @@ class _TasbeehScreenState extends State<TasbeehScreen> {
     required Color iconColor,
     required String title,
     required String subtitle,
+    required ThemeProvider tp,
   }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -670,10 +891,10 @@ class _TasbeehScreenState extends State<TasbeehScreen> {
             children: [
               Text(
                 title,
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.plusJakartaSans(
                   fontSize: 13.5,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFFF0F6FC),
+                  color: tp.textPrimary,
                 ),
               ),
               const SizedBox(height: 2),
@@ -681,7 +902,7 @@ class _TasbeehScreenState extends State<TasbeehScreen> {
                 subtitle,
                 style: GoogleFonts.inter(
                   fontSize: 11.5,
-                  color: const Color(0xFF8B949E),
+                  color: tp.textSecondary,
                   height: 1.35,
                 ),
               ),
@@ -694,6 +915,12 @@ class _TasbeehScreenState extends State<TasbeehScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final tp = context.watch<ThemeProvider>();
+    final isDark = tp.isDarkMode;
+    final topInset = MediaQuery.paddingOf(context).top;
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+    const double kTopBarHeight = 56.0;
+
     final currentPhrase = _selectedPhraseIndex < _allPhrases.length
         ? _allPhrases[_selectedPhraseIndex]
         : _allPhrases.first;
@@ -701,25 +928,23 @@ class _TasbeehScreenState extends State<TasbeehScreen> {
     final progress = _target > 0 ? (_counter / _target).clamp(0.0, 1.0) : 1.0;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0E14),
+      backgroundColor: tp.backgroundTop,
       body: Stack(
         children: [
-          // 1. Ambient Background Gradient
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFF0B0E14),
-                  Color(0xFF0D121D),
-                  Color(0xFF070A10),
-                ],
+          // Ambient Background Gradient
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [tp.backgroundTop, tp.backgroundBottom],
+                ),
               ),
             ),
           ),
 
-          // 2. Central Soft Ambient Radial Aura
+          // Central Soft Ambient Teal Aura
           Positioned(
             top: MediaQuery.of(context).size.height * 0.38,
             left: -30,
@@ -730,7 +955,7 @@ class _TasbeehScreenState extends State<TasbeehScreen> {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    JiraTheme.secondaryGreen.withValues(alpha: 0.09),
+                    tp.primaryAccent.withValues(alpha: isDark ? 0.12 : 0.08),
                     Colors.transparent,
                   ],
                 ),
@@ -738,206 +963,204 @@ class _TasbeehScreenState extends State<TasbeehScreen> {
             ),
           ),
 
-          // 3. Main Minimalist Screen Layout
-          SafeArea(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                return SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                    child: IntrinsicHeight(
-                      child: Column(
-                        children: [
-                          // Minimal Top Bar
-                          _buildTopBar(),
+          // Main Layout with Guaranteed Safe Area Clearance
+          Positioned.fill(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                16,
+                topInset + kTopBarHeight + 8,
+                16,
+                math.max(bottomInset, 16.0),
+              ),
+              child: Column(
+                children: [
+                  // Horizontal Dhikr Selector Pills
+                  _buildDhikrSelectorPills(tp, isDark),
 
-                          const SizedBox(height: 6),
+                  const Spacer(flex: 2),
 
-                          // Horizontal Dhikr Selector Pills + Add Custom Button
-                          _buildDhikrSelectorPills(),
+                  // Active Dhikr Calligraphy & Details (Clickable for Custom Target)
+                  _buildActiveDhikrHeader(currentPhrase, tp, isDark),
 
-                          const Spacer(flex: 2),
+                  const Spacer(flex: 3),
 
-                          // Active Dhikr Calligraphy & Details
-                          _buildActiveDhikrHeader(currentPhrase),
+                  // Hero Circular Counter Orb
+                  _buildCounterOrb(progress, tp, isDark),
 
-                          const Spacer(flex: 3),
+                  const Spacer(flex: 4),
 
-                          // Hero Centerpiece: Circular Counter Orb with Heartbeat Pulse
-                          _buildCounterOrb(progress),
+                  // Quick Controls Row (Reset, Target Segment, Lap)
+                  _buildQuickControls(tp, isDark),
 
-                          const Spacer(flex: 4),
+                  const SizedBox(height: 14),
 
-                          // Sleek Quick Controls Row (Reset, Target Segment, Lap)
-                          _buildQuickControls(),
+                  // Minimalist Bottom Stats
+                  _buildMinimalBottomStats(tp),
 
-                          const SizedBox(height: 14),
+                  const SizedBox(height: 8),
+                ],
+              ),
+            ),
+          ),
 
-                          // Minimalist Bottom Stats Subtitle
-                          _buildMinimalBottomStats(),
-
-                          const SizedBox(height: 16),
-                        ],
+          // Fixed Frosted 56px Top Header
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: topInset + kTopBarHeight,
+            child: ClipRect(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                child: Container(
+                  padding: EdgeInsets.only(top: topInset),
+                  decoration: BoxDecoration(
+                    color: tp.backgroundTop.withValues(alpha: isDark ? 0.85 : 0.90),
+                    border: Border(
+                      bottom: BorderSide(
+                        color: tp.borderColor.withValues(alpha: 0.35),
+                        width: 0.8,
                       ),
                     ),
                   ),
-                );
-              },
+                  child: Container(
+                    height: 56.0,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    alignment: Alignment.center,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        // Back Button
+                        HeartbeatTap(
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            Navigator.pop(context);
+                          },
+                          child: Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: tp.surfaceColor,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: tp.borderColor, width: 0.8),
+                            ),
+                            child: Center(
+                              child: Icon(Icons.arrow_back_ios_new_rounded, color: tp.textPrimary, size: 16),
+                            ),
+                          ),
+                        ),
+
+                        // Center Title with Glowing Orb
+                        Expanded(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                width: 7,
+                                height: 7,
+                                decoration: BoxDecoration(
+                                  color: tp.primaryAccent,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: tp.primaryAccent.withValues(alpha: 0.8),
+                                      blurRadius: 6,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'DIGITAL TASBEEH',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                  color: tp.textPrimary,
+                                  letterSpacing: 1.2,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // Right Controls Cluster (Tip Bulb, Sound, Vibration)
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            HeartbeatTap(
+                              onTap: () => _showTasbeehTipDialog(context),
+                              child: Container(
+                                width: 34,
+                                height: 34,
+                                decoration: BoxDecoration(
+                                  color: tp.surfaceColor,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: tp.borderColor, width: 0.8),
+                                ),
+                                child: const Center(
+                                  child: Icon(Icons.lightbulb_outline_rounded, size: 16, color: Color(0xFFF59E0B)),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+
+                            HeartbeatTap(
+                              onTap: () {
+                                HapticFeedback.selectionClick();
+                                setState(() => _soundEnabled = !_soundEnabled);
+                                _saveTasbeehData();
+                              },
+                              child: Container(
+                                width: 34,
+                                height: 34,
+                                decoration: BoxDecoration(
+                                  color: tp.surfaceColor,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: tp.borderColor, width: 0.8),
+                                ),
+                                child: Center(
+                                  child: Icon(
+                                    _soundEnabled ? Icons.volume_up_rounded : Icons.volume_off_rounded,
+                                    size: 16,
+                                    color: _soundEnabled ? tp.textPrimary : tp.textMuted,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+
+                            HeartbeatTap(
+                              onTap: () {
+                                HapticFeedback.selectionClick();
+                                setState(() => _hapticEnabled = !_hapticEnabled);
+                                _saveTasbeehData();
+                              },
+                              child: Container(
+                                width: 34,
+                                height: 34,
+                                decoration: BoxDecoration(
+                                  color: tp.surfaceColor,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: tp.borderColor, width: 0.8),
+                                ),
+                                child: Center(
+                                  child: Icon(
+                                    Icons.vibration_rounded,
+                                    size: 16,
+                                    color: _hapticEnabled ? tp.primaryAccent : tp.textMuted,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Minimal Top Bar
-  Widget _buildTopBar() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          // Left Circular Back Button
-          HeartbeatTap(
-            onTap: () {
-              HapticFeedback.selectionClick();
-              Navigator.pop(context);
-            },
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: const Color(0xFF161B22),
-                shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFF30363D)),
-              ),
-              child: const Center(
-                child: Icon(
-                  Icons.arrow_back_rounded,
-                  size: 20,
-                  color: Color(0xFFF0F6FC),
-                ),
-              ),
-            ),
-          ),
-
-          // Center Title with Green Glowing Orb Indicator
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 7,
-                height: 7,
-                decoration: BoxDecoration(
-                  color: JiraTheme.secondaryGreen,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: JiraTheme.secondaryGreen.withValues(alpha: 0.8),
-                      blurRadius: 6,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'DIGITAL TASBEEH',
-                style: GoogleFonts.outfit(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFFF0F6FC),
-                  letterSpacing: 1.2,
-                ),
-              ),
-            ],
-          ),
-
-          // Right Controls Cluster (Tip Bulb, Sound & Vibration toggles)
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Tip Button
-              HeartbeatTap(
-                onTap: () => _showTasbeehTipDialog(context),
-                child: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF161B22),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: const Color(0xFFF59E0B).withValues(alpha: 0.4),
-                    ),
-                  ),
-                  child: const Center(
-                    child: Icon(
-                      Icons.lightbulb_outline_rounded,
-                      size: 16,
-                      color: Color(0xFFFBBF24),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 6),
-
-              // Sound Toggle
-              HeartbeatTap(
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  setState(() => _soundEnabled = !_soundEnabled);
-                  _saveTasbeehData();
-                },
-                child: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF161B22),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFF30363D)),
-                  ),
-                  child: Center(
-                    child: Icon(
-                      _soundEnabled
-                          ? Icons.volume_up_rounded
-                          : Icons.volume_off_rounded,
-                      size: 16,
-                      color: _soundEnabled
-                          ? const Color(0xFFF0F6FC)
-                          : const Color(0xFF64748B),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 6),
-
-              // Vibration Toggle
-              HeartbeatTap(
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  setState(() => _hapticEnabled = !_hapticEnabled);
-                  _saveTasbeehData();
-                },
-                child: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF161B22),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFF30363D)),
-                  ),
-                  child: Center(
-                    child: Icon(
-                      Icons.vibration_rounded,
-                      size: 16,
-                      color: _hapticEnabled
-                          ? JiraTheme.secondaryGreen
-                          : const Color(0xFF64748B),
-                    ),
-                  ),
-                ),
-              ),
-            ],
           ),
         ],
       ),
@@ -945,47 +1168,40 @@ class _TasbeehScreenState extends State<TasbeehScreen> {
   }
 
   // Horizontal Dhikr Selector Pills with "+ Custom" Button
-  Widget _buildDhikrSelectorPills() {
+  Widget _buildDhikrSelectorPills(ThemeProvider tp, bool isDark) {
     return SizedBox(
-      height: 44,
+      height: 38,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: _allPhrases.length + 1, // Extra + 1 for Add button
+        itemCount: _allPhrases.length + 1,
         itemBuilder: (context, index) {
-          // Add Custom Dhikr Button
           if (index == _allPhrases.length) {
             return Padding(
               padding: const EdgeInsets.only(right: 8),
               child: HeartbeatTap(
-                onTap: () => _showAddCustomDhikrDialog(context),
+                onTap: () => _showAddCustomDhikrDialog(context, tp),
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF161B22),
-                    borderRadius: BorderRadius.circular(22),
+                    color: tp.surfaceColor,
+                    borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: JiraTheme.secondaryGreen.withValues(alpha: 0.4),
-                      width: 1.0,
+                      color: tp.primaryAccent.withValues(alpha: 0.4),
+                      width: 0.8,
                     ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(
-                        Icons.add_rounded,
-                        size: 16,
-                        color: JiraTheme.secondaryGreen,
-                      ),
+                      Icon(Icons.add_rounded, size: 14, color: tp.primaryAccent),
                       const SizedBox(width: 4),
                       Text(
                         'Custom',
-                        style: GoogleFonts.outfit(
-                          fontSize: 13,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 12,
                           fontWeight: FontWeight.w700,
-                          color: JiraTheme.secondaryGreen,
+                          color: tp.primaryAccent,
                         ),
                       ),
                     ],
@@ -1012,18 +1228,15 @@ class _TasbeehScreenState extends State<TasbeehScreen> {
                 _saveTasbeehData();
               },
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? const Color(0xFFA4C6FB)
-                      : const Color(0xFF161B22),
-                  borderRadius: BorderRadius.circular(22),
+                      ? tp.primaryAccent.withValues(alpha: isDark ? 0.15 : 0.12)
+                      : tp.surfaceColor,
+                  borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: isSelected
-                        ? const Color(0xFFA4C6FB)
-                        : const Color(0xFF30363D),
-                    width: 1.0,
+                    color: isSelected ? tp.primaryAccent : tp.borderColor,
+                    width: 0.8,
                   ),
                 ),
                 child: Center(
@@ -1031,13 +1244,10 @@ class _TasbeehScreenState extends State<TasbeehScreen> {
                     phrase.defaultTarget > 0
                         ? '${phrase.transliteration} (${phrase.defaultTarget})'
                         : phrase.transliteration,
-                    style: GoogleFonts.outfit(
-                      fontSize: 13,
-                      fontWeight:
-                          isSelected ? FontWeight.w800 : FontWeight.w600,
-                      color: isSelected
-                          ? const Color(0xFF0B0E14)
-                          : const Color(0xFFF0F6FC),
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                      color: isSelected ? tp.primaryAccent : tp.textSecondary,
                     ),
                   ),
                 ),
@@ -1049,37 +1259,35 @@ class _TasbeehScreenState extends State<TasbeehScreen> {
     );
   }
 
-  // Active Dhikr Calligraphy Header
-  Widget _buildActiveDhikrHeader(DhikrPhrase phrase) {
+  // Active Dhikr Calligraphy Header (Clickable status to edit target / count)
+  Widget _buildActiveDhikrHeader(DhikrPhrase phrase, ThemeProvider tp, bool isDark) {
     final targetLabel = _target == 0 ? '∞' : '$_target';
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Sacred Arabic Calligraphy
           Text(
             phrase.arabic,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: 'HafsFont',
-              fontSize: 30,
+              fontSize: 28,
               fontWeight: FontWeight.normal,
-              color: Color(0xFFC7D2FE),
+              color: isDark ? const Color(0xFFF0F6FC) : const Color(0xFF0F172A),
               height: 1.5,
             ),
           ),
           const SizedBox(height: 4),
 
-          // Transliteration
           Text(
             phrase.transliteration,
             textAlign: TextAlign.center,
-            style: GoogleFonts.outfit(
-              fontSize: 19,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 17,
               fontWeight: FontWeight.w800,
-              color: Colors.white,
+              color: tp.textPrimary,
             ),
           ),
           if (phrase.translation.isNotEmpty) ...[
@@ -1088,28 +1296,37 @@ class _TasbeehScreenState extends State<TasbeehScreen> {
               phrase.translation,
               textAlign: TextAlign.center,
               style: GoogleFonts.inter(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w400,
-                color: const Color(0xFF8B949E),
+                fontSize: 12,
+                color: tp.textSecondary,
               ),
             ),
           ],
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
 
-          // Minimalist Status Subtitle
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
-            decoration: BoxDecoration(
-              color: const Color(0xFF161B22),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFF30363D)),
-            ),
-            child: Text(
-              'Lap $_currentLap  •  Target $targetLabel  •  Total $_totalToday',
-              style: GoogleFonts.outfit(
-                fontSize: 11.5,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF8B949E),
+          // Clickable Status Badge (Opens Goal / Start Count Sheet)
+          HeartbeatTap(
+            onTap: () => _showSetCustomGoalAndCountDialog(context, tp),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF151D24) : const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: tp.borderColor, width: 0.8),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Lap $_currentLap  •  Target $targetLabel  •  Total $_totalToday',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: tp.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Icon(Icons.edit_outlined, size: 12, color: tp.primaryAccent),
+                ],
               ),
             ),
           ),
@@ -1118,28 +1335,28 @@ class _TasbeehScreenState extends State<TasbeehScreen> {
     );
   }
 
-  // Hero Counter Orb (250px with HeartbeatTap pulse)
-  Widget _buildCounterOrb(double progress) {
+  // Hero Counter Orb (240px with HeartbeatTap pulse)
+  Widget _buildCounterOrb(double progress, ThemeProvider tp, bool isDark) {
     return HeartbeatTap(
       onTap: _onIncrement,
       child: Container(
-        width: 250,
-        height: 250,
+        width: 240,
+        height: 240,
         decoration: BoxDecoration(
-          color: const Color(0xFF161B22),
+          color: tp.surfaceColor,
           shape: BoxShape.circle,
           border: Border.all(
-            color: const Color(0xFF30363D),
+            color: tp.borderColor,
             width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: JiraTheme.secondaryGreen.withValues(alpha: 0.15),
+              color: tp.primaryAccent.withValues(alpha: isDark ? 0.20 : 0.08),
               blurRadius: 32,
               spreadRadius: 2,
             ),
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.5),
+              color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.05),
               blurRadius: 20,
               offset: const Offset(0, 8),
             ),
@@ -1148,38 +1365,36 @@ class _TasbeehScreenState extends State<TasbeehScreen> {
         child: Stack(
           alignment: Alignment.center,
           children: [
-            // Circular Progress Ring
             CustomPaint(
-              size: const Size(250, 250),
+              size: const Size(240, 240),
               painter: _TasbeehProgressRingPainter(
                 progress: progress,
                 strokeWidth: 6.0,
-                trackColor: const Color(0xFF1E293B).withValues(alpha: 0.5),
-                progressColor: JiraTheme.secondaryGreen,
+                trackColor: tp.borderColor.withValues(alpha: 0.4),
+                progressColor: tp.primaryAccent,
               ),
             ),
 
-            // Giant Number & Subtitle
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
                   '$_counter',
-                  style: GoogleFonts.outfit(
-                    fontSize: 80,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 74,
+                    fontWeight: FontWeight.w800,
+                    color: tp.textPrimary,
                     height: 1.0,
                   ),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   'TAP TO COUNT',
-                  style: GoogleFonts.outfit(
-                    fontSize: 11,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 10.5,
                     fontWeight: FontWeight.w800,
-                    color: const Color(0xFF8B949E),
-                    letterSpacing: 1.6,
+                    color: tp.textSecondary,
+                    letterSpacing: 1.5,
                   ),
                 ),
               ],
@@ -1191,53 +1406,85 @@ class _TasbeehScreenState extends State<TasbeehScreen> {
   }
 
   // Minimalist Quick Controls Strip
-  Widget _buildQuickControls() {
+  Widget _buildQuickControls(ThemeProvider tp, bool isDark) {
+    final isCustomTarget = _target != 33 && _target != 99 && _target != 100 && _target != 0;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 28),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Left Reset Button
+          // Reset Button
           HeartbeatTap(
             onTap: _onReset,
             child: Container(
-              width: 44,
-              height: 44,
+              width: 42,
+              height: 42,
               decoration: BoxDecoration(
-                color: const Color(0xFF161B22),
+                color: tp.surfaceColor,
                 shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFF30363D)),
+                border: Border.all(color: tp.borderColor, width: 0.8),
               ),
-              child: const Center(
+              child: Center(
                 child: Icon(
                   Icons.restart_alt_rounded,
-                  size: 20,
-                  color: Color(0xFFF0F6FC),
+                  size: 19,
+                  color: tp.textPrimary,
                 ),
               ),
             ),
           ),
 
-          // Center Target Segment Switcher
+          // Center Target Segment Switcher with Custom Pencil Button
           Container(
             padding: const EdgeInsets.all(3),
             decoration: BoxDecoration(
-              color: const Color(0xFF161B22),
+              color: tp.surfaceColor,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0xFF30363D)),
+              border: Border.all(color: tp.borderColor, width: 0.8),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _buildTargetSegment(33, '33'),
-                _buildTargetSegment(99, '99'),
-                _buildTargetSegment(100, '100'),
-                _buildTargetSegment(0, '∞'),
+                _buildTargetSegment(33, '33', tp, isDark),
+                _buildTargetSegment(99, '99', tp, isDark),
+                _buildTargetSegment(100, '100', tp, isDark),
+                _buildTargetSegment(0, '∞', tp, isDark),
+                // Custom Goal Segment Pill
+                HeartbeatTap(
+                  onTap: () => _showSetCustomGoalAndCountDialog(context, tp),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: isCustomTarget
+                          ? tp.primaryAccent.withValues(alpha: isDark ? 0.18 : 0.14)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(15),
+                      border: isCustomTarget ? Border.all(color: tp.primaryAccent, width: 0.8) : null,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (isCustomTarget)
+                          Text(
+                            '$_target',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w800,
+                              color: tp.primaryAccent,
+                            ),
+                          )
+                        else
+                          Icon(Icons.edit_outlined, size: 14, color: tp.textSecondary),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
 
-          // Right Lap Flag Button
+          // Lap Flag Button
           HeartbeatTap(
             onTap: () {
               HapticFeedback.selectionClick();
@@ -1248,18 +1495,18 @@ class _TasbeehScreenState extends State<TasbeehScreen> {
               _saveTasbeehData();
             },
             child: Container(
-              width: 44,
-              height: 44,
+              width: 42,
+              height: 42,
               decoration: BoxDecoration(
-                color: const Color(0xFF161B22),
+                color: tp.surfaceColor,
                 shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFF30363D)),
+                border: Border.all(color: tp.borderColor, width: 0.8),
               ),
-              child: const Center(
+              child: Center(
                 child: Icon(
                   Icons.outlined_flag_rounded,
-                  size: 20,
-                  color: Color(0xFFF0F6FC),
+                  size: 19,
+                  color: tp.textPrimary,
                 ),
               ),
             ),
@@ -1269,7 +1516,7 @@ class _TasbeehScreenState extends State<TasbeehScreen> {
     );
   }
 
-  Widget _buildTargetSegment(int value, String label) {
+  Widget _buildTargetSegment(int value, String label, ThemeProvider tp, bool isDark) {
     final isSelected = _target == value;
 
     return HeartbeatTap(
@@ -1282,19 +1529,22 @@ class _TasbeehScreenState extends State<TasbeehScreen> {
         _saveTasbeehData();
       },
       child: Container(
-        width: 38,
-        height: 32,
+        width: 36,
+        height: 30,
         decoration: BoxDecoration(
-          color: isSelected ? JiraTheme.primaryBlue : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
+          color: isSelected
+              ? tp.primaryAccent.withValues(alpha: isDark ? 0.18 : 0.14)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(15),
+          border: isSelected ? Border.all(color: tp.primaryAccent, width: 0.8) : null,
         ),
         child: Center(
           child: Text(
             label,
-            style: GoogleFonts.outfit(
-              fontSize: 12.5,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 12,
               fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-              color: isSelected ? Colors.white : const Color(0xFF8B949E),
+              color: isSelected ? tp.primaryAccent : tp.textSecondary,
             ),
           ),
         ),
@@ -1303,37 +1553,36 @@ class _TasbeehScreenState extends State<TasbeehScreen> {
   }
 
   // Minimal Bottom Stats
-  Widget _buildMinimalBottomStats() {
+  Widget _buildMinimalBottomStats(ThemeProvider tp) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Icon(Icons.local_fire_department_rounded,
-            size: 14, color: JiraTheme.secondaryGreen),
+        Icon(Icons.local_fire_department_rounded, size: 14, color: tp.primaryAccent),
         const SizedBox(width: 4),
         Text(
           '$_totalToday / 500 Daily Goal',
           style: GoogleFonts.inter(
             fontSize: 11.5,
             fontWeight: FontWeight.w500,
-            color: const Color(0xFF8B949E),
+            color: tp.textSecondary,
           ),
         ),
         const SizedBox(width: 12),
         Container(
           width: 3,
           height: 3,
-          decoration: const BoxDecoration(
-            color: Color(0xFF30363D),
+          decoration: BoxDecoration(
+            color: tp.borderColor,
             shape: BoxShape.circle,
           ),
         ),
         const SizedBox(width: 12),
         Text(
           '$_streakDays Day Streak 🔥',
-          style: GoogleFonts.inter(
+          style: GoogleFonts.plusJakartaSans(
             fontSize: 11.5,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF93C5FD),
+            fontWeight: FontWeight.w700,
+            color: tp.primaryAccent,
           ),
         ),
       ],
@@ -1360,7 +1609,6 @@ class _TasbeehProgressRingPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = (size.width - strokeWidth) / 2;
 
-    // Background track
     final trackPaint = Paint()
       ..color = trackColor
       ..style = PaintingStyle.stroke
@@ -1370,7 +1618,6 @@ class _TasbeehProgressRingPainter extends CustomPainter {
 
     if (progress <= 0.0) return;
 
-    // Foreground progress arc
     final progressPaint = Paint()
       ..color = progressColor
       ..style = PaintingStyle.stroke
@@ -1386,7 +1633,6 @@ class _TasbeehProgressRingPainter extends CustomPainter {
       progressPaint,
     );
 
-    // Tip Glowing Dot
     final endAngle = -math.pi / 2 + sweepAngle;
     final dotCenter = Offset(
       center.dx + radius * math.cos(endAngle),

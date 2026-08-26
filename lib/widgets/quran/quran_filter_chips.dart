@@ -3,10 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../providers/theme_provider.dart';
-import '../../theme/jira_theme.dart';
 import '../heartbeat_tap.dart';
 
-enum QuranFilterType { all, bookmarks, juz, meccan, medinan }
+enum QuranFilterType { all, juz, bookmarks, meccan, medinan }
 
 class QuranFilterChips extends StatelessWidget {
   final QuranFilterType activeFilter;
@@ -28,9 +27,9 @@ class QuranFilterChips extends StatelessWidget {
     final isDark = themeProvider.isDarkMode;
 
     final filters = [
-      (QuranFilterType.all, 'All Surahs ($totalCount)'),
-      (QuranFilterType.bookmarks, bookmarksCount > 0 ? 'Bookmarks ($bookmarksCount)' : 'Bookmarks'),
+      (QuranFilterType.all, 'Surah'),
       (QuranFilterType.juz, 'Juz'),
+      (QuranFilterType.bookmarks, bookmarksCount > 0 ? 'Bookmarks ($bookmarksCount)' : 'Bookmarks'),
       (QuranFilterType.meccan, 'Meccan'),
       (QuranFilterType.medinan, 'Medinan'),
     ];
@@ -38,7 +37,7 @@ class QuranFilterChips extends StatelessWidget {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: EdgeInsets.zero,
       child: Row(
         children: filters.map((item) {
           final type = item.$1;
@@ -46,47 +45,36 @@ class QuranFilterChips extends StatelessWidget {
           final isSelected = activeFilter == type;
 
           return Padding(
-            padding: const EdgeInsets.only(right: 8.0),
+            padding: const EdgeInsets.only(right: 6.0),
             child: HeartbeatTap(
               onTap: () {
                 HapticFeedback.selectionClick();
                 onFilterSelected(type);
               },
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                height: 38,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                duration: const Duration(milliseconds: 180),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6.5),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? const Color(0xFFA4C6FB)
-                      : (isDark ? JiraTheme.darkSurface : JiraTheme.lightSurface),
-                  borderRadius: BorderRadius.circular(20),
+                      ? (isDark ? const Color(0xFF1E2833) : const Color(0xFFE2E8F0))
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                     color: isSelected
-                        ? const Color(0xFFA4C6FB)
-                        : (isDark ? JiraTheme.darkBorderSubtle : JiraTheme.lightBorderSubtle),
-                    width: 1.0,
+                        ? themeProvider.primaryAccent.withValues(alpha: isDark ? 0.35 : 0.45)
+                        : Colors.transparent,
+                    width: 0.8,
                   ),
-                  boxShadow: isSelected
-                      ? [
-                          BoxShadow(
-                            color: const Color(0xFFA4C6FB).withValues(alpha: 0.25),
-                            blurRadius: 10,
-                            offset: const Offset(0, 3),
-                          ),
-                        ]
-                      : null,
                 ),
-                child: Center(
-                  child: Text(
-                    label,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 12,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                      color: isSelected
-                          ? const Color(0xFF0B0E14)
-                          : themeProvider.textSecondary,
-                    ),
+                child: Text(
+                  label,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12.5,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                    color: isSelected
+                        ? themeProvider.primaryAccent
+                        : themeProvider.textSecondary,
+                    letterSpacing: 0.1,
                   ),
                 ),
               ),

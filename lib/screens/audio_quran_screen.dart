@@ -8,7 +8,6 @@ import 'package:provider/provider.dart';
 import '../models/quran_model.dart';
 import '../providers/quran_provider.dart';
 import '../providers/theme_provider.dart';
-import '../theme/jira_theme.dart';
 import '../widgets/heartbeat_tap.dart';
 import '../widgets/quran/reciter_picker_sheet.dart';
 
@@ -53,7 +52,6 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
       if (provider.currentViewingSurahNumber != targetSurah || provider.ayahs.isEmpty) {
         await provider.fetchSurahDetails(targetSurah);
       }
-      // If nothing is playing, start from beginning
       if (provider.playerState?.playing != true && provider.ayahs.isNotEmpty) {
         provider.togglePlayAyah(0);
       }
@@ -74,7 +72,7 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
     if (key?.currentContext != null) {
       Scrollable.ensureVisible(
         key!.currentContext!,
-        alignment: 0.42, // Exactly in the focal center area of the screen
+        alignment: 0.42,
         duration: const Duration(milliseconds: 650),
         curve: Curves.easeOutCubic,
       );
@@ -100,42 +98,48 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
     setState(() {
       _sleepTimerMinutes = minutes;
     });
+
     if (minutes > 0) {
       _sleepTimer = Timer(Duration(minutes: minutes), () {
         if (mounted) {
-          final provider = context.read<QuranProvider>();
-          provider.pauseAudio();
+          context.read<QuranProvider>().pauseAudio();
           setState(() {
             _sleepTimerMinutes = null;
           });
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Sleep timer ended. Audio paused.'),
+              content: Text('Sleep timer ended • Audio stopped'),
               behavior: SnackBarBehavior.floating,
+              duration: Duration(seconds: 2),
             ),
           );
         }
       });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Sleep timer set for $minutes minutes'),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
+        ),
+      );
     }
   }
 
-  void _showSleepTimerSheet(BuildContext context) {
-    final tp = context.read<ThemeProvider>();
-    final isDark = tp.isDarkMode;
+  void _showSleepTimerPicker(BuildContext context, ThemeProvider tp) {
+    final durations = [15, 30, 45, 60, 0];
 
     showModalBottomSheet(
       context: context,
-      useSafeArea: true,
-      backgroundColor: isDark ? JiraTheme.darkSurface : JiraTheme.lightSurface,
+      backgroundColor: tp.surfaceColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(24),
+        return SafeArea(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              const SizedBox(height: 12),
               Container(
                 width: 40,
                 height: 4,
@@ -144,59 +148,50 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              const SizedBox(height: 16),
-              Text(
-                'Sleep Timer',
-                style: GoogleFonts.outfit(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: tp.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 20),
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                alignment: WrapAlignment.center,
-                children: [15, 30, 45, 60].map((mins) {
-                  final isSelected = _sleepTimerMinutes == mins;
-                  return HeartbeatTap(
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      _setSleepTimer(mins);
-                      Navigator.pop(context);
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: isSelected ? JiraTheme.primaryBlue : (isDark ? JiraTheme.darkContainer : JiraTheme.lightContainer),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: isSelected ? JiraTheme.primaryBlue : tp.borderColor,
-                        ),
-                      ),
-                      child: Text(
-                        '🌙 $mins Minutes',
-                        style: GoogleFonts.outfit(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: isSelected ? Colors.white : tp.textPrimary,
-                        ),
+              Padding(
+                padding: const EdgeInsets.all(18),
+                child: Row(
+                  children: [
+                    Icon(Icons.bedtime_outlined, color: tp.primaryAccent, size: 20),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Sleep Timer',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: tp.textPrimary,
                       ),
                     ),
-                  );
-                }).toList(),
-              ),
-              if (_sleepTimerMinutes != null) ...[
-                const SizedBox(height: 16),
-                TextButton(
-                  onPressed: () {
-                    _setSleepTimer(0);
-                    Navigator.pop(context);
-                  },
-                  child: const Text('Turn Off Sleep Timer', style: TextStyle(color: Colors.redAccent)),
+                  ],
                 ),
-              ],
+              ),
+              ...durations.map((mins) {
+                final isSelected = mins == _sleepTimerMinutes || (mins == 0 && _sleepTimerMinutes == null);
+                final label = mins == 0 ? 'Turn Off Timer' : '$mins Minutes';
+
+                return ListTile(
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    Navigator.pop(context);
+                    _setSleepTimer(mins);
+                  },
+                  leading: Icon(
+                    mins == 0 ? Icons.timer_off_outlined : Icons.timer_outlined,
+                    color: isSelected ? tp.primaryAccent : tp.textSecondary,
+                  ),
+                  title: Text(
+                    label,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 14,
+                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                      color: isSelected ? tp.primaryAccent : tp.textPrimary,
+                    ),
+                  ),
+                  trailing: isSelected
+                      ? Icon(Icons.check_rounded, color: tp.primaryAccent)
+                      : null,
+                );
+              }),
               const SizedBox(height: 12),
             ],
           ),
@@ -205,15 +200,14 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
     );
   }
 
-  void _showSurahPlaylistDrawer(BuildContext context, QuranProvider provider) {
-    final tp = context.read<ThemeProvider>();
+  void _showSurahPlaylistDrawer(BuildContext context, QuranProvider provider, ThemeProvider tp) {
     final isDark = tp.isDarkMode;
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor: isDark ? JiraTheme.darkSurface : JiraTheme.lightSurface,
+      backgroundColor: tp.surfaceColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -242,8 +236,8 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                     children: [
                       Text(
                         'Quran Surahs (114)',
-                        style: GoogleFonts.outfit(
-                          fontSize: 18,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 16,
                           fontWeight: FontWeight.w800,
                           color: tp.textPrimary,
                         ),
@@ -258,7 +252,7 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                     ],
                   ),
                 ),
-                const Divider(height: 1),
+                Divider(height: 1, color: tp.borderColor),
                 Expanded(
                   child: ListView.builder(
                     controller: scrollController,
@@ -278,26 +272,32 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                           width: 36,
                           height: 36,
                           decoration: BoxDecoration(
-                            color: isCurrent ? JiraTheme.primaryBlue : (isDark ? JiraTheme.darkContainer : JiraTheme.lightContainer),
+                            color: isCurrent
+                                ? tp.primaryAccent.withValues(alpha: isDark ? 0.15 : 0.12)
+                                : tp.containerColor,
                             borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: isCurrent ? tp.primaryAccent : tp.borderColor,
+                              width: 0.8,
+                            ),
                           ),
                           child: Center(
                             child: Text(
                               surah.number.toString().padLeft(2, '0'),
-                              style: GoogleFonts.outfit(
+                              style: GoogleFonts.plusJakartaSans(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w800,
-                                color: isCurrent ? Colors.white : tp.textPrimary,
+                                color: isCurrent ? tp.primaryAccent : tp.textPrimary,
                               ),
                             ),
                           ),
                         ),
                         title: Text(
                           surah.englishName,
-                          style: GoogleFonts.outfit(
-                            fontSize: 15,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 14.5,
                             fontWeight: isCurrent ? FontWeight.w800 : FontWeight.w600,
-                            color: isCurrent ? JiraTheme.primaryBlue : tp.textPrimary,
+                            color: isCurrent ? tp.primaryAccent : tp.textPrimary,
                           ),
                         ),
                         subtitle: Text(
@@ -308,8 +308,8 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                           surah.name,
                           style: TextStyle(
                             fontFamily: 'HafsFont',
-                            fontSize: 18,
-                            color: isCurrent ? JiraTheme.primaryBlue : tp.textPrimary,
+                            fontSize: 17,
+                            color: isCurrent ? tp.primaryAccent : tp.textPrimary,
                           ),
                         ),
                       );
@@ -324,12 +324,14 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
     );
   }
 
-  void _showQariPickerSheet(BuildContext context, QuranProvider provider) {
+  void _showQariPickerSheet(BuildContext context) {
     ReciterPickerSheet.show(context);
   }
 
   @override
   Widget build(BuildContext context) {
+    final tp = context.watch<ThemeProvider>();
+    final isDark = tp.isDarkMode;
     final quranProvider = context.watch<QuranProvider>();
 
     final isPlaying = quranProvider.playerState?.playing == true;
@@ -351,7 +353,6 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
     final qariFullName = quranProvider.selectedQariObj.name;
     final qariShortName = qariFullName.split(' ').take(2).join(' ');
 
-    // Auto-scroll lyrics stream smoothly to center when active verse changes
     if (quranProvider.currentPlayingIndex != null && quranProvider.currentPlayingIndex != _lastScrolledIndex) {
       _lastScrolledIndex = quranProvider.currentPlayingIndex;
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -360,25 +361,23 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0E14),
+      backgroundColor: tp.backgroundTop,
       body: Stack(
         children: [
-          // 1. Ambient Background Glow Gradient
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFF0B0E14),
-                  Color(0xFF0D121D),
-                  Color(0xFF070A10),
-                ],
+          // Background Gradient
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [tp.backgroundTop, tp.backgroundBottom],
+                ),
               ),
             ),
           ),
 
-          // 2. Central Soft Ambient Radial Aura
+          // Central Soft Ambient Teal Radial Glow
           Positioned(
             top: MediaQuery.of(context).size.height * 0.25,
             left: -50,
@@ -389,7 +388,7 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    const Color(0xFF0C66E4).withValues(alpha: 0.12),
+                    tp.primaryAccent.withValues(alpha: isDark ? 0.12 : 0.08),
                     Colors.transparent,
                   ],
                 ),
@@ -397,40 +396,48 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
             ),
           ),
 
-          // 3. Main Screen Flow
+          // Main Screen Flow
           SafeArea(
             child: Column(
               children: [
-                // Top Floating Navigation Bar
+                // Top Bar
                 _buildTopBar(
                   context: context,
                   surah: currentSurah,
                   qariShortName: qariShortName,
                   quranProvider: quranProvider,
+                  tp: tp,
+                  isDark: isDark,
                 ),
 
-                // Center Stage: Live Synced Lyrics Stream or Disc
+                // Center Stage: Synced Lyrics Stream or Disc
                 Expanded(
                   child: _viewMode == AudioPlayerViewMode.lyrics
                       ? _buildLiveSyncedLyricsStream(
                           context: context,
                           quranProvider: quranProvider,
                           currentPlayingIndex: currentAyahIndex,
+                          tp: tp,
+                          isDark: isDark,
                         )
                       : _buildCelestialDiscView(
                           context: context,
                           surah: currentSurah,
                           isPlaying: isPlaying,
+                          tp: tp,
+                          isDark: isDark,
                         ),
                 ),
 
-                // Bottom Floating Glassmorphic Playback Console
+                // Bottom Playback Console
                 _buildBottomPlaybackConsole(
                   context: context,
                   quranProvider: quranProvider,
                   isPlaying: isPlaying,
                   currentAyahIndex: currentAyahIndex,
                   surah: currentSurah,
+                  tp: tp,
+                  isDark: isDark,
                 ),
                 const SizedBox(height: 10),
               ],
@@ -441,12 +448,13 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
     );
   }
 
-  // Top Bar with Minimize Down-Chevron, Surah Header, and Mode Switcher
   Widget _buildTopBar({
     required BuildContext context,
     required Surah surah,
     required String qariShortName,
     required QuranProvider quranProvider,
+    required ThemeProvider tp,
+    required bool isDark,
   }) {
     final arabicTitle = surah.name.replaceAll('سُورَةُ ', '');
 
@@ -455,28 +463,25 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Left Minimize Down-Chevron Button
+          // Minimize Button
           HeartbeatTap(
             onTap: () {
               HapticFeedback.selectionClick();
               Navigator.of(context).pop();
             },
             child: Container(
-              width: 40,
-              height: 40,
+              width: 38,
+              height: 38,
               decoration: BoxDecoration(
-                color: const Color(0xFF161B22).withValues(alpha: 0.85),
+                color: tp.surfaceColor,
                 shape: BoxShape.circle,
-                border: Border.all(
-                  color: const Color(0xFF30363D).withValues(alpha: 0.7),
-                  width: 1.0,
-                ),
+                border: Border.all(color: tp.borderColor, width: 0.8),
               ),
-              child: const Center(
+              child: Center(
                 child: Icon(
                   Icons.keyboard_arrow_down_rounded,
-                  size: 26,
-                  color: Color(0xFFF0F6FC),
+                  size: 24,
+                  color: tp.textPrimary,
                 ),
               ),
             ),
@@ -492,36 +497,36 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                   children: [
                     Text(
                       'SURAH ${surah.englishName.toUpperCase()} • ',
-                      style: GoogleFonts.outfit(
+                      style: GoogleFonts.plusJakartaSans(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w800,
-                        color: const Color(0xFFF0F6FC),
-                        letterSpacing: 0.5,
+                        color: tp.textPrimary,
+                        letterSpacing: 0.3,
                       ),
                     ),
                     Text(
                       'سُورَةُ $arabicTitle',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: 'HafsFont',
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFFC7D2FE),
+                        color: isDark ? const Color(0xFFE2E8F0) : tp.primaryAccent,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 3),
 
-                // Reciter Capsule Chip (Clickable to switch)
+                // Reciter Capsule Chip
                 HeartbeatTap(
-                  onTap: () => _showQariPickerSheet(context, quranProvider),
+                  onTap: () => _showQariPickerSheet(context),
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2.5),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1F242C),
+                      color: isDark ? const Color(0xFF151D24) : const Color(0xFFF1F5F9),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: const Color(0xFF30363D).withValues(alpha: 0.6),
+                        color: tp.borderColor,
                         width: 0.8,
                       ),
                     ),
@@ -533,14 +538,14 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                           style: GoogleFonts.inter(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
-                            color: const Color(0xFF8B949E),
+                            color: tp.textSecondary,
                           ),
                         ),
                         const SizedBox(width: 4),
-                        const Icon(
+                        Icon(
                           Icons.keyboard_arrow_down_rounded,
                           size: 13,
-                          color: Color(0xFF8B949E),
+                          color: tp.textSecondary,
                         ),
                       ],
                     ),
@@ -550,21 +555,17 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
             ),
           ),
 
-          // Right Two-Mode Toggle Capsule ([💬 Lyrics] / [💿 Disc])
+          // Two-Mode Toggle Capsule ([💬 Lyrics] / [💿 Disc])
           Container(
             padding: const EdgeInsets.all(3),
             decoration: BoxDecoration(
-              color: const Color(0xFF161B22),
+              color: tp.surfaceColor,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: const Color(0xFF30363D),
-                width: 1.0,
-              ),
+              border: Border.all(color: tp.borderColor, width: 0.8),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Lyrics Icon Button
                 HeartbeatTap(
                   onTap: () {
                     HapticFeedback.selectionClick();
@@ -574,20 +575,20 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                     width: 32,
                     height: 32,
                     decoration: BoxDecoration(
-                      color: _viewMode == AudioPlayerViewMode.lyrics ? const Color(0xFF1F2A38) : Colors.transparent,
+                      color: _viewMode == AudioPlayerViewMode.lyrics
+                          ? tp.primaryAccent.withValues(alpha: isDark ? 0.15 : 0.12)
+                          : Colors.transparent,
                       shape: BoxShape.circle,
                     ),
                     child: Center(
                       child: Icon(
                         Icons.chat_bubble_outline_rounded,
-                        size: 16,
-                        color: _viewMode == AudioPlayerViewMode.lyrics ? const Color(0xFFA4C6FB) : const Color(0xFF8B949E),
+                        size: 15,
+                        color: _viewMode == AudioPlayerViewMode.lyrics ? tp.primaryAccent : tp.textSecondary,
                       ),
                     ),
                   ),
                 ),
-
-                // Disc Artwork Button
                 HeartbeatTap(
                   onTap: () {
                     HapticFeedback.selectionClick();
@@ -597,14 +598,16 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                     width: 32,
                     height: 32,
                     decoration: BoxDecoration(
-                      color: _viewMode == AudioPlayerViewMode.disc ? const Color(0xFF1F2A38) : Colors.transparent,
+                      color: _viewMode == AudioPlayerViewMode.disc
+                          ? tp.primaryAccent.withValues(alpha: isDark ? 0.15 : 0.12)
+                          : Colors.transparent,
                       shape: BoxShape.circle,
                     ),
                     child: Center(
                       child: Icon(
                         Icons.album_outlined,
-                        size: 17,
-                        color: _viewMode == AudioPlayerViewMode.disc ? const Color(0xFFA4C6FB) : const Color(0xFF8B949E),
+                        size: 16,
+                        color: _viewMode == AudioPlayerViewMode.disc ? tp.primaryAccent : tp.textSecondary,
                       ),
                     ),
                   ),
@@ -617,15 +620,16 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
     );
   }
 
-  // 1. Live Synced Lyrics Stream (Apple Music / Spotify Style Karaoke Flow)
   Widget _buildLiveSyncedLyricsStream({
     required BuildContext context,
     required QuranProvider quranProvider,
     required int currentPlayingIndex,
+    required ThemeProvider tp,
+    required bool isDark,
   }) {
     if (quranProvider.isLoadingAyahs) {
-      return const Center(
-        child: CircularProgressIndicator(color: JiraTheme.primaryBlue),
+      return Center(
+        child: CircularProgressIndicator(color: tp.primaryAccent),
       );
     }
 
@@ -633,7 +637,7 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
       return Center(
         child: Text(
           'No verses loaded',
-          style: GoogleFonts.outfit(color: const Color(0xFF8B949E)),
+          style: GoogleFonts.plusJakartaSans(color: tp.textSecondary),
         ),
       );
     }
@@ -660,20 +664,18 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // Top Arabic Calligraphy Line + Verse Badge
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // Verse Number Badge (Left in row)
                     Container(
                       width: 28,
                       height: 28,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: isActive ? const Color(0xFF1E293B) : Colors.transparent,
+                        color: isActive ? tp.primaryAccent.withValues(alpha: isDark ? 0.15 : 0.12) : Colors.transparent,
                         border: Border.all(
-                          color: isActive ? const Color(0xFF38BDF8).withValues(alpha: 0.6) : const Color(0xFF334155).withValues(alpha: 0.3),
+                          color: isActive ? tp.primaryAccent : tp.borderColor.withValues(alpha: 0.5),
                           width: 1.0,
                         ),
                       ),
@@ -684,14 +686,13 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                             fontFamily: 'HafsFont',
                             fontSize: 12,
                             fontWeight: FontWeight.normal,
-                            color: isActive ? const Color(0xFF93C5FD) : const Color(0xFF475569),
+                            color: isActive ? tp.primaryAccent : tp.textSecondary,
                           ),
                         ),
                       ),
                     ),
                     const SizedBox(width: 14),
 
-                    // Arabic Sacred Verse Calligraphy (Un-bolded, Clean Hafs Flow)
                     Flexible(
                       child: Text(
                         ayah.text,
@@ -700,13 +701,15 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                         style: TextStyle(
                           fontFamily: 'HafsFont',
                           fontSize: isActive ? 26 : 20,
-                          fontWeight: FontWeight.normal, // Clean regular weight, no bold
+                          fontWeight: FontWeight.normal,
                           height: 1.9,
-                          color: isActive ? Colors.white : const Color(0xFF64748B).withValues(alpha: 0.4),
+                          color: isActive
+                              ? (isDark ? const Color(0xFFF0F6FC) : const Color(0xFF0F172A))
+                              : tp.textSecondary.withValues(alpha: 0.45),
                           shadows: isActive
                               ? [
                                   BoxShadow(
-                                    color: const Color(0xFF38BDF8).withValues(alpha: 0.35),
+                                    color: tp.primaryAccent.withValues(alpha: 0.35),
                                     blurRadius: 18,
                                   ),
                                 ]
@@ -718,17 +721,16 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                 ),
                 const SizedBox(height: 8),
 
-                // English / Translation Lyrics Subtitle Line
                 AnimatedOpacity(
                   duration: const Duration(milliseconds: 300),
-                  opacity: isActive ? 1.0 : 0.28,
+                  opacity: isActive ? 1.0 : 0.3,
                   child: Text(
                     'Verse ${ayah.numberInSurah}',
                     textAlign: TextAlign.center,
                     style: GoogleFonts.inter(
-                      fontSize: isActive ? 14 : 12,
+                      fontSize: isActive ? 13.5 : 12,
                       fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-                      color: isActive ? const Color(0xFFE2E8F0) : const Color(0xFF64748B),
+                      color: isActive ? tp.textPrimary : tp.textSecondary,
                     ),
                   ),
                 ),
@@ -740,12 +742,12 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
     );
   }
 
-  // 2. Celestial Sacred Geometry Disc View (Vinyl / Artwork Mode)
-  // Outer vinyl disc rotates, while the inner center label with Surah name stays stationary!
   Widget _buildCelestialDiscView({
     required BuildContext context,
     required Surah surah,
     required bool isPlaying,
+    required ThemeProvider tp,
+    required bool isDark,
   }) {
     return Center(
       child: Column(
@@ -754,7 +756,6 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
           Stack(
             alignment: Alignment.center,
             children: [
-              // Outer Rotating Vinyl Disc & Grooves
               AnimatedBuilder(
                 animation: _waveformController,
                 builder: (context, child) {
@@ -764,15 +765,15 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                       width: 230,
                       height: 230,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF161B22),
+                        color: tp.surfaceColor,
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: const Color(0xFF30363D),
-                          width: 2.0,
+                          color: tp.borderColor,
+                          width: 1.5,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: JiraTheme.secondaryGreen.withValues(alpha: isPlaying ? 0.25 : 0.08),
+                            color: tp.primaryAccent.withValues(alpha: isPlaying ? 0.25 : 0.05),
                             blurRadius: 36,
                             spreadRadius: 4,
                           ),
@@ -781,14 +782,13 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
-                          // Concentric vinyl groove rings
                           Container(
                             width: 170,
                             height: 170,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: const Color(0xFF30363D).withValues(alpha: 0.5),
+                                color: tp.borderColor.withValues(alpha: 0.5),
                                 width: 1.0,
                               ),
                             ),
@@ -799,7 +799,7 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: const Color(0xFF30363D).withValues(alpha: 0.3),
+                                color: tp.borderColor.withValues(alpha: 0.3),
                                 width: 1.0,
                               ),
                             ),
@@ -811,20 +811,19 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                 },
               ),
 
-              // Inner Stationary Surah Name Label (DOES NOT ROTATE - Stays perfectly upright)
               Container(
                 width: 90,
                 height: 90,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0B0E14),
+                  color: tp.backgroundTop,
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: const Color(0xFF30363D).withValues(alpha: 0.8),
+                    color: tp.borderColor,
                     width: 1.5,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.5),
+                      color: Colors.black.withValues(alpha: 0.4),
                       blurRadius: 14,
                     ),
                   ],
@@ -832,11 +831,11 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                 child: Center(
                   child: Text(
                     surah.name.replaceAll('سُورَةُ ', ''),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'HafsFont',
                       fontSize: 18,
                       fontWeight: FontWeight.normal,
-                      color: Color(0xFFC7D2FE),
+                      color: isDark ? const Color(0xFFE2E8F0) : tp.primaryAccent,
                     ),
                   ),
                 ),
@@ -846,10 +845,10 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
           const SizedBox(height: 32),
           Text(
             surah.englishName,
-            style: GoogleFonts.outfit(
-              fontSize: 24,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 22,
               fontWeight: FontWeight.w800,
-              color: Colors.white,
+              color: tp.textPrimary,
             ),
           ),
           const SizedBox(height: 6),
@@ -858,7 +857,7 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
             style: GoogleFonts.inter(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF8B949E),
+              color: tp.textSecondary,
               letterSpacing: 0.8,
             ),
           ),
@@ -867,13 +866,14 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
     );
   }
 
-  // 3. Floating Glassmorphic Playback Console (Waveform + Hero Button + Toolbar)
   Widget _buildBottomPlaybackConsole({
     required BuildContext context,
     required QuranProvider quranProvider,
     required bool isPlaying,
     required int currentAyahIndex,
     required Surah surah,
+    required ThemeProvider tp,
+    required bool isDark,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -885,15 +885,15 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
             width: double.infinity,
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
             decoration: BoxDecoration(
-              color: const Color(0xFF161B22).withValues(alpha: 0.94),
+              color: tp.surfaceColor.withValues(alpha: isDark ? 0.94 : 0.96),
               borderRadius: BorderRadius.circular(28),
               border: Border.all(
-                color: const Color(0xFF30363D).withValues(alpha: 0.85),
-                width: 1.0,
+                color: tp.borderColor,
+                width: 0.8,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.45),
+                  color: Colors.black.withValues(alpha: isDark ? 0.45 : 0.08),
                   blurRadius: 28,
                   offset: const Offset(0, 10),
                 ),
@@ -902,7 +902,6 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Top Row: Timestamps + Pulsating Audio Waveform Bars
                 StreamBuilder<Duration>(
                   stream: quranProvider.audioPlayer.positionStream,
                   builder: (context, snapshot) {
@@ -913,26 +912,23 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                     return Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // Elapsed Time
                         Text(
                           _formatDuration(position),
-                          style: GoogleFonts.outfit(
+                          style: GoogleFonts.plusJakartaSans(
                             fontSize: 11.5,
                             fontWeight: FontWeight.w600,
-                            color: const Color(0xFF8B949E),
+                            color: tp.textSecondary,
                           ),
                         ),
 
-                        // Center Pulsating Waveform Equalizer
-                        _buildWaveformEqualizer(isPlaying),
+                        _buildWaveformEqualizer(isPlaying, tp),
 
-                        // Remaining Time
                         Text(
                           '-${_formatDuration(remaining > Duration.zero ? remaining : Duration.zero)}',
-                          style: GoogleFonts.outfit(
+                          style: GoogleFonts.plusJakartaSans(
                             fontSize: 11.5,
                             fontWeight: FontWeight.w600,
-                            color: const Color(0xFF8B949E),
+                            color: tp.textSecondary,
                           ),
                         ),
                       ],
@@ -941,11 +937,9 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                 ),
                 const SizedBox(height: 16),
 
-                // Main Controls Row (Repeat, Replay 10s, Hero Play/Pause, Forward 10s, Playlist)
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    // Repeat Ayah Mode
                     HeartbeatTap(
                       onTap: () {
                         HapticFeedback.selectionClick();
@@ -958,28 +952,26 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                         child: Icon(
                           quranProvider.hifzLoopCount > 1 ? Icons.repeat_one_rounded : Icons.repeat_rounded,
                           size: 22,
-                          color: quranProvider.hifzLoopCount > 1 ? JiraTheme.secondaryGreen : const Color(0xFF8B949E),
+                          color: quranProvider.hifzLoopCount > 1 ? tp.primaryAccent : tp.textSecondary,
                         ),
                       ),
                     ),
 
-                    // Replay 10s Button
                     HeartbeatTap(
                       onTap: () {
                         HapticFeedback.selectionClick();
                         quranProvider.seekBackward10();
                       },
-                      child: const Padding(
-                        padding: EdgeInsets.all(8),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8),
                         child: Icon(
                           Icons.replay_10_rounded,
                           size: 26,
-                          color: Color(0xFFF0F6FC),
+                          color: tp.textPrimary,
                         ),
                       ),
                     ),
 
-                    // Center Hero Emerald Play/Pause Button
                     HeartbeatTap(
                       onTap: () {
                         HapticFeedback.selectionClick();
@@ -990,14 +982,14 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                         }
                       },
                       child: Container(
-                        width: 66,
-                        height: 66,
+                        width: 64,
+                        height: 64,
                         decoration: BoxDecoration(
-                          color: JiraTheme.secondaryGreen,
+                          color: tp.primaryAccent,
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: JiraTheme.secondaryGreen.withValues(alpha: 0.45),
+                              color: tp.primaryAccent.withValues(alpha: 0.45),
                               blurRadius: 20,
                               offset: const Offset(0, 4),
                             ),
@@ -1006,50 +998,48 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                         child: Center(
                           child: quranProvider.isAudioLoading
                               ? const SizedBox(
-                                  width: 28,
-                                  height: 28,
+                                  width: 26,
+                                  height: 26,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 3.0,
-                                    color: Color(0xFF0B0E14),
+                                    color: Colors.white,
                                   ),
                                 )
                               : Icon(
                                   isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                                  size: 36,
-                                  color: const Color(0xFF0B0E14),
+                                  size: 34,
+                                  color: Colors.white,
                                 ),
                         ),
                       ),
                     ),
 
-                    // Forward 10s Button
                     HeartbeatTap(
                       onTap: () {
                         HapticFeedback.selectionClick();
                         quranProvider.seekForward10();
                       },
-                      child: const Padding(
-                        padding: EdgeInsets.all(8),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8),
                         child: Icon(
                           Icons.forward_10_rounded,
                           size: 26,
-                          color: Color(0xFFF0F6FC),
+                          color: tp.textPrimary,
                         ),
                       ),
                     ),
 
-                    // Playlist / Queue Drawer
                     HeartbeatTap(
                       onTap: () {
                         HapticFeedback.selectionClick();
-                        _showSurahPlaylistDrawer(context, quranProvider);
+                        _showSurahPlaylistDrawer(context, quranProvider, tp);
                       },
-                      child: const Padding(
-                        padding: EdgeInsets.all(8),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8),
                         child: Icon(
                           Icons.queue_music_rounded,
                           size: 24,
-                          color: Color(0xFF8B949E),
+                          color: tp.textSecondary,
                         ),
                       ),
                     ),
@@ -1057,11 +1047,9 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                 ),
                 const SizedBox(height: 14),
 
-                // Bottom Micro-Utility Toolbar (Speed Pill, Sleep Timer, Output Cast)
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Playback Speed Pill
                     HeartbeatTap(
                       onTap: () {
                         HapticFeedback.selectionClick();
@@ -1079,78 +1067,54 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF1F242C),
+                          color: isDark ? const Color(0xFF151D24) : const Color(0xFFF1F5F9),
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: const Color(0xFF30363D).withValues(alpha: 0.7),
-                            width: 1.0,
-                          ),
+                          border: Border.all(color: tp.borderColor, width: 0.8),
                         ),
                         child: Text(
                           '${quranProvider.playbackSpeed.toStringAsFixed(quranProvider.playbackSpeed == 1.0 || quranProvider.playbackSpeed == 2.0 ? 0 : 2)}x',
-                          style: GoogleFonts.outfit(
+                          style: GoogleFonts.plusJakartaSans(
                             fontSize: 11.5,
                             fontWeight: FontWeight.w700,
-                            color: const Color(0xFFF0F6FC),
+                            color: tp.textPrimary,
                           ),
                         ),
                       ),
                     ),
                     const SizedBox(width: 12),
 
-                    // Sleep Timer Pill
                     HeartbeatTap(
-                      onTap: () {
-                        HapticFeedback.selectionClick();
-                        _showSleepTimerSheet(context);
-                      },
+                      onTap: () => _showSleepTimerPicker(context, tp),
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF1F242C),
+                          color: _sleepTimerMinutes != null
+                              ? tp.primaryAccent.withValues(alpha: isDark ? 0.15 : 0.12)
+                              : (isDark ? const Color(0xFF151D24) : const Color(0xFFF1F5F9)),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: _sleepTimerMinutes != null ? JiraTheme.primaryBlue : const Color(0xFF30363D).withValues(alpha: 0.7),
-                            width: 1.0,
+                            color: _sleepTimerMinutes != null ? tp.primaryAccent : tp.borderColor,
+                            width: 0.8,
                           ),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Text('🌙', style: TextStyle(fontSize: 11)),
-                            const SizedBox(width: 4),
+                            Icon(
+                              Icons.bedtime_outlined,
+                              size: 14,
+                              color: _sleepTimerMinutes != null ? tp.primaryAccent : tp.textSecondary,
+                            ),
+                            const SizedBox(width: 6),
                             Text(
-                              _sleepTimerMinutes != null ? '${_sleepTimerMinutes}m' : '30m',
-                              style: GoogleFonts.outfit(
+                              _sleepTimerMinutes != null ? '${_sleepTimerMinutes}m' : 'Sleep',
+                              style: GoogleFonts.plusJakartaSans(
                                 fontSize: 11.5,
                                 fontWeight: FontWeight.w700,
-                                color: _sleepTimerMinutes != null ? JiraTheme.primaryBlue : const Color(0xFFF0F6FC),
+                                color: _sleepTimerMinutes != null ? tp.primaryAccent : tp.textPrimary,
                               ),
                             ),
                           ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-
-                    // AirPlay / Cast Output Icon
-                    HeartbeatTap(
-                      onTap: () {
-                        HapticFeedback.selectionClick();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Audio routed to device speaker / Bluetooth output.'),
-                            behavior: SnackBarBehavior.floating,
-                            duration: Duration(seconds: 2),
-                          ),
-                        );
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        child: const Icon(
-                          Icons.airplay_rounded,
-                          size: 18,
-                          color: Color(0xFF8B949E),
                         ),
                       ),
                     ),
@@ -1164,36 +1128,25 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
     );
   }
 
-  // Pulsating Audio Equalizer Waveform Bars
-  Widget _buildWaveformEqualizer(bool isPlaying) {
-    const barHeights = [10.0, 16.0, 22.0, 14.0, 26.0, 18.0, 12.0, 8.0];
-
+  Widget _buildWaveformEqualizer(bool isPlaying, ThemeProvider tp) {
     return AnimatedBuilder(
       animation: _waveformController,
       builder: (context, child) {
         return Row(
           mainAxisSize: MainAxisSize.min,
-          children: List.generate(barHeights.length, (i) {
-            final base = barHeights[i];
-            final factor = isPlaying ? math.sin((_waveformController.value * math.pi * 2) + (i * 0.6)).abs() : 0.3;
-            final height = (base * (0.4 + factor * 0.6)).clamp(4.0, 28.0);
-            final isCenter = i == 3 || i == 4;
+          children: List.generate(14, (index) {
+            final waveSeed = (index * 0.22) + (_waveformController.value * math.pi);
+            final barHeight = isPlaying ? 6.0 + (math.sin(waveSeed).abs() * 16.0) : 4.0;
 
             return Container(
-              margin: const EdgeInsets.symmetric(horizontal: 2.5),
-              width: 3.5,
-              height: height,
+              margin: const EdgeInsets.symmetric(horizontal: 1.5),
+              width: 3.0,
+              height: barHeight,
               decoration: BoxDecoration(
-                color: isCenter ? Colors.white : (isPlaying ? const Color(0xFF93C5FD) : const Color(0xFF475569)),
-                borderRadius: BorderRadius.circular(3),
-                boxShadow: isCenter && isPlaying
-                    ? [
-                        BoxShadow(
-                          color: Colors.white.withValues(alpha: 0.6),
-                          blurRadius: 6,
-                        ),
-                      ]
-                    : null,
+                color: isPlaying
+                    ? tp.primaryAccent.withValues(alpha: 0.5 + (math.sin(waveSeed).abs() * 0.5))
+                    : tp.textSecondary.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(2),
               ),
             );
           }),

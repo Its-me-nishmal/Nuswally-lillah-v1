@@ -7,6 +7,7 @@ import '../providers/quran_provider.dart';
 import '../providers/theme_provider.dart';
 import '../theme/jira_theme.dart';
 import '../widgets/heartbeat_tap.dart';
+import '../widgets/theme_palette_sheet.dart';
 import '../widgets/quran/reciter_picker_sheet.dart';
 import '../services/app_share_service.dart';
 import 'app_update_screen.dart';
@@ -310,6 +311,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     children: [
                       // Hero App Language Card
                       _buildLanguageHeroCard(context, themeProvider, isMalayalam),
+
+                      const SizedBox(height: 24),
+
+                      // Section: APPEARANCE & THEMES
+                      _buildSectionHeader('APPEARANCE & THEMES'),
+                      const SizedBox(height: 10),
+                      _buildGroupContainer([
+                        _buildSettingsTile(
+                          icon: Icons.palette_outlined,
+                          iconColor: themeProvider.primaryAccent,
+                          title: 'App Theme & Accent Color',
+                          trailingValue: '${themeProvider.accent.title} (${themeProvider.isDarkMode ? 'Dark' : 'Light'})',
+                          trailingColor: themeProvider.primaryAccent,
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            ThemePaletteSheet.show(context);
+                          },
+                        ),
+                      ]),
 
                       const SizedBox(height: 24),
 

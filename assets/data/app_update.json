@@ -1,25 +1,30 @@
 {
-  "version_code": 101,
-  "version_name": "1.1.0",
+  "version_code": 200,
+  "version_name": "2.0.0",
   "min_supported_version_code": 100,
   "release_date": "August 2026",
   "is_critical": false,
   "download_url": "https://play.google.com/store/apps/details?id=com.nuswallylillah",
-  "title": "Obsidian Media & System Refinements",
-  "description": "A major stability and media update featuring the new Islamic Media player, dynamic playlist sync, and prayer notification fixes.",
+  "title": "Nuswally Lillah 2.0 - Grand Redesign & Theme Engine",
+  "description": "A transformative milestone update introducing dynamic Islamic color palettes, 56px frosted glass headers, interactive Tasbeeh streaks, Asmaul Husna audio recitation, and YouTube media playback.",
   "features": [
-    "Brand new Islamic Media player with category filtering",
-    "Auto-fullscreen on phone rotation with immersive mode",
-    "Dynamic remote playlist synchronization via live API"
+    "Dynamic Islamic Theme Engine with 5 sacred palettes & Dark/Light mode",
+    "Universal 56px Frosted Glass top headers with ambient glowing indicators",
+    "Native vector-animated Crescent & Star emblem in the splash experience",
+    "Full Asmaul Husna audio recitation player and Quran Ayah navigation",
+    "Enhanced digital Tasbeeh with custom target counts & active streaks",
+    "Curated Islamic Media hub with auto YouTube thumbnails & playlists"
   ],
   "improvements": [
-    "Enhanced astronomical prayer calculation accuracy",
-    "Optimized memory usage & battery efficiency",
-    "Refined dark mode Obsidian Sanctuary design tokens"
+    "Instant Azan silencing via physical hardware volume and mute buttons",
+    "Lightweight, minimal notification bell indicator on the Home screen",
+    "Full safe area protection & responsive bottom sheets on modern notch displays",
+    "Seamless background update checking scheduled daily at 6:00 AM"
   ],
   "bug_fixes": [
-    "Fixed YouTube player orientation glitch on certain devices",
-    "Resolved prayer notification delay during deep sleep mode",
-    "Fixed smooth scrolling stutter in lengthy Adhkaar lists"
+    "Fixed layout shift & button safe-area clearance in custom goal dialogs",
+    "Resolved missing YouTube thumbnail previews in Islamic media cards",
+    "Fixed Quran Ayah cross-referencing in 99 Names detail sheets",
+    "Eliminated duplicate play icons and cleaned typography across all tabs"
   ]
 }

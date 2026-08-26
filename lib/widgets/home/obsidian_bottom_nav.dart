@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../providers/theme_provider.dart';
-import '../../theme/jira_theme.dart';
 import '../heartbeat_tap.dart';
 
 class ObsidianBottomNav extends StatelessWidget {
@@ -44,10 +43,8 @@ class ObsidianBottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
     final isDark = themeProvider.isDarkMode;
-
-    final surfaceColor = (isDark ? JiraTheme.darkSurface : JiraTheme.lightSurface)
-        .withValues(alpha: 0.90);
-    final borderColor = isDark ? JiraTheme.darkBorderSubtle : JiraTheme.lightBorderSubtle;
+    final surfaceColor = themeProvider.surfaceColor.withValues(alpha: isDark ? 0.92 : 0.95);
+    final borderColor = themeProvider.borderColor;
     final bottomInset = MediaQuery.paddingOf(context).bottom;
 
     return ClipRect(
@@ -79,10 +76,8 @@ class ObsidianBottomNav extends StatelessWidget {
             children: List.generate(_items.length, (index) {
               final item = _items[index];
               final isActive = currentIndex == index;
-              final activeColor = JiraTheme.primaryBlue;
-              final inactiveColor = isDark
-                  ? const Color(0xFF8B949E)
-                  : const Color(0xFF64748B);
+              final activeColor = themeProvider.primaryAccent;
+              final inactiveColor = themeProvider.textSecondary;
 
               return Expanded(
                 child: HeartbeatTap(

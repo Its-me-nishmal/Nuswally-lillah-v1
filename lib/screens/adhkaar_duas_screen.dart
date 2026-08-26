@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -5,9 +6,7 @@ import 'package:provider/provider.dart';
 import '../models/adhkaar.dart';
 import '../providers/adhkaar_provider.dart';
 import '../providers/theme_provider.dart';
-import '../theme/jira_theme.dart';
 import '../widgets/heartbeat_tap.dart';
-import '../widgets/jira_screen.dart';
 import 'dua_detail_screen.dart';
 
 class AdhkaarDuasScreen extends StatelessWidget {
@@ -18,12 +17,17 @@ class AdhkaarDuasScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tp = context.watch<ThemeProvider>();
+    final isDark = tp.isDarkMode;
     final isMl = tp.isMalayalam;
     final bundle = context.watch<AdhkaarProvider>().bundle;
+    final topInset = MediaQuery.paddingOf(context).top;
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+    const double kTopBarHeight = 56.0;
 
     if (bundle == null) {
-      return JiraScreen(
-        child: Center(
+      return Scaffold(
+        backgroundColor: tp.backgroundTop,
+        body: Center(
           child: CircularProgressIndicator(color: tp.primaryAccent),
         ),
       );
@@ -38,132 +42,203 @@ class AdhkaarDuasScreen extends StatelessWidget {
         ? sub.title
         : (sub.titleEn.isNotEmpty ? sub.titleEn : sub.title);
 
-    return JiraScreen(
-      child: Column(
+    return Scaffold(
+      backgroundColor: tp.backgroundTop,
+      body: Stack(
         children: [
-          // 1. Top App Bar
-          _buildTopAppBar(context, tp, titleHeader, duas.length),
-
-          // 2. Subcategory Header Banner if Arabic exists
-          if (sub.titleArabic.trim().isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  color: tp.surfaceColor,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: tp.borderColor),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      sub.titleArabic,
-                      textDirection: TextDirection.rtl,
-                      textAlign: TextAlign.right,
-                      style: TextStyle(
-                        fontFamily: 'HafsFont',
-                        fontSize: 16,
-                        color: tp.primaryAccent,
-                        height: 1.35,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      isMl ? '${duas.length} പ്രാർത്ഥനകൾ' : '${duas.length} Authentic Supplications',
-                      style: GoogleFonts.inter(
-                        fontSize: 11.5,
-                        color: tp.textSecondary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-          const SizedBox(height: 6),
-
-          // 3. Duas List
-          Expanded(
-            child: ListView.separated(
-              physics: const BouncingScrollPhysics(),
-              padding: EdgeInsets.fromLTRB(16, 6, 16, 24 + MediaQuery.paddingOf(context).bottom),
-              itemCount: duas.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 10),
-              itemBuilder: (context, index) {
-                return _DuaCard(dua: duas[index], index: index + 1);
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTopAppBar(BuildContext context, ThemeProvider tp, String title, int count) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          // Frosted circular back button
-          HeartbeatTap(
-            onTap: () {
-              HapticFeedback.selectionClick();
-              Navigator.pop(context);
-            },
+          // Background Gradient & Subtle Pattern
+          Positioned.fill(
             child: Container(
-              width: 38,
-              height: 38,
               decoration: BoxDecoration(
-                color: tp.surfaceColor,
-                shape: BoxShape.circle,
-                border: Border.all(color: tp.borderColor),
-              ),
-              child: Icon(
-                Icons.arrow_back_rounded,
-                color: tp.textPrimary,
-                size: 18,
-              ),
-            ),
-          ),
-
-          // Title
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Text(
-                title,
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.outfit(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w800,
-                  color: tp.textPrimary,
-                  letterSpacing: 0.3,
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [tp.backgroundTop, tp.backgroundBottom],
                 ),
               ),
             ),
           ),
-
-          // Count pill
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: tp.containerColor,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: tp.borderColor),
+          Positioned.fill(
+            child: Opacity(
+              opacity: 0.035,
+              child: Image.asset(
+                'assets/images/islamic_bg.png',
+                repeat: ImageRepeat.repeat,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+              ),
             ),
-            child: Text(
-              '$count',
-              style: GoogleFonts.outfit(
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-                color: tp.primaryAccent,
+          ),
+
+          // Scrollable Content
+          Positioned.fill(
+            child: ListView(
+              physics: const BouncingScrollPhysics(),
+              padding: EdgeInsets.fromLTRB(16, topInset + kTopBarHeight + 12, 16, bottomInset + 24),
+              children: [
+                // Chapter Banner
+                if (sub.titleArabic.trim().isNotEmpty) ...[
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                    decoration: BoxDecoration(
+                      color: tp.surfaceColor,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: tp.borderColor, width: 0.8),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.03),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          sub.titleArabic,
+                          textDirection: TextDirection.rtl,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: 'HafsFont',
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: isDark ? const Color(0xFFE2E8F0) : tp.primaryAccent,
+                            height: 1.4,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          isMl ? '${duas.length} പ്രാർത്ഥനകൾ' : '${duas.length} Authentic Supplications',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.inter(
+                            fontSize: 11.5,
+                            color: tp.textSecondary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
+                // Duas List
+                ...duas.asMap().entries.map((entry) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _DuaCard(dua: entry.value, index: entry.key + 1, isMl: isMl),
+                  );
+                }),
+              ],
+            ),
+          ),
+
+          // Fixed Frosted 56px Top Header
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: topInset + kTopBarHeight,
+            child: ClipRect(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                child: Container(
+                  padding: EdgeInsets.only(top: topInset),
+                  decoration: BoxDecoration(
+                    color: tp.backgroundTop.withValues(alpha: isDark ? 0.85 : 0.90),
+                    border: Border(
+                      bottom: BorderSide(
+                        color: tp.borderColor.withValues(alpha: 0.35),
+                        width: 0.8,
+                      ),
+                    ),
+                  ),
+                  child: Container(
+                    height: 56.0,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    alignment: Alignment.center,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        // Circular Back Button
+                        HeartbeatTap(
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            Navigator.pop(context);
+                          },
+                          child: Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: tp.surfaceColor,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: tp.borderColor, width: 0.8),
+                            ),
+                            child: Center(
+                              child: Icon(Icons.arrow_back_ios_new_rounded, color: tp.textPrimary, size: 16),
+                            ),
+                          ),
+                        ),
+
+                        // Center Title
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  titleHeader,
+                                  textAlign: TextAlign.center,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                    color: tp.textPrimary,
+                                  ),
+                                ),
+                                const SizedBox(height: 1),
+                                Text(
+                                  '${duas.length} Invocations',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w500,
+                                    color: tp.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                        // Count Pill
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: tp.primaryAccent.withValues(alpha: isDark ? 0.12 : 0.14),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: tp.primaryAccent.withValues(alpha: isDark ? 0.25 : 0.35),
+                              width: 0.8,
+                            ),
+                          ),
+                          child: Text(
+                            '${duas.length}',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: tp.primaryAccent,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
@@ -176,12 +251,14 @@ class AdhkaarDuasScreen extends StatelessWidget {
 class _DuaCard extends StatelessWidget {
   final Dua dua;
   final int index;
+  final bool isMl;
 
-  const _DuaCard({required this.dua, required this.index});
+  const _DuaCard({required this.dua, required this.index, required this.isMl});
 
   @override
   Widget build(BuildContext context) {
     final tp = context.watch<ThemeProvider>();
+    final isDark = tp.isDarkMode;
 
     return HeartbeatTap(
       onTap: () {
@@ -195,117 +272,121 @@ class _DuaCard extends StatelessWidget {
       },
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           color: tp.surfaceColor,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: tp.borderColor),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: tp.borderColor, width: 0.8),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.03),
+              blurRadius: 14,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Top Row: Number Index + Arabic Badge
+            // Top Row: Number Badge + Repeat Count + Bookmark/Arrow
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  width: 32,
-                  height: 32,
+                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
                   decoration: BoxDecoration(
-                    color: tp.containerColor,
+                    color: tp.primaryAccent.withValues(alpha: isDark ? 0.12 : 0.14),
                     borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: tp.primaryAccent.withValues(alpha: isDark ? 0.25 : 0.35),
+                      width: 0.8,
+                    ),
                   ),
-                  child: Center(
-                    child: Text(
-                      index.toString().padLeft(2, '0'),
-                      style: GoogleFonts.outfit(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                        color: tp.primaryAccent,
-                      ),
+                  child: Text(
+                    'DUA ${index.toString().padLeft(2, '0')}',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: tp.primaryAccent,
                     ),
                   ),
                 ),
                 if (dua.hint.isNotEmpty)
-                  Flexible(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: JiraTheme.secondaryGreen.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF151D24) : const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: isDark ? const Color(0xFF222D38) : const Color(0xFFE2E8F0),
+                        width: 0.8,
                       ),
-                      child: Text(
-                        dua.hint,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.outfit(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: JiraTheme.secondaryGreen,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.repeat_rounded, size: 12, color: tp.textSecondary),
+                        const SizedBox(width: 4),
+                        Text(
+                          dua.hint,
+                          style: GoogleFonts.inter(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w600,
+                            color: tp.textSecondary,
+                          ),
                         ),
-                      ),
+                      ],
                     ),
                   ),
               ],
             ),
+            const SizedBox(height: 14),
 
+            // Arabic Calligraphy
+            Text(
+              dua.dua,
+              textDirection: TextDirection.rtl,
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontFamily: 'HafsFont',
+                fontSize: 20,
+                color: isDark ? const Color(0xFFF0F6FC) : const Color(0xFF0F172A),
+                height: 1.7,
+                letterSpacing: 0.2,
+              ),
+            ),
             const SizedBox(height: 12),
 
-            // Arabic Calligraphy snippet
-            if (dua.dua.isNotEmpty)
-              Text(
-                dua.dua,
-                textDirection: TextDirection.rtl,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontFamily: 'HafsFont',
-                  fontSize: 20,
-                  height: 1.45,
-                  color: tp.textPrimary,
-                ),
+            // Translation
+            Text(
+              isMl && dua.trans.isNotEmpty ? dua.trans : (dua.descEn.isNotEmpty ? dua.descEn : dua.transli),
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 13,
+                color: tp.textSecondary,
+                height: 1.5,
               ),
+            ),
+            const SizedBox(height: 12),
 
-            if (dua.transli.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Text(
-                dua.transli,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontStyle: FontStyle.italic,
-                  color: tp.textSecondary,
-                  height: 1.35,
+            // Bottom Reference Bar
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  dua.ref.isNotEmpty ? dua.ref : 'Authentic Supplication',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: tp.primaryAccent,
+                  ),
                 ),
-              ),
-            ],
-
-            if (dua.ref.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Icon(
-                    Icons.menu_book_rounded,
-                    size: 12,
-                    color: tp.textMuted,
-                  ),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Text(
-                      dua.ref,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.inter(
-                        fontSize: 10.5,
-                        color: tp.textMuted,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 13,
+                  color: tp.textMuted,
+                ),
+              ],
+            ),
           ],
         ),
       ),

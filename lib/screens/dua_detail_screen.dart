@@ -1,12 +1,11 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../models/adhkaar.dart';
 import '../providers/theme_provider.dart';
-import '../theme/jira_theme.dart';
 import '../widgets/heartbeat_tap.dart';
-import '../widgets/jira_screen.dart';
 
 class DuaDetailScreen extends StatefulWidget {
   final Dua dua;
@@ -71,50 +70,223 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
   @override
   Widget build(BuildContext context) {
     final tp = context.watch<ThemeProvider>();
+    final isDark = tp.isDarkMode;
     final dua = widget.dua;
+    final topInset = MediaQuery.paddingOf(context).top;
     final bottomInset = MediaQuery.paddingOf(context).bottom;
+    const double kTopBarHeight = 56.0;
 
-    return JiraScreen(
-      child: Stack(
+    return Scaffold(
+      backgroundColor: tp.backgroundTop,
+      body: Stack(
         children: [
-          Column(
-            children: [
-              // 1. Top App Bar
-              _buildTopAppBar(context, tp),
-
-              // 2. Scrollable Detail Content
-              Expanded(
-                child: ListView(
-                  physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  children: [
-                    const SizedBox(height: 8),
-
-                    // Centerpiece Hero Arabic Recitation & Audio Card
-                    _buildHeroArabicCard(dua, tp),
-
-                    const SizedBox(height: 14),
-
-                    // Phonetic Transliteration Card
-                    if (dua.transli.isNotEmpty) ...[
-                      _buildTransliterationCard(dua.transli, tp),
-                      const SizedBox(height: 14),
-                    ],
-
-                    SizedBox(height: 90 + bottomInset), // Bottom clearance for floating counter
-                  ],
+          // Background Gradient & Subtle Pattern
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [tp.backgroundTop, tp.backgroundBottom],
                 ),
               ),
-            ],
+            ),
+          ),
+          Positioned.fill(
+            child: Opacity(
+              opacity: 0.035,
+              child: Image.asset(
+                'assets/images/islamic_bg.png',
+                repeat: ImageRepeat.repeat,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+              ),
+            ),
           ),
 
-          // 3. Floating Repetition Counter Dock
+          // Scrollable Detail Content
+          Positioned.fill(
+            child: ListView(
+              physics: const BouncingScrollPhysics(),
+              padding: EdgeInsets.fromLTRB(16, topInset + kTopBarHeight + 12, 16, bottomInset + 100),
+              children: [
+                // Centerpiece Hero Arabic Recitation & Audio Card
+                _buildHeroArabicCard(dua, tp, isDark),
+
+                const SizedBox(height: 14),
+
+                // Phonetic Transliteration Card
+                if (dua.transli.isNotEmpty) ...[
+                  _buildTransliterationCard(dua.transli, tp, isDark),
+                  const SizedBox(height: 14),
+                ],
+
+                // Translation & Meaning Card
+                if (dua.trans.isNotEmpty || dua.descEn.isNotEmpty) ...[
+                  _buildTranslationCard(dua, tp, isDark),
+                  const SizedBox(height: 14),
+                ],
+
+                // Hadith / Reference Card
+                if (dua.ref.isNotEmpty)
+                  _buildReferenceCard(dua.ref, tp, isDark),
+              ],
+            ),
+          ),
+
+          // Fixed Frosted 56px Top Header
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: topInset + kTopBarHeight,
+            child: ClipRect(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                child: Container(
+                  padding: EdgeInsets.only(top: topInset),
+                  decoration: BoxDecoration(
+                    color: tp.backgroundTop.withValues(alpha: isDark ? 0.85 : 0.90),
+                    border: Border(
+                      bottom: BorderSide(
+                        color: tp.borderColor.withValues(alpha: 0.35),
+                        width: 0.8,
+                      ),
+                    ),
+                  ),
+                  child: Container(
+                    height: 56.0,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    alignment: Alignment.center,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        // Back Button
+                        HeartbeatTap(
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            Navigator.pop(context);
+                          },
+                          child: Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: tp.surfaceColor,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: tp.borderColor, width: 0.8),
+                            ),
+                            child: Center(
+                              child: Icon(Icons.arrow_back_ios_new_rounded, color: tp.textPrimary, size: 16),
+                            ),
+                          ),
+                        ),
+
+                        // Center Title
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'DUA FOCUS',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w700,
+                                color: tp.textPrimary,
+                                letterSpacing: 0.8,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Container(
+                              width: 6,
+                              height: 6,
+                              decoration: BoxDecoration(
+                                color: tp.primaryAccent,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: tp.primaryAccent.withValues(alpha: 0.8),
+                                    blurRadius: 6,
+                                    spreadRadius: 1,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        // Bookmark & Share buttons
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            HeartbeatTap(
+                              onTap: () {
+                                HapticFeedback.selectionClick();
+                                setState(() => _isBookmarked = !_isBookmarked);
+                              },
+                              child: Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: tp.surfaceColor,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: tp.borderColor, width: 0.8),
+                                ),
+                                child: Center(
+                                  child: Icon(
+                                    _isBookmarked ? Icons.bookmark_rounded : Icons.bookmark_outline_rounded,
+                                    color: _isBookmarked ? tp.primaryAccent : tp.textSecondary,
+                                    size: 17,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            HeartbeatTap(
+                              onTap: () {
+                                HapticFeedback.selectionClick();
+                                Clipboard.setData(ClipboardData(text: '${widget.dua.dua}\n\n${widget.dua.transli}'));
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Dua copied to clipboard'),
+                                    behavior: SnackBarBehavior.floating,
+                                    duration: Duration(seconds: 1),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: tp.surfaceColor,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: tp.borderColor, width: 0.8),
+                                ),
+                                child: Center(
+                                  child: Icon(
+                                    Icons.share_outlined,
+                                    color: tp.textSecondary,
+                                    size: 17,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // Floating Repetition Counter Dock
           Positioned(
             left: 0,
             right: 0,
-            bottom: bottomInset > 0 ? bottomInset + 12 : 20,
+            bottom: bottomInset > 0 ? bottomInset + 10 : 18,
             child: Center(
-              child: _buildFloatingCounterDock(tp),
+              child: _buildFloatingCounterDock(tp, isDark),
             ),
           ),
         ],
@@ -122,135 +294,21 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
     );
   }
 
-  // 1. Top App Bar
-  Widget _buildTopAppBar(BuildContext context, ThemeProvider tp) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          // Left: Circular back button
-          HeartbeatTap(
-            onTap: () {
-              HapticFeedback.selectionClick();
-              Navigator.pop(context);
-            },
-            child: Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: tp.surfaceColor,
-                shape: BoxShape.circle,
-                border: Border.all(color: tp.borderColor),
-              ),
-              child: Icon(
-                Icons.arrow_back_rounded,
-                color: tp.textPrimary,
-                size: 18,
-              ),
-            ),
-          ),
-
-          // Center: Title + Glowing Blue Orb
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'DUA FOCUS',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w600,
-                  color: tp.textPrimary,
-                  letterSpacing: 1.0,
-                ),
-              ),
-              const SizedBox(width: 6),
-              Container(
-                width: 6,
-                height: 6,
-                decoration: BoxDecoration(
-                  color: tp.primaryAccent,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: tp.primaryAccent.withValues(alpha: 0.8),
-                      blurRadius: 6,
-                      spreadRadius: 1,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-
-          // Right: Bookmark & Share buttons
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              HeartbeatTap(
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  setState(() => _isBookmarked = !_isBookmarked);
-                },
-                child: Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: tp.surfaceColor,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: tp.borderColor),
-                  ),
-                  child: Icon(
-                    _isBookmarked ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
-                    color: _isBookmarked ? tp.primaryAccent : tp.textSecondary,
-                    size: 18,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              HeartbeatTap(
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  Clipboard.setData(ClipboardData(text: '${widget.dua.dua}\n\n${widget.dua.transli}'));
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Dua copied to clipboard'),
-                      behavior: SnackBarBehavior.floating,
-                      duration: Duration(seconds: 1),
-                    ),
-                  );
-                },
-                child: Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: tp.surfaceColor,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: tp.borderColor),
-                  ),
-                  child: Icon(
-                    Icons.share_outlined,
-                    color: tp.textSecondary,
-                    size: 18,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  // 2. Hero Centerpiece Card (Arabic Recitation & Audio Bar)
-  Widget _buildHeroArabicCard(Dua dua, ThemeProvider tp) {
+  Widget _buildHeroArabicCard(Dua dua, ThemeProvider tp, bool isDark) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: tp.surfaceColor,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: tp.borderColor, width: 1.0),
+        border: Border.all(color: tp.borderColor, width: 0.8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.03),
+            blurRadius: 18,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -261,30 +319,26 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
             children: [
               // Repetition Pill Badge
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: JiraTheme.secondaryGreen.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
+                  color: tp.primaryAccent.withValues(alpha: isDark ? 0.12 : 0.14),
+                  borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: JiraTheme.secondaryGreen.withValues(alpha: 0.3),
-                    width: 1.0,
+                    color: tp.primaryAccent.withValues(alpha: isDark ? 0.25 : 0.35),
+                    width: 0.8,
                   ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(
-                      Icons.repeat_rounded,
-                      size: 13,
-                      color: JiraTheme.secondaryGreen,
-                    ),
+                    Icon(Icons.repeat_rounded, size: 13, color: tp.primaryAccent),
                     const SizedBox(width: 5),
                     Text(
                       'REPEAT $_targetCount TIMES',
                       style: GoogleFonts.plusJakartaSans(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: JiraTheme.secondaryGreen,
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w700,
+                        color: tp.primaryAccent,
                         letterSpacing: 0.3,
                       ),
                     ),
@@ -292,19 +346,17 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
                 ),
               ),
 
-              // Dua Reference Number
               Text(
                 '#${dua.id.toString().padLeft(2, '0')}',
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 12,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
                   color: tp.textSecondary,
                 ),
               ),
             ],
           ),
-
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
 
           // Sacred Arabic Calligraphy
           Text(
@@ -314,89 +366,74 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
             style: TextStyle(
               fontFamily: 'HafsFont',
               fontSize: 24,
-              fontWeight: FontWeight.normal,
-              color: tp.textPrimary,
-              height: 1.8,
+              fontWeight: FontWeight.w600,
+              color: isDark ? const Color(0xFFF0F6FC) : const Color(0xFF0F172A),
+              height: 1.85,
+              letterSpacing: 0.2,
             ),
           ),
-
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
 
           // Audio Player Bar
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
-              color: tp.containerColor,
+              color: isDark ? const Color(0xFF151D24) : const Color(0xFFF1F5F9),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: tp.borderColor, width: 0.8),
+              border: Border.all(
+                color: isDark ? const Color(0xFF222D38) : const Color(0xFFE2E8F0),
+                width: 0.8,
+              ),
             ),
             child: Row(
               children: [
-                // Circular Play/Pause button
                 HeartbeatTap(
                   onTap: _togglePlay,
                   child: Container(
-                    width: 38,
-                    height: 38,
+                    width: 36,
+                    height: 36,
                     decoration: BoxDecoration(
                       color: tp.primaryAccent,
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: tp.primaryAccent.withValues(alpha: 0.4),
+                          color: tp.primaryAccent.withValues(alpha: 0.35),
                           blurRadius: 10,
                           offset: const Offset(0, 2),
                         ),
                       ],
                     ),
-                    child: Icon(
-                      _isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                      color: Colors.white,
-                      size: 22,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 14),
-
-                // Waveform bars
-                Expanded(
-                  child: SizedBox(
-                    height: 24,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: List.generate(12, (index) {
-                        final isHighlighted = index < 4 || _isPlaying;
-                        final heights = [8.0, 16.0, 22.0, 14.0, 10.0, 18.0, 24.0, 12.0, 16.0, 20.0, 10.0, 6.0];
-                        return AnimatedBuilder(
-                          animation: _waveformController,
-                          builder: (context, child) {
-                            final factor = _isPlaying
-                                ? (0.4 + 0.6 * ((index % 2 == 0) ? _waveformController.value : (1.0 - _waveformController.value)))
-                                : 1.0;
-                            return Container(
-                              width: 3,
-                              height: heights[index % heights.length] * factor,
-                              decoration: BoxDecoration(
-                                color: isHighlighted ? tp.primaryAccent : tp.textMuted.withValues(alpha: 0.3),
-                                borderRadius: BorderRadius.circular(2),
-                              ),
-                            );
-                          },
-                        );
-                      }),
+                    child: Center(
+                      child: Icon(
+                        _isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(width: 12),
-
-                // Timestamp
-                Text(
-                  _isPlaying ? '0:05 / 0:12' : '0:00 / 0:12',
-                  style: GoogleFonts.outfit(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w600,
-                    color: tp.textSecondary,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _isPlaying ? 'Playing Audio Recitation' : 'Listen Recitation',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w700,
+                          color: tp.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 1),
+                      Text(
+                        'Authentic Arabic Phonation',
+                        style: GoogleFonts.inter(
+                          fontSize: 10.5,
+                          color: tp.textSecondary,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -407,34 +444,38 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
     );
   }
 
-  // 3. Phonetic Transliteration Card
-  Widget _buildTransliterationCard(String transliteration, ThemeProvider tp) {
+  Widget _buildTransliterationCard(String transli, ThemeProvider tp, bool isDark) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: tp.surfaceColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: tp.borderColor),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: tp.borderColor, width: 0.8),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'TRANSLITERATION',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 10.5,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 1.2,
-              color: tp.textSecondary,
-            ),
+          Row(
+            children: [
+              Icon(Icons.record_voice_over_outlined, color: tp.primaryAccent, size: 16),
+              const SizedBox(width: 8),
+              Text(
+                'TRANSLITERATION',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.0,
+                  color: tp.primaryAccent,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Text(
-            transliteration,
-            style: GoogleFonts.inter(
-              fontSize: 13.5,
-              fontWeight: FontWeight.w400,
+            transli,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 14,
               color: tp.textPrimary,
               height: 1.6,
             ),
@@ -444,58 +485,170 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
     );
   }
 
-  // 4. Floating Repetition Counter Dock
-  Widget _buildFloatingCounterDock(ThemeProvider tp) {
-    final isCompleted = _count >= _targetCount;
-
-    return HeartbeatTap(
-      onTap: _incrementCount,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-        decoration: BoxDecoration(
-          color: tp.surfaceColor.withValues(alpha: 0.95),
-          borderRadius: BorderRadius.circular(25),
-          border: Border.all(
-            color: isCompleted ? JiraTheme.secondaryGreen : tp.borderColor.withValues(alpha: 0.7),
-            width: 1.0,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: (isCompleted ? JiraTheme.secondaryGreen : Colors.black).withValues(alpha: 0.2),
-              blurRadius: 16,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              isCompleted ? 'COMPLETED' : 'TAP TO COUNT',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 11.5,
-                fontWeight: FontWeight.w600,
-                color: isCompleted ? JiraTheme.secondaryGreen : tp.textPrimary,
-                letterSpacing: 0.5,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: isCompleted ? JiraTheme.secondaryGreen : tp.containerColor,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                '$_count/$_targetCount',
+  Widget _buildTranslationCard(Dua dua, ThemeProvider tp, bool isDark) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: tp.surfaceColor,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: tp.borderColor, width: 0.8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.translate_rounded, color: tp.primaryAccent, size: 16),
+              const SizedBox(width: 8),
+              Text(
+                'MEANING & TRANSLATION',
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: isCompleted ? Colors.white : tp.primaryAccent,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.0,
+                  color: tp.primaryAccent,
                 ),
               ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            dua.trans.isNotEmpty ? dua.trans : dua.descEn,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 13.5,
+              color: tp.textSecondary,
+              height: 1.6,
             ),
-          ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReferenceCard(String ref, ThemeProvider tp, bool isDark) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: tp.surfaceColor,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: tp.borderColor, width: 0.8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.menu_book_rounded, color: tp.primaryAccent, size: 16),
+              const SizedBox(width: 8),
+              Text(
+                'HADITH / QURAN REFERENCE',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.0,
+                  color: tp.primaryAccent,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            ref,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: tp.textPrimary,
+              height: 1.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFloatingCounterDock(ThemeProvider tp, bool isDark) {
+    final isDone = _count >= _targetCount;
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(30),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+        child: Container(
+          height: 52,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: (isDark ? const Color(0xFF0E1418) : Colors.white).withValues(
+              alpha: isDark ? 0.92 : 0.95,
+            ),
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(
+              color: isDone
+                  ? tp.primaryAccent.withValues(alpha: 0.6)
+                  : tp.borderColor.withValues(alpha: 0.6),
+              width: 0.8,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
+                blurRadius: 18,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Circular Tap Counter Button
+              HeartbeatTap(
+                onTap: _incrementCount,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: isDone ? tp.primaryAccent : tp.primaryAccent.withValues(alpha: isDark ? 0.15 : 0.12),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: isDone ? tp.primaryAccent : tp.primaryAccent.withValues(alpha: isDark ? 0.3 : 0.4),
+                      width: 0.8,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        isDone ? Icons.check_circle_rounded : Icons.touch_app_rounded,
+                        size: 17,
+                        color: isDone ? Colors.white : tp.primaryAccent,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '$_count / $_targetCount',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          color: isDone ? Colors.white : tp.primaryAccent,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+
+              // Reset Icon Button
+              HeartbeatTap(
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  setState(() => _count = 0);
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(6),
+                  child: Icon(Icons.refresh_rounded, size: 18, color: tp.textSecondary),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -14,7 +14,8 @@
           "title": "Understanding Surah Al-Kahf - Deep Reflection & Guidance",
           "speaker": "Sh. Ahmad Al-Khatib",
           "duration": "45:20",
-          "url": "https://youtu.be/IrDP9YIcnCo?si=5bI7PW3n-_9zIh60"
+          "url": "https://youtu.be/IrDP9YIcnCo?si=5bI7PW3n-_9zIh60",
+          "thumbnail": "https://img.youtube.com/vi/IrDP9YIcnCo/hqdefault.jpg"
         },
         {
           "id": "quran_heart_peace",
@@ -24,7 +25,8 @@
           "title": "Finding Inner Peace Through Quranic Contemplation",
           "speaker": "Sh. Ahmad Al-Khatib",
           "duration": "32:15",
-          "url": "https://youtu.be/_H7zBaAjEH0?si=5UCWyrYoBrSmrNy-"
+          "url": "https://youtu.be/_H7zBaAjEH0?si=5UCWyrYoBrSmrNy-",
+          "thumbnail": "https://img.youtube.com/vi/_H7zBaAjEH0/hqdefault.jpg"
         }
       ]
     },
@@ -41,7 +43,8 @@
           "title": "Spiritual Discipline & Overcoming Distractions",
           "speaker": "Ustadh Muhammad Ilyas",
           "duration": "28:40",
-          "url": "https://youtu.be/IrDP9YIcnCo?si=5bI7PW3n-_9zIh60"
+          "url": "https://youtu.be/IrDP9YIcnCo?si=5bI7PW3n-_9zIh60",
+          "thumbnail": "https://img.youtube.com/vi/IrDP9YIcnCo/hqdefault.jpg"
         }
       ]
     },
@@ -58,7 +61,8 @@
           "title": "Nuswally Lillah Official Channel",
           "speaker": "Nuswally Media",
           "duration": "Official",
-          "url": "https://youtu.be/_H7zBaAjEH0?si=5UCWyrYoBrSmrNy-"
+          "url": "https://youtu.be/_H7zBaAjEH0?si=5UCWyrYoBrSmrNy-",
+          "thumbnail": "https://img.youtube.com/vi/_H7zBaAjEH0/hqdefault.jpg"
         }
       ]
     }
@@ -71,7 +75,8 @@
       "category": "Tafseer Series",
       "episode": "Ep. 08",
       "speaker": "Sh. Ahmad Al-Khatib",
-      "duration": "45:20"
+      "duration": "45:20",
+      "thumbnail": "https://img.youtube.com/vi/IrDP9YIcnCo/hqdefault.jpg"
     },
     {
       "platform": "youtube",
@@ -80,7 +85,8 @@
       "category": "Tafseer Series",
       "episode": "Ep. 07",
       "speaker": "Sh. Ahmad Al-Khatib",
-      "duration": "32:15"
+      "duration": "32:15",
+      "thumbnail": "https://img.youtube.com/vi/_H7zBaAjEH0/hqdefault.jpg"
     }
   ]
 }

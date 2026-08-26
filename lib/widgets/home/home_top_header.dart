@@ -6,6 +6,7 @@ import '../../providers/prayer_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../theme/jira_theme.dart';
 import '../heartbeat_tap.dart';
+import '../theme_palette_sheet.dart';
 import '../../screens/location_selection_screen.dart';
 import '../../screens/notification_settings_screen.dart';
 import '../../screens/settings_screen.dart';
@@ -52,12 +53,15 @@ class HomeTopHeader extends StatelessWidget {
       builder: (context, locationName, child) {
         final displayLoc = locationName.contains(',') ? locationName : '$locationName, India';
 
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        return Container(
+          height: 56.0,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          alignment: Alignment.center,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Left Location Capsule
+              // Left Location Selector (Clean & Borderless)
               HeartbeatTap(
                 onTap: () {
                   HapticFeedback.selectionClick();
@@ -66,94 +70,154 @@ class HomeTopHeader extends StatelessWidget {
                     MaterialPageRoute(builder: (context) => const LocationSelectionScreen()),
                   );
                 },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: surfaceColor,
-                    borderRadius: BorderRadius.circular(22),
-                    border: Border.all(color: borderColor, width: 1.0),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.04),
-                        blurRadius: 10,
-                        offset: const Offset(0, 3),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: themeProvider.primaryAccent.withValues(alpha: isDark ? 0.12 : 0.10),
+                        shape: BoxShape.circle,
                       ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.location_on_outlined,
-                        size: 16,
-                        color: themeProvider.textSecondary,
+                      child: Center(
+                        child: Icon(
+                          Icons.my_location_rounded,
+                          size: 15,
+                          color: themeProvider.primaryAccent,
+                        ),
                       ),
-                      const SizedBox(width: 8),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            displayLoc,
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: themeProvider.textPrimary,
-                              letterSpacing: 0.1,
+                    ),
+                    const SizedBox(width: 9),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              displayLoc,
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w600,
+                                color: themeProvider.textPrimary,
+                                letterSpacing: 0.1,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 1),
-                          Text(
-                            _getHijriDateString(),
-                            style: GoogleFonts.inter(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w400,
-                              color: themeProvider.textSecondary.withValues(alpha: 0.85),
+                            const SizedBox(width: 3),
+                            Icon(
+                              Icons.keyboard_arrow_down_rounded,
+                              size: 16,
+                              color: themeProvider.textSecondary,
                             ),
+                          ],
+                        ),
+                        const SizedBox(height: 1),
+                        Text(
+                          _getHijriDateString(),
+                          style: GoogleFonts.inter(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w500,
+                            color: themeProvider.textSecondary.withValues(alpha: 0.85),
                           ),
-                        ],
-                      ),
-                    ],
-                  ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
 
-              // Right Action Buttons (Notification Bell + Settings Icon)
+              // Right Action Buttons (Theme + Notifications + Settings)
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  // Theme Palette Switcher Button
                   HeartbeatTap(
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const NotificationSettingsScreen()),
-                      );
-                    },
+                    onTap: () => ThemePaletteSheet.show(context),
                     child: Container(
-                      width: 38,
-                      height: 38,
+                      width: 36,
+                      height: 36,
                       decoration: BoxDecoration(
                         color: surfaceColor,
                         shape: BoxShape.circle,
                         border: Border.all(color: borderColor, width: 1.0),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.04),
+                            color: Colors.black.withValues(alpha: isDark ? 0.22 : 0.03),
                             blurRadius: 10,
-                            offset: const Offset(0, 3),
+                            offset: const Offset(0, 2),
                           ),
                         ],
                       ),
                       child: Center(
                         child: Icon(
-                          Icons.notifications_none_rounded,
-                          size: 19,
+                          Icons.palette_outlined,
+                          size: 18,
                           color: themeProvider.textPrimary,
                         ),
                       ),
                     ),
                   ),
+                  const SizedBox(width: 8),
+
+                  // Notifications Button
+                  Consumer<PrayerProvider>(
+                  builder: (context, prayerProvider, _) {
+                    final isAzanOn = prayerProvider.azanNotificationsEnabled;
+
+                    return HeartbeatTap(
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const NotificationSettingsScreen()),
+                        );
+                      },
+                      child: Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: surfaceColor,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: borderColor, width: 1.0),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: isDark ? 0.22 : 0.03),
+                              blurRadius: 10,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            Icon(
+                              isAzanOn
+                                  ? Icons.notifications_rounded
+                                  : Icons.notifications_none_rounded,
+                              size: 18,
+                              color: themeProvider.textPrimary,
+                            ),
+                            if (isAzanOn)
+                              Positioned(
+                                top: 8,
+                                right: 8,
+                                child: Container(
+                                  width: 5.5,
+                                  height: 5.5,
+                                  decoration: BoxDecoration(
+                                    color: themeProvider.primaryAccent,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
                   const SizedBox(width: 8),
                   HeartbeatTap(
                     onTap: () {
@@ -164,24 +228,24 @@ class HomeTopHeader extends StatelessWidget {
                       );
                     },
                     child: Container(
-                      width: 38,
-                      height: 38,
+                      width: 36,
+                      height: 36,
                       decoration: BoxDecoration(
                         color: surfaceColor,
                         shape: BoxShape.circle,
                         border: Border.all(color: borderColor, width: 1.0),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.04),
+                            color: Colors.black.withValues(alpha: isDark ? 0.22 : 0.03),
                             blurRadius: 10,
-                            offset: const Offset(0, 3),
+                            offset: const Offset(0, 2),
                           ),
                         ],
                       ),
                       child: Center(
                         child: Icon(
                           Icons.tune_rounded,
-                          size: 19,
+                          size: 18,
                           color: themeProvider.textPrimary,
                         ),
                       ),

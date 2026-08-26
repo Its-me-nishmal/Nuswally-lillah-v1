@@ -1,9 +1,12 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
 import '../services/app_update_service.dart';
-import '../theme/jira_theme.dart';
+import '../widgets/heartbeat_tap.dart';
+import '../widgets/splash/animated_crescent_emblem.dart';
 import 'home_screen.dart';
 import 'onboarding/onboarding_flow.dart';
 
@@ -27,7 +30,7 @@ class _SplashScreenState extends State<SplashScreen>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 900),
     );
 
     _fadeAnimation = CurvedAnimation(
@@ -35,10 +38,10 @@ class _SplashScreenState extends State<SplashScreen>
       curve: const Interval(0.0, 0.7, curve: Curves.easeOutCubic),
     );
 
-    _scaleAnimation = Tween<double>(begin: 0.92, end: 1.0).animate(
+    _scaleAnimation = Tween<double>(begin: 0.88, end: 1.0).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: const Interval(0.0, 0.7, curve: Curves.easeOutCubic),
+        curve: const Interval(0.0, 0.7, curve: Curves.easeOutBack),
       ),
     );
 
@@ -47,15 +50,12 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _startInitializationFlow() async {
-    // Run splash delay and update check in parallel
-    final splashWait = Future.delayed(const Duration(milliseconds: 1800));
+    final splashWait = Future.delayed(const Duration(milliseconds: 1600));
 
     AppUpdateInfo? updateInfo;
     try {
       updateInfo = await AppUpdateService.fetchUpdateInfo(forceRemote: true);
-    } catch (_) {
-      // Ignore network errors/timeouts during splash
-    }
+    } catch (_) {}
 
     await splashWait;
     if (!mounted) return;
@@ -69,6 +69,7 @@ class _SplashScreenState extends State<SplashScreen>
 
   void _showUpdateDialog(AppUpdateInfo info) {
     final isForce = AppUpdateService.isForceUpdate(info);
+    final tp = context.read<ThemeProvider>();
 
     showDialog<void>(
       context: context,
@@ -82,12 +83,12 @@ class _SplashScreenState extends State<SplashScreen>
             child: Container(
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
-                color: const Color(0xFF161B22),
+                color: tp.surfaceColor,
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
                   color: isForce
                       ? const Color(0xFFEF4444).withValues(alpha: 0.6)
-                      : JiraTheme.secondaryGreen.withValues(alpha: 0.5),
+                      : tp.primaryAccent.withValues(alpha: 0.5),
                   width: 1.2,
                 ),
                 boxShadow: [
@@ -102,7 +103,6 @@ class _SplashScreenState extends State<SplashScreen>
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Header Icon & Status
                   Row(
                     children: [
                       Container(
@@ -111,7 +111,7 @@ class _SplashScreenState extends State<SplashScreen>
                         decoration: BoxDecoration(
                           color: isForce
                               ? const Color(0xFFEF4444).withValues(alpha: 0.15)
-                              : JiraTheme.secondaryGreen.withValues(alpha: 0.15),
+                              : tp.primaryAccent.withValues(alpha: 0.15),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
@@ -120,7 +120,7 @@ class _SplashScreenState extends State<SplashScreen>
                               : Icons.system_update_rounded,
                           color: isForce
                               ? const Color(0xFFEF4444)
-                              : JiraTheme.secondaryGreen,
+                              : tp.primaryAccent,
                           size: 24,
                         ),
                       ),
@@ -133,10 +133,10 @@ class _SplashScreenState extends State<SplashScreen>
                               isForce
                                   ? 'Mandatory Update'
                                   : 'New Update Available',
-                              style: GoogleFonts.outfit(
-                                fontSize: 16.5,
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 16,
                                 fontWeight: FontWeight.w700,
-                                color: const Color(0xFFF0F6FC),
+                                color: tp.textPrimary,
                               ),
                             ),
                             const SizedBox(height: 2),
@@ -146,7 +146,7 @@ class _SplashScreenState extends State<SplashScreen>
                                 fontSize: 12.5,
                                 color: isForce
                                     ? const Color(0xFFF87171)
-                                    : const Color(0xFF34D399),
+                                    : tp.primaryAccent,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -155,129 +155,80 @@ class _SplashScreenState extends State<SplashScreen>
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 16),
-
-                  // Description
                   if (info.description.isNotEmpty) ...[
                     Text(
                       info.description,
                       style: GoogleFonts.inter(
                         fontSize: 13,
-                        color: const Color(0xFF8B949E),
+                        color: tp.textSecondary,
                         height: 1.4,
                       ),
                     ),
                     const SizedBox(height: 14),
                   ],
-
-                  // Highlights preview (Features & Bug Fixes)
-                  if (info.features.isNotEmpty || info.bugFixes.isNotEmpty) ...[
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF0D121D),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFF30363D)),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          for (final feat in info.features.take(2)) ...[
-                            _buildDialogHighlightRow(
-                              Icons.check_circle_outline_rounded,
-                              JiraTheme.secondaryGreen,
-                              feat,
+                  Row(
+                    children: [
+                      if (!isForce)
+                        Expanded(
+                          child: HeartbeatTap(
+                            onTap: () {
+                              Navigator.pop(ctx);
+                              _navigateToNextScreen();
+                            },
+                            child: Container(
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: tp.containerColor,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: tp.borderColor),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'Later',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: tp.textSecondary,
+                                  ),
+                                ),
+                              ),
                             ),
-                            const SizedBox(height: 6),
-                          ],
-                          for (final fix in info.bugFixes.take(2)) ...[
-                            _buildDialogHighlightRow(
-                              Icons.build_circle_outlined,
-                              const Color(0xFFFBBF24),
-                              fix,
+                          ),
+                        ),
+                      if (!isForce) const SizedBox(width: 10),
+                      Expanded(
+                        child: HeartbeatTap(
+                          onTap: () {
+                            AppUpdateService.launchDownload(info.downloadUrl);
+                          },
+                          child: Container(
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: tp.primaryAccent,
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                            const SizedBox(height: 6),
-                          ],
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                  ],
-
-                  // Action Buttons
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      HapticFeedback.selectionClick();
-                      AppUpdateService.launchDownload(info.downloadUrl);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: JiraTheme.secondaryGreen,
-                      foregroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(vertical: 13),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    icon: const Icon(Icons.download_rounded, size: 18),
-                    label: Text(
-                      'Update Now',
-                      style: GoogleFonts.outfit(
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-
-                  // "Later" button for non-critical updates
-                  if (!isForce) ...[
-                    const SizedBox(height: 8),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(ctx).pop();
-                        _navigateToNextScreen();
-                      },
-                      child: Text(
-                        'Later / Continue to App',
-                        style: GoogleFonts.inter(
-                          color: const Color(0xFF8B949E),
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
+                            child: Center(
+                              child: Text(
+                                'Update Now',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ],
               ),
             ),
           ),
         );
       },
-    );
-  }
-
-  Widget _buildDialogHighlightRow(
-      IconData icon, Color color, String text) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(top: 2),
-          child: Icon(icon, color: color, size: 13),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            text,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: GoogleFonts.inter(
-              color: const Color(0xFFE6EDF3),
-              fontSize: 12,
-            ),
-          ),
-        ),
-      ],
     );
   }
 
@@ -293,7 +244,7 @@ class _SplashScreenState extends State<SplashScreen>
         transitionsBuilder: (context, anim, _, child) {
           return FadeTransition(opacity: anim, child: child);
         },
-        transitionDuration: const Duration(milliseconds: 600),
+        transitionDuration: const Duration(milliseconds: 500),
       ),
     );
   }
@@ -306,139 +257,140 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    final tp = context.watch<ThemeProvider>();
+    final isDark = tp.isDarkMode;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0E14),
-      body: SafeArea(
-        child: Center(
-          child: AnimatedBuilder(
-            animation: _controller,
-            builder: (context, child) {
-              return FadeTransition(
-                opacity: _fadeAnimation,
-                child: ScaleTransition(
-                  scale: _scaleAnimation,
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      return SingleChildScrollView(
-                        physics: const BouncingScrollPhysics(),
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                          child: IntrinsicHeight(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 24),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Spacer(flex: 3),
+      backgroundColor: tp.backgroundTop,
+      body: Stack(
+        children: [
+          // Background Gradient
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [tp.backgroundTop, tp.backgroundBottom],
+                ),
+              ),
+            ),
+          ),
 
-                                  // Glowing Mosque Emblem
-                                  Container(
-                                    width: 88,
-                                    height: 88,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: const Color(0xFF161B22),
-                                      border: Border.all(
-                                        color: JiraTheme.primaryBlue,
-                                        width: 1.5,
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color:
-                                              JiraTheme.primaryBlue.withValues(alpha: 0.35),
-                                          blurRadius: 28,
-                                          spreadRadius: 4,
-                                        ),
-                                      ],
-                                    ),
-                                    child: const Center(
-                                      child: Icon(
-                                        Icons.mosque_rounded,
-                                        size: 44,
-                                        color: Color(0xFF93C5FD),
-                                      ),
-                                    ),
-                                  ),
+          // Ambient Teal Radial Glow
+          Positioned(
+            top: MediaQuery.of(context).size.height * 0.35,
+            left: -40,
+            right: -40,
+            child: Container(
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    tp.primaryAccent.withValues(alpha: isDark ? 0.12 : 0.06),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
 
-                                  const SizedBox(height: 24),
+          // Center Floating Splash Box
+          Center(
+            child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            return FadeTransition(
+              opacity: _fadeAnimation,
+              child: ScaleTransition(
+                scale: _scaleAnimation,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(28),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+                    child: Container(
+                      width: 290,
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+                      decoration: BoxDecoration(
+                        color: (isDark ? const Color(0xFF161B22) : const Color(0xFFFFFFFF))
+                            .withValues(alpha: isDark ? 0.88 : 0.92),
+                        borderRadius: BorderRadius.circular(28),
+                        border: Border.all(
+                          color: tp.primaryAccent.withValues(alpha: 0.45),
+                          width: 1.2,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.35),
+                            blurRadius: 32,
+                            offset: const Offset(0, 12),
+                          ),
+                          BoxShadow(
+                            color: tp.primaryAccent.withValues(alpha: 0.20),
+                            blurRadius: 20,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Glowing Animated Crescent & Star Emblem
+                          AnimatedCrescentEmblem(
+                            size: 80,
+                            primaryColor: tp.primaryAccent,
+                          ),
+                          const SizedBox(height: 12),
 
-                                  // Sacred Arabic Calligraphy
-                                  const Text(
-                                    'نُصَلِّي لِلَّهِ',
-                                    style: TextStyle(
-                                      fontFamily: 'HafsFont',
-                                      fontSize: 32,
-                                      fontWeight: FontWeight.bold,
-                                      color: Color(0xFFF0F6FC),
-                                      height: 1.2,
-                                    ),
-                                  ),
+                          // Sacred Arabic Script
+                          Text(
+                            'نُصَلِّي لِلَّهِ',
+                            style: TextStyle(
+                              fontFamily: 'HafsFont',
+                              fontSize: 26,
+                              fontWeight: FontWeight.normal,
+                              color: tp.textPrimary,
+                              height: 1.2,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
 
-                                  const SizedBox(height: 8),
+                          // English Title
+                          Text(
+                            'NUSWALLY LILLAH',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 2.0,
+                              color: tp.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 18),
 
-                                  // English Title
-                                  Text(
-                                    'NUSWALLY LILLAH',
-                                    style: GoogleFonts.outfit(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w800,
-                                      letterSpacing: 4.0,
-                                      color: JiraTheme.secondaryGreen,
-                                    ),
-                                  ),
-
-                                  const SizedBox(height: 6),
-
-                                  // Subtitle
-                                  Text(
-                                    'YOUR ISLAMIC SANCTUARY',
-                                    style: GoogleFonts.inter(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
-                                      letterSpacing: 2.0,
-                                      color: const Color(0xFF8B949E),
-                                    ),
-                                  ),
-
-                                  const Spacer(flex: 3),
-
-                                  // Bottom Bismillah Calligraphy
-                                  const Text(
-                                    'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
-                                    style: TextStyle(
-                                      fontFamily: 'HafsFont',
-                                      fontSize: 18,
-                                      color: Color(0xFF64748B),
-                                    ),
-                                  ),
-
-                                  const SizedBox(height: 10),
-
-                                  // App Version Tag
-                                  Text(
-                                    'v${AppUpdateService.currentVersionName}',
-                                    style: GoogleFonts.outfit(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
-                                      color: const Color(0xFF475569),
-                                      letterSpacing: 1.0,
-                                    ),
-                                  ),
-
-                                  const SizedBox(height: 20),
-                                ],
+                          // Sleek Micro Progress Indicator
+                          SizedBox(
+                            width: 36,
+                            height: 3,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(2),
+                              child: LinearProgressIndicator(
+                                backgroundColor: tp.borderColor,
+                                valueColor: AlwaysStoppedAnimation<Color>(tp.primaryAccent),
                               ),
                             ),
                           ),
-                        ),
-                      );
-                    },
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-              );
-            },
-          ),
+              ),
+            );
+          },
         ),
+      ),
+        ],
       ),
     );
   }

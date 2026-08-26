@@ -105,7 +105,7 @@ class QuickActionsDock extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Circular Glass Accent Icon Capsule
+            // Modern Glass Squircle Icon Tile
             Container(
               width: 52,
               height: 52,
@@ -113,7 +113,7 @@ class QuickActionsDock extends StatelessWidget {
                 color: isDark
                     ? accentColor.withValues(alpha: 0.10)
                     : accentColor.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
+                borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: isDark
                       ? accentColor.withValues(alpha: 0.22)

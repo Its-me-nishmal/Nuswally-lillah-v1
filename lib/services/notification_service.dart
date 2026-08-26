@@ -1,10 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter_timezone/flutter_timezone.dart';
 import '../models/prayer_time_model.dart';
+import 'app_update_service.dart';
 
 class NotificationService {
   static final FlutterLocalNotificationsPlugin _notificationsPlugin = FlutterLocalNotificationsPlugin();
@@ -111,6 +113,21 @@ class NotificationService {
         );
       } catch (e) {
         debugPrint('NotificationService: Failed to create adhan_default_channel: $e');
+      }
+
+      try {
+        // Create channel for app updates
+        await androidImplementation.createNotificationChannel(
+          const AndroidNotificationChannel(
+            'app_update_channel',
+            'App Updates',
+            description: 'Notifications for new app updates and releases',
+            importance: Importance.high,
+            playSound: true,
+          ),
+        );
+      } catch (e) {
+        debugPrint('NotificationService: Failed to create app_update_channel: $e');
       }
     }
   }
@@ -381,6 +398,15 @@ class NotificationService {
     );
   }
 
+  static Future<void> silenceAllAlarmsAndAzan() async {
+    try {
+      await _notificationsPlugin.cancelAll();
+      debugPrint('NotificationService: All notification alarms and Azan sound silenced.');
+    } catch (e) {
+      debugPrint('NotificationService: Error silencing alarms: $e');
+    }
+  }
+
   static Future<void> cancelAll() async {
     await _notificationsPlugin.cancel(id: 1001);
     await _notificationsPlugin.cancel(id: 1002);
@@ -396,5 +422,81 @@ class NotificationService {
 
   static Future<void> cancelQuranNotification() async {
     await _notificationsPlugin.cancel(id: 2001);
+  }
+
+  /// Displays a heads-up notification when a new update is available
+  static Future<void> showUpdateNotification(AppUpdateInfo info) async {
+    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+      'app_update_channel',
+      'App Updates',
+      channelDescription: 'Notifications for new app updates and releases',
+      importance: Importance.high,
+      priority: Priority.high,
+      playSound: true,
+      actions: <AndroidNotificationAction>[
+        AndroidNotificationAction(
+          'open_update',
+          'Update Now 🚀',
+          showsUserInterface: true,
+          cancelNotification: true,
+        ),
+      ],
+    );
+
+    const NotificationDetails platformDetails = NotificationDetails(android: androidDetails);
+    await _notificationsPlugin.show(
+      id: 3001,
+      title: '✨ Nuswally Lillah Update Available',
+      body: 'New version v${info.versionName} is ready with fresh features and improvements. Tap to update!',
+      notificationDetails: platformDetails,
+      payload: 'app_update',
+    );
+  }
+
+  /// Performs live check against remote API and triggers notification if update exists
+  static Future<void> checkAndNotifyUpdates() async {
+    try {
+      debugPrint('NotificationService: Checking for daily app updates in background...');
+      final updateInfo = await AppUpdateService.fetchUpdateInfo(forceRemote: true);
+      if (updateInfo != null && AppUpdateService.isUpdateAvailable(updateInfo)) {
+        debugPrint('NotificationService: Update found (v${updateInfo.versionName}). Triggering notification.');
+        await showUpdateNotification(updateInfo);
+      } else {
+        debugPrint('NotificationService: App is on latest version.');
+      }
+    } catch (e) {
+      debugPrint('NotificationService: Daily update check error: $e');
+    }
+  }
+
+  /// Schedules daily 6:00 AM background update check & triggers if 24h passed
+  static Future<void> scheduleDaily6AMUpdateCheck() async {
+    try {
+      final tzNow = tz.TZDateTime.now(tz.local);
+      var scheduledDate = tz.TZDateTime(
+        tz.local,
+        tzNow.year,
+        tzNow.month,
+        tzNow.day,
+        6, // 6:00 AM
+        0,
+      );
+
+      if (scheduledDate.isBefore(tzNow)) {
+        scheduledDate = scheduledDate.add(const Duration(days: 1));
+      }
+
+      // Check if 24 hours have elapsed since last check to perform live check
+      final prefs = await SharedPreferences.getInstance();
+      final lastCheck = prefs.getInt('last_daily_update_check_timestamp') ?? 0;
+      final nowMs = DateTime.now().millisecondsSinceEpoch;
+
+      if (nowMs - lastCheck > 24 * 60 * 60 * 1000) {
+        await prefs.setInt('last_daily_update_check_timestamp', nowMs);
+        checkAndNotifyUpdates();
+      }
+    } catch (e) {
+      debugPrint('NotificationService: scheduleDaily6AMUpdateCheck error: $e');
+    }
   }
 }

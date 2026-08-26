@@ -11,13 +11,24 @@ import 'providers/theme_provider.dart';
 import 'providers/journal_provider.dart';
 import 'providers/adhkaar_provider.dart';
 import 'screens/splash_screen.dart';
+import 'screens/app_update_screen.dart';
 import 'services/notification_service.dart';
 import 'theme/jira_theme.dart';
 
+final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 bool _onboardingComplete = false;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Set up notification action routing
+  NotificationService.onActionClicked = (actionId, payload) {
+    if (payload == 'app_update' || actionId == 'open_update') {
+      rootNavigatorKey.currentState?.push(
+        MaterialPageRoute(builder: (_) => const AppUpdateScreen()),
+      );
+    }
+  };
 
   // Lock orientation to portrait
   try {
@@ -48,6 +59,7 @@ void main() async {
   // Initialize notification service without blocking the first frame.
   unawaited(
     NotificationService.init()
+        .then((_) => NotificationService.scheduleDaily6AMUpdateCheck())
         .timeout(const Duration(seconds: 5), onTimeout: () {})
         .catchError((e) => debugPrint('NotificationService init error: $e')),
   );
@@ -208,6 +220,7 @@ class AzanApp extends StatelessWidget {
         );
 
         return MaterialApp(
+          navigatorKey: rootNavigatorKey,
           title: 'Nuswally Lillah',
           debugShowCheckedModeBanner: false,
           themeMode: isDark ? ThemeMode.dark : ThemeMode.light,

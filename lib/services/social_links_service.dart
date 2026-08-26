@@ -121,6 +121,35 @@ class SocialLink {
           .toList(),
     );
   }
+
+  /// Automatically retrieves high-res YouTube thumbnail or configured image
+  String get effectiveThumbnail {
+    if (thumbnail.isNotEmpty && thumbnail.startsWith('http')) {
+      return thumbnail;
+    }
+    final ytId = _extractYoutubeId(url);
+    if (ytId != null && ytId.isNotEmpty) {
+      return 'https://img.youtube.com/vi/$ytId/hqdefault.jpg';
+    }
+    return thumbnail;
+  }
+
+  static String? _extractYoutubeId(String videoUrl) {
+    if (videoUrl.isEmpty) return null;
+    if (videoUrl.contains('youtu.be/')) {
+      final parts = videoUrl.split('youtu.be/').last.split('?').first.split('&').first;
+      return parts.trim();
+    }
+    if (videoUrl.contains('watch?v=')) {
+      final parts = videoUrl.split('watch?v=').last.split('&').first;
+      return parts.trim();
+    }
+    final uri = Uri.tryParse(videoUrl);
+    if (uri != null && uri.queryParameters.containsKey('v')) {
+      return uri.queryParameters['v'];
+    }
+    return null;
+  }
 }
 
 class VideoCategory {
