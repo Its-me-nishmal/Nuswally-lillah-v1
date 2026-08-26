@@ -139,7 +139,7 @@ class TodayPrayersTimeline extends StatelessWidget {
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: JiraTheme.secondaryGreen,
+                    color: themeProvider.primaryAccent,
                     letterSpacing: 0.3,
                   ),
                 ),
@@ -154,7 +154,7 @@ class TodayPrayersTimeline extends StatelessWidget {
                 value: progress,
                 minHeight: 3.0,
                 backgroundColor: themeProvider.borderColor.withValues(alpha: 0.15),
-                valueColor: const AlwaysStoppedAnimation<Color>(JiraTheme.secondaryGreen),
+                valueColor: AlwaysStoppedAnimation<Color>(themeProvider.primaryAccent),
               ),
             ),
             const SizedBox(height: 14),
@@ -258,7 +258,7 @@ class _PrayerRowItem extends StatelessWidget {
         child: Row(
           children: [
             // Left Status Node (Tappable completion toggle)
-            _buildStatusNode(isDark),
+            _buildStatusNode(context, isDark),
             const SizedBox(width: 14),
 
             // Prayer Name + Optional "NOW" Badge
@@ -319,13 +319,16 @@ class _PrayerRowItem extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusNode(bool isDark) {
+  Widget _buildStatusNode(BuildContext context, bool isDark) {
+    final themeProvider = context.watch<ThemeProvider>();
+    final accentColor = themeProvider.primaryAccent;
+
     if (data.isCompleted) {
       return Container(
         width: 22,
         height: 22,
-        decoration: const BoxDecoration(
-          color: JiraTheme.secondaryGreen,
+        decoration: BoxDecoration(
+          color: accentColor,
           shape: BoxShape.circle,
         ),
         child: const Center(
@@ -343,18 +346,18 @@ class _PrayerRowItem extends StatelessWidget {
         width: 22,
         height: 22,
         decoration: BoxDecoration(
-          color: JiraTheme.primaryBlue.withValues(alpha: 0.15),
+          color: accentColor.withValues(alpha: 0.15),
           shape: BoxShape.circle,
           border: Border.all(
-            color: JiraTheme.primaryBlue,
+            color: accentColor,
             width: 1.2,
           ),
         ),
-        child: const Center(
+        child: Center(
           child: Icon(
             Icons.access_time_filled_rounded,
             size: 11,
-            color: JiraTheme.primaryBlue,
+            color: accentColor,
           ),
         ),
       );
@@ -369,7 +372,7 @@ class _PrayerRowItem extends StatelessWidget {
         shape: BoxShape.circle,
         border: Border.all(
           color: data.isNext
-              ? JiraTheme.primaryBlue.withValues(alpha: 0.6)
+              ? accentColor.withValues(alpha: 0.6)
               : (isDark ? const Color(0xFF30363D) : const Color(0xFFD0D7DE)),
           width: 1.2,
         ),
@@ -380,7 +383,7 @@ class _PrayerRowItem extends StatelessWidget {
           height: 4.5,
           decoration: BoxDecoration(
             color: data.isNext
-                ? JiraTheme.primaryBlue
+                ? accentColor
                 : (isDark ? const Color(0xFF484F58) : const Color(0xFF8B949E)),
             shape: BoxShape.circle,
           ),

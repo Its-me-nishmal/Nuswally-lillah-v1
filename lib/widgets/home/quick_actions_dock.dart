@@ -11,13 +11,13 @@ import '../../screens/tasbeeh_screen.dart';
 class QuickActionsDock extends StatelessWidget {
   final ValueChanged<int>? onNavigateTab;
 
-  const QuickActionsDock({
-    super.key,
-    this.onNavigateTab,
-  });
+  const QuickActionsDock({super.key, this.onNavigateTab});
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = context.watch<ThemeProvider>();
+    final accentColor = themeProvider.primaryAccent;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Row(
@@ -28,12 +28,14 @@ class QuickActionsDock extends StatelessWidget {
             context: context,
             label: 'Audio',
             icon: Icons.headphones_rounded,
-            accentColor: const Color(0xFF2DD4BF),
+            accentColor: accentColor,
             onTap: () {
               HapticFeedback.selectionClick();
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const AudioQuranScreen()),
+                MaterialPageRoute(
+                  builder: (context) => const AudioQuranScreen(),
+                ),
               );
             },
           ),
@@ -43,7 +45,7 @@ class QuickActionsDock extends StatelessWidget {
             context: context,
             label: 'Tasbeeh',
             icon: Icons.fingerprint_rounded,
-            accentColor: const Color(0xFF10B981),
+            accentColor: accentColor,
             onTap: () {
               HapticFeedback.selectionClick();
               Navigator.push(
@@ -58,7 +60,7 @@ class QuickActionsDock extends StatelessWidget {
             context: context,
             label: 'Quran',
             icon: Icons.menu_book_rounded,
-            accentColor: const Color(0xFF14B8A6),
+            accentColor: accentColor,
             onTap: () {
               HapticFeedback.selectionClick();
               if (onNavigateTab != null) {
@@ -72,7 +74,7 @@ class QuickActionsDock extends StatelessWidget {
             context: context,
             label: '99 Names',
             icon: Icons.auto_awesome_rounded,
-            accentColor: const Color(0xFFF59E0B),
+            accentColor: accentColor,
             onTap: () {
               HapticFeedback.selectionClick();
               Navigator.push(
@@ -119,13 +121,7 @@ class QuickActionsDock extends StatelessWidget {
                   width: 1.0,
                 ),
               ),
-              child: Center(
-                child: Icon(
-                  icon,
-                  size: 22,
-                  color: accentColor,
-                ),
-              ),
+              child: Center(child: Icon(icon, size: 22, color: accentColor)),
             ),
             const SizedBox(height: 7),
             // Label
