@@ -561,7 +561,7 @@ class PrayerProvider with ChangeNotifier {
       return;
     }
 
-    final locName = _selectedLocation?.nameEn ?? 'Kerala';
+    final locName = _selectedLocation?.name ?? 'Kerala';
     final remainingMins = _timeToNextPrayer.inMinutes;
     final remainingSecs = _timeToNextPrayer.inSeconds % 60;
     final formattedCountdown = remainingMins > 60
