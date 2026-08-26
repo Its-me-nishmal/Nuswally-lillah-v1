@@ -211,7 +211,7 @@ class _HomeScreenState extends State<HomeScreen> {
             physics: const BouncingScrollPhysics(),
             padding: const EdgeInsets.symmetric(horizontal: 16),
             children: [
-              const SizedBox(height: 6),
+              const SizedBox(height: 12),
               const NextPrayerHeroCard(),
               const SizedBox(height: 18),
               QuickActionsDock(

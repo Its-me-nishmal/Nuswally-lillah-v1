@@ -106,7 +106,7 @@ class _QuranTabBodyState extends State<QuranTabBody> {
           children: [
             // 1. Last Read Hero Card (only shown when not searching and on 'All Surahs')
             if (widget.searchQuery.isEmpty && _activeFilter == QuranFilterType.all) ...[
-              const SizedBox(height: 6),
+              const SizedBox(height: 12),
               const QuranLastReadCard(),
               const SizedBox(height: 20),
             ] else ...[

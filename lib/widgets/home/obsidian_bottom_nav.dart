@@ -43,6 +43,10 @@ class ObsidianBottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
     final isDark = themeProvider.isDarkMode;
+    final surfaceColor = isDark
+        ? JiraTheme.darkSurface.withValues(alpha: 0.94)
+        : Colors.white.withValues(alpha: 0.96);
+    final borderColor = isDark ? JiraTheme.darkBorderSubtle : JiraTheme.lightBorderSubtle;
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(28),
@@ -52,21 +56,17 @@ class ObsidianBottomNav extends StatelessWidget {
           height: 64,
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           decoration: BoxDecoration(
-            color: isDark
-                ? const Color(0xFF161B22).withValues(alpha: 0.92)
-                : Colors.white.withValues(alpha: 0.94),
+            color: surfaceColor,
             borderRadius: BorderRadius.circular(28),
             border: Border.all(
-              color: isDark
-                  ? const Color(0xFF30363D).withValues(alpha: 0.8)
-                  : const Color(0xFFD0D7DE),
+              color: borderColor,
               width: 1.0,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: isDark ? 0.45 : 0.12),
-                blurRadius: 24,
-                offset: const Offset(0, 10),
+                color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
               ),
             ],
           ),
@@ -78,7 +78,7 @@ class ObsidianBottomNav extends StatelessWidget {
               return Stack(
                 alignment: Alignment.centerLeft,
                 children: [
-                  // 1. Smooth Sliding Glowing Active Pill
+                  // 1. Smooth Sliding Active Pill
                   if (isWithinTabs)
                     AnimatedPositioned(
                       duration: const Duration(milliseconds: 240),
@@ -89,12 +89,12 @@ class ObsidianBottomNav extends StatelessWidget {
                         width: 44,
                         height: 44,
                         decoration: BoxDecoration(
-                          color: JiraTheme.secondaryGreen,
+                          color: JiraTheme.primaryBlue,
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: JiraTheme.secondaryGreen.withValues(alpha: 0.4),
-                              blurRadius: 14,
+                              color: JiraTheme.primaryBlue.withValues(alpha: 0.35),
+                              blurRadius: 10,
                               offset: const Offset(0, 3),
                             ),
                           ],
@@ -120,13 +120,13 @@ class ObsidianBottomNav extends StatelessWidget {
                             child: Center(
                               child: AnimatedScale(
                                 duration: const Duration(milliseconds: 200),
-                                scale: isActive ? 1.08 : 1.0,
+                                scale: isActive ? 1.06 : 1.0,
                                 curve: Curves.easeOutBack,
                                 child: Icon(
                                   isActive ? item.activeIcon : item.icon,
                                   size: 22,
                                   color: isActive
-                                      ? const Color(0xFF0B0E14)
+                                      ? Colors.white
                                       : (isDark ? const Color(0xFF8B949E) : const Color(0xFF626F86)),
                                 ),
                               ),

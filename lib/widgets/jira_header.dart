@@ -38,7 +38,7 @@ class JiraHeader extends StatelessWidget {
     final themeProvider = context.watch<ThemeProvider>();
     final isDark = themeProvider.isDarkMode;
     final surfaceColor = isDark ? JiraTheme.darkSurface : JiraTheme.lightSurface;
-    final borderColor = isDark ? JiraTheme.darkBorder : JiraTheme.lightBorder;
+    final borderColor = isDark ? JiraTheme.darkBorderSubtle : JiraTheme.lightBorderSubtle;
 
     Widget backButton = Container(
       width: 36,
@@ -51,7 +51,7 @@ class JiraHeader extends StatelessWidget {
       child: Center(
         child: Icon(
           Icons.arrow_back_ios_new_rounded,
-          size: 16,
+          size: 15,
           color: themeProvider.textPrimary,
         ),
       ),
@@ -63,10 +63,10 @@ class JiraHeader extends StatelessWidget {
       children: [
         Text(
           title,
-          style: GoogleFonts.outfit(
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 1.2,
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.2,
             color: themeProvider.textPrimary,
           ),
           maxLines: 1,
@@ -77,10 +77,10 @@ class JiraHeader extends StatelessWidget {
           const SizedBox(height: 2),
           Text(
             subtitle!,
-            style: GoogleFonts.outfit(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color: themeProvider.textSecondary.withValues(alpha: 0.8),
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              fontWeight: FontWeight.w400,
+              color: themeProvider.textSecondary.withValues(alpha: 0.85),
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,

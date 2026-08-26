@@ -154,13 +154,11 @@ class _LibraryTabBodyState extends State<LibraryTabBody> {
           sub.titleArabic.toLowerCase().contains(query);
     }).toList();
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF0B0E14),
-      body: ListView(
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        children: [
-          const SizedBox(height: 8),
+    return ListView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      children: [
+        const SizedBox(height: 12),
 
           // 1. Clean Text Filter Pills (Emoji-Free)
           _buildFilterPills(),
@@ -257,8 +255,7 @@ class _LibraryTabBodyState extends State<LibraryTabBody> {
 
           SizedBox(height: 100 + MediaQuery.paddingOf(context).bottom), // Dynamic clearance for floating dock
         ],
-      ),
-    );
+      );
   }
 
   // 1. Clean Text Filter Pills (NO EMOJIS)
@@ -293,10 +290,10 @@ class _LibraryTabBodyState extends State<LibraryTabBody> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  color: isSelected ? JiraTheme.primaryBlue : const Color(0xFF161B22),
+                  color: isSelected ? JiraTheme.primaryBlue : JiraTheme.darkSurface,
                   borderRadius: BorderRadius.circular(18),
                   border: Border.all(
-                    color: isSelected ? JiraTheme.primaryBlue : const Color(0xFF30363D),
+                    color: isSelected ? JiraTheme.primaryBlue : JiraTheme.darkBorderSubtle,
                     width: 1.0,
                   ),
                   boxShadow: isSelected
@@ -312,9 +309,9 @@ class _LibraryTabBodyState extends State<LibraryTabBody> {
                 child: Center(
                   child: Text(
                     filter['label']!,
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 12,
-                      fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                       color: isSelected ? Colors.white : const Color(0xFF8B949E),
                       letterSpacing: 0.2,
                     ),
@@ -344,12 +341,12 @@ class _LibraryTabBodyState extends State<LibraryTabBody> {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFF161B22),
+            color: JiraTheme.darkSurface,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFF30363D)),
+            border: Border.all(color: JiraTheme.darkBorderSubtle),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
+                color: Colors.black.withValues(alpha: 0.15),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),

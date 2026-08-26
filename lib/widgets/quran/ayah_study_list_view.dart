@@ -169,20 +169,20 @@ class AyahStudyListView extends StatelessWidget {
                 children: [
                   // Ayah Badge (e.g. "2:1")
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
                     decoration: BoxDecoration(
                       color: containerColor,
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                        color: borderColor.withValues(alpha: 0.8),
+                        color: borderColor,
                         width: 1.0,
                       ),
                     ),
                     child: Text(
                       '${surah.number}:${ayah.numberInSurah}',
-                      style: GoogleFonts.outfit(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
                         color: isDark ? const Color(0xFFD0D7DE) : JiraTheme.primaryBlue,
                       ),
                     ),
@@ -282,12 +282,12 @@ class AyahStudyListView extends StatelessWidget {
 
   Widget _buildPillBadge(String text, bool isDark, Color containerColor, Color borderColor) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
         color: containerColor,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: borderColor.withValues(alpha: 0.8),
+          color: borderColor,
           width: 1.0,
         ),
       ),
@@ -295,9 +295,9 @@ class AyahStudyListView extends StatelessWidget {
         text,
         style: GoogleFonts.inter(
           fontSize: 10,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w600,
           color: const Color(0xFF8B949E),
-          letterSpacing: 0.5,
+          letterSpacing: 0.3,
         ),
       ),
     );

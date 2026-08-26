@@ -35,7 +35,7 @@ class SurahDirectoryCard extends StatelessWidget {
 
     final surfaceColor = isDark ? JiraTheme.darkSurface : JiraTheme.lightSurface;
     final containerColor = isDark ? JiraTheme.darkContainer : JiraTheme.lightContainer;
-    final borderColor = isDark ? JiraTheme.darkBorder : JiraTheme.lightBorder;
+    final borderColor = isDark ? JiraTheme.darkBorderSubtle : JiraTheme.lightBorderSubtle;
 
     final formattedNumber = surah.number.toString().padLeft(2, '0');
     final meaningText = _formatMeaning(surah.englishNameTranslation);
@@ -54,17 +54,17 @@ class SurahDirectoryCard extends StatelessWidget {
         );
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
         decoration: BoxDecoration(
           color: surfaceColor,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: borderColor.withValues(alpha: isDark ? 0.6 : 0.9),
+            color: borderColor,
             width: 1.0,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
+              color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.02),
               blurRadius: 10,
               offset: const Offset(0, 3),
             ),
@@ -74,22 +74,22 @@ class SurahDirectoryCard extends StatelessWidget {
           children: [
             // Left Squircle Number Badge
             Container(
-              width: 44,
-              height: 44,
+              width: 42,
+              height: 42,
               decoration: BoxDecoration(
                 color: containerColor,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: borderColor.withValues(alpha: 0.8),
+                  color: borderColor,
                   width: 1.0,
                 ),
               ),
               child: Center(
                 child: Text(
                   formattedNumber,
-                  style: GoogleFonts.outfit(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
                     color: isDark ? const Color(0xFFD0D7DE) : JiraTheme.primaryBlue,
                   ),
                 ),
@@ -105,9 +105,9 @@ class SurahDirectoryCard extends StatelessWidget {
                 children: [
                   Text(
                     surah.englishName,
-                    style: GoogleFonts.outfit(
-                      fontSize: 16.5,
-                      fontWeight: FontWeight.w800,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 15.5,
+                      fontWeight: FontWeight.w600,
                       color: themeProvider.textPrimary,
                       letterSpacing: 0.1,
                     ),
@@ -117,9 +117,9 @@ class SurahDirectoryCard extends StatelessWidget {
                     subtitleText,
                     style: GoogleFonts.inter(
                       fontSize: 10,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w500,
                       color: themeProvider.textSecondary.withValues(alpha: 0.85),
-                      letterSpacing: 0.4,
+                      letterSpacing: 0.3,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -135,8 +135,8 @@ class SurahDirectoryCard extends StatelessWidget {
               textAlign: TextAlign.right,
               style: TextStyle(
                 fontFamily: 'HafsFont',
-                fontSize: 21,
-                fontWeight: FontWeight.w700,
+                fontSize: 20,
+                fontWeight: FontWeight.w500,
                 color: isDark ? const Color(0xFFC7D2FE) : JiraTheme.primaryBlue,
               ),
             ),

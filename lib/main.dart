@@ -78,15 +78,51 @@ class AzanApp extends StatelessWidget {
         final baseTheme = isDark ? ThemeData.dark().textTheme : ThemeData.light().textTheme;
         final interTheme = GoogleFonts.interTextTheme(baseTheme);
         final textTheme = interTheme.copyWith(
-          displayLarge: GoogleFonts.outfit(textStyle: baseTheme.displayLarge),
-          displayMedium: GoogleFonts.outfit(textStyle: baseTheme.displayMedium),
-          displaySmall: GoogleFonts.outfit(textStyle: baseTheme.displaySmall),
-          headlineLarge: GoogleFonts.outfit(textStyle: baseTheme.headlineLarge),
-          headlineMedium: GoogleFonts.outfit(textStyle: baseTheme.headlineMedium),
-          headlineSmall: GoogleFonts.outfit(textStyle: baseTheme.headlineSmall),
-          titleLarge: GoogleFonts.outfit(textStyle: baseTheme.titleLarge),
-          titleMedium: GoogleFonts.outfit(textStyle: baseTheme.titleMedium),
-          titleSmall: GoogleFonts.outfit(textStyle: baseTheme.titleSmall),
+          displayLarge: GoogleFonts.plusJakartaSans(
+            textStyle: baseTheme.displayLarge?.copyWith(fontWeight: FontWeight.w700, letterSpacing: -0.5),
+          ),
+          displayMedium: GoogleFonts.plusJakartaSans(
+            textStyle: baseTheme.displayMedium?.copyWith(fontWeight: FontWeight.w700, letterSpacing: -0.4),
+          ),
+          displaySmall: GoogleFonts.plusJakartaSans(
+            textStyle: baseTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600, letterSpacing: -0.3),
+          ),
+          headlineLarge: GoogleFonts.plusJakartaSans(
+            textStyle: baseTheme.headlineLarge?.copyWith(fontWeight: FontWeight.w600, letterSpacing: -0.2),
+          ),
+          headlineMedium: GoogleFonts.plusJakartaSans(
+            textStyle: baseTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w600, letterSpacing: -0.2),
+          ),
+          headlineSmall: GoogleFonts.plusJakartaSans(
+            textStyle: baseTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w600, letterSpacing: -0.1),
+          ),
+          titleLarge: GoogleFonts.plusJakartaSans(
+            textStyle: baseTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600, letterSpacing: -0.1),
+          ),
+          titleMedium: GoogleFonts.plusJakartaSans(
+            textStyle: baseTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          titleSmall: GoogleFonts.plusJakartaSans(
+            textStyle: baseTheme.titleSmall?.copyWith(fontWeight: FontWeight.w500),
+          ),
+          bodyLarge: GoogleFonts.inter(
+            textStyle: baseTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w400, height: 1.4),
+          ),
+          bodyMedium: GoogleFonts.inter(
+            textStyle: baseTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w400, height: 1.4),
+          ),
+          bodySmall: GoogleFonts.inter(
+            textStyle: baseTheme.bodySmall?.copyWith(fontWeight: FontWeight.w400, height: 1.3),
+          ),
+          labelLarge: GoogleFonts.inter(
+            textStyle: baseTheme.labelLarge?.copyWith(fontWeight: FontWeight.w500),
+          ),
+          labelMedium: GoogleFonts.inter(
+            textStyle: baseTheme.labelMedium?.copyWith(fontWeight: FontWeight.w500),
+          ),
+          labelSmall: GoogleFonts.inter(
+            textStyle: baseTheme.labelSmall?.copyWith(fontWeight: FontWeight.w500),
+          ),
         );
 
         const pageTransitionsTheme = PageTransitionsTheme(
@@ -118,8 +154,8 @@ class AzanApp extends StatelessWidget {
             elevation: 0,
             color: JiraTheme.darkSurface,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(JiraTheme.radiusMedium),
-              side: const BorderSide(color: JiraTheme.darkBorder, width: 1),
+              borderRadius: BorderRadius.circular(JiraTheme.radiusCard),
+              side: const BorderSide(color: JiraTheme.darkBorderSubtle, width: 1),
             ),
           ),
           appBarTheme: const AppBarTheme(
@@ -129,7 +165,7 @@ class AzanApp extends StatelessWidget {
             centerTitle: false,
           ),
           dividerTheme: const DividerThemeData(
-            color: JiraTheme.darkBorder,
+            color: JiraTheme.darkBorderSubtle,
             thickness: 1,
             space: 1,
           ),
@@ -154,8 +190,8 @@ class AzanApp extends StatelessWidget {
             elevation: 0,
             color: JiraTheme.lightSurface,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(JiraTheme.radiusMedium),
-              side: const BorderSide(color: JiraTheme.lightBorder, width: 1),
+              borderRadius: BorderRadius.circular(JiraTheme.radiusCard),
+              side: const BorderSide(color: JiraTheme.lightBorderSubtle, width: 1),
             ),
           ),
           appBarTheme: const AppBarTheme(
@@ -165,7 +201,7 @@ class AzanApp extends StatelessWidget {
             centerTitle: false,
           ),
           dividerTheme: const DividerThemeData(
-            color: JiraTheme.lightBorder,
+            color: JiraTheme.lightBorderSubtle,
             thickness: 1,
             space: 1,
           ),

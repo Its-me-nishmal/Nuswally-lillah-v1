@@ -61,10 +61,10 @@ class JiraBadge extends StatelessWidget {
             Text(
               label.toUpperCase(),
               style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
+                fontSize: 9.5,
+                fontWeight: FontWeight.w600,
                 color: textColor,
-                letterSpacing: 0.5,
+                letterSpacing: 0.4,
               ),
             ),
           ],

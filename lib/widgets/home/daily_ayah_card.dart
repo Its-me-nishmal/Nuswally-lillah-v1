@@ -12,7 +12,7 @@ class DailyAyahCard extends StatelessWidget {
     final themeProvider = context.watch<ThemeProvider>();
     final isDark = themeProvider.isDarkMode;
     final surfaceColor = isDark ? JiraTheme.darkSurface : JiraTheme.lightSurface;
-    final borderColor = isDark ? JiraTheme.darkBorder : JiraTheme.lightBorder;
+    final borderColor = isDark ? JiraTheme.darkBorderSubtle : JiraTheme.lightBorderSubtle;
 
     return Container(
       width: double.infinity,
@@ -21,12 +21,12 @@ class DailyAyahCard extends StatelessWidget {
         color: surfaceColor,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: borderColor.withValues(alpha: isDark ? 0.6 : 0.9),
+          color: borderColor,
           width: 1.0,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.04),
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
             blurRadius: 16,
             offset: const Offset(0, 5),
           ),
@@ -39,10 +39,10 @@ class DailyAyahCard extends StatelessWidget {
           // Header Caption
           Text(
             'DAILY AYAH',
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.plusJakartaSans(
               fontSize: 11,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 1.0,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.8,
               color: JiraTheme.secondaryGreen,
             ),
           ),

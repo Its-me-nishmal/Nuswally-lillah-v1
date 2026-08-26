@@ -101,7 +101,7 @@ class _NextPrayerHeroCardState extends State<NextPrayerHeroCard> {
     final isDark = themeProvider.isDarkMode;
     final surfaceColor = isDark ? JiraTheme.darkSurface : JiraTheme.lightSurface;
     final containerColor = isDark ? JiraTheme.darkContainer : JiraTheme.lightContainer;
-    final borderColor = isDark ? JiraTheme.darkBorder : JiraTheme.lightBorder;
+    final borderColor = isDark ? JiraTheme.darkBorderSubtle : JiraTheme.lightBorderSubtle;
 
     return Consumer<PrayerProvider>(
       builder: (context, provider, child) {
@@ -117,12 +117,12 @@ class _NextPrayerHeroCardState extends State<NextPrayerHeroCard> {
             color: surfaceColor,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: borderColor.withValues(alpha: isDark ? 0.6 : 0.9),
+              color: borderColor,
               width: 1.0,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.05),
+                color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.04),
                 blurRadius: 20,
                 offset: const Offset(0, 8),
               ),
@@ -146,8 +146,8 @@ class _NextPrayerHeroCardState extends State<NextPrayerHeroCard> {
                   painter: _CelestialOrbitsPainter(
                     isDark: isDark,
                     orbitColor: isDark
-                        ? const Color(0xFF30363D).withValues(alpha: 0.45)
-                        : const Color(0xFFD0D7DE).withValues(alpha: 0.7),
+                        ? const Color(0xFF262C36).withValues(alpha: 0.4)
+                        : const Color(0xFFE2E8F0).withValues(alpha: 0.7),
                     glowColor: JiraTheme.primaryBlue,
                   ),
                 ),
@@ -166,10 +166,10 @@ class _NextPrayerHeroCardState extends State<NextPrayerHeroCard> {
                       children: [
                         Text(
                           'NEXT PRAYER',
-                          style: GoogleFonts.outfit(
+                          style: GoogleFonts.plusJakartaSans(
                             fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 1.2,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 1.0,
                             color: themeProvider.textSecondary.withValues(alpha: 0.9),
                           ),
                         ),
@@ -179,7 +179,7 @@ class _NextPrayerHeroCardState extends State<NextPrayerHeroCard> {
                             color: containerColor,
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: borderColor.withValues(alpha: 0.8),
+                              color: borderColor,
                               width: 1.0,
                             ),
                           ),
@@ -206,7 +206,7 @@ class _NextPrayerHeroCardState extends State<NextPrayerHeroCard> {
                                 countdownStr,
                                 style: GoogleFonts.inter(
                                   fontSize: 11.5,
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: FontWeight.w500,
                                   color: themeProvider.textPrimary,
                                 ),
                               ),
@@ -223,10 +223,10 @@ class _NextPrayerHeroCardState extends State<NextPrayerHeroCard> {
                       children: [
                         Text(
                           nextPrayer.toUpperCase(),
-                          style: GoogleFonts.outfit(
-                            fontSize: 38,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 0.5,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 34,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.5,
                             height: 1.05,
                             color: themeProvider.textPrimary,
                           ),
@@ -234,9 +234,9 @@ class _NextPrayerHeroCardState extends State<NextPrayerHeroCard> {
                         const SizedBox(height: 4),
                         Text(
                           nextTimeStr,
-                          style: GoogleFonts.outfit(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
                             color: themeProvider.textSecondary.withValues(alpha: 0.9),
                           ),
                         ),

@@ -102,11 +102,11 @@ class SurahDetailTopBar extends StatelessWidget {
                     children: [
                       Text(
                         surahTitle,
-                        style: GoogleFonts.outfit(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 15.5,
+                          fontWeight: FontWeight.w600,
                           color: themeProvider.textPrimary,
-                          letterSpacing: 0.8,
+                          letterSpacing: 0.2,
                         ),
                       ),
                       const SizedBox(width: 6),
@@ -115,7 +115,7 @@ class SurahDetailTopBar extends StatelessWidget {
                         style: TextStyle(
                           fontFamily: 'HafsFont',
                           fontSize: 15,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w500,
                           color: isDark ? const Color(0xFFC7D2FE) : JiraTheme.primaryBlue,
                         ),
                       ),
@@ -127,8 +127,8 @@ class SurahDetailTopBar extends StatelessWidget {
                         ? 'Juz $juzNum • Page ${surah.number * 2 + 1}'
                         : '${surah.numberOfAyahs} • $arabicTitle Verses',
                     style: GoogleFonts.inter(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w400,
                       color: themeProvider.textSecondary.withValues(alpha: 0.85),
                     ),
                   ),

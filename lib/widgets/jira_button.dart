@@ -70,7 +70,7 @@ class JiraButton extends StatelessWidget {
         bgColor = isDark ? JiraTheme.darkContainer : JiraTheme.lightContainer;
         fgColor = isDark ? JiraTheme.darkTextPrimary : JiraTheme.lightTextPrimary;
         borderSide = BorderSide(
-          color: isDark ? JiraTheme.darkBorder : JiraTheme.lightBorder,
+          color: isDark ? JiraTheme.darkBorderSubtle : JiraTheme.lightBorderSubtle,
           width: 1,
         );
         break;
@@ -78,7 +78,7 @@ class JiraButton extends StatelessWidget {
         bgColor = Colors.transparent;
         fgColor = isDark ? JiraTheme.darkTextPrimary : JiraTheme.lightTextPrimary;
         borderSide = BorderSide(
-          color: isDark ? JiraTheme.darkBorder : JiraTheme.lightBorder,
+          color: isDark ? JiraTheme.darkBorderSubtle : JiraTheme.lightBorderSubtle,
           width: 1,
         );
         break;

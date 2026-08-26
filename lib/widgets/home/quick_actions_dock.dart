@@ -23,7 +23,7 @@ class QuickActionsDock extends StatelessWidget {
     final isDark = themeProvider.isDarkMode;
     final surfaceColor = isDark ? JiraTheme.darkSurface : JiraTheme.lightSurface;
     final containerColor = isDark ? JiraTheme.darkContainer : JiraTheme.lightContainer;
-    final borderColor = isDark ? JiraTheme.darkBorder : JiraTheme.lightBorder;
+    final borderColor = isDark ? JiraTheme.darkBorderSubtle : JiraTheme.lightBorderSubtle;
 
     return Row(
       children: [
@@ -133,12 +133,12 @@ class QuickActionsDock extends StatelessWidget {
           color: surfaceColor,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: borderColor.withValues(alpha: isDark ? 0.6 : 0.9),
+            color: borderColor,
             width: 1.0,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.04),
+              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -169,9 +169,9 @@ class QuickActionsDock extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               label,
-              style: GoogleFonts.outfit(
+              style: GoogleFonts.plusJakartaSans(
                 fontSize: 12,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w500,
                 color: themeProvider.textPrimary,
                 letterSpacing: 0.1,
               ),

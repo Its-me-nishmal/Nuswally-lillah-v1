@@ -64,13 +64,13 @@ class QuranFilterChips extends StatelessWidget {
                   border: Border.all(
                     color: isSelected
                         ? const Color(0xFFA4C6FB)
-                        : (isDark ? JiraTheme.darkBorder : JiraTheme.lightBorder),
+                        : (isDark ? JiraTheme.darkBorderSubtle : JiraTheme.lightBorderSubtle),
                     width: 1.0,
                   ),
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color: const Color(0xFFA4C6FB).withValues(alpha: 0.35),
+                            color: const Color(0xFFA4C6FB).withValues(alpha: 0.25),
                             blurRadius: 10,
                             offset: const Offset(0, 3),
                           ),
@@ -80,9 +80,9 @@ class QuranFilterChips extends StatelessWidget {
                 child: Center(
                   child: Text(
                     label,
-                    style: GoogleFonts.outfit(
-                      fontSize: 12.5,
-                      fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                       color: isSelected
                           ? const Color(0xFF0B0E14)
                           : themeProvider.textSecondary,

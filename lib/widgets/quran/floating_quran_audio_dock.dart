@@ -201,12 +201,12 @@ class FloatingQuranAudioDock extends StatelessWidget {
             color: (isDark ? JiraTheme.darkSurface : JiraTheme.lightSurface).withValues(alpha: 0.92),
             borderRadius: BorderRadius.circular(28),
             border: Border.all(
-              color: (isDark ? JiraTheme.darkBorder : JiraTheme.lightBorder).withValues(alpha: 0.8),
+              color: (isDark ? JiraTheme.darkBorderSubtle : JiraTheme.lightBorderSubtle),
               width: 1.0,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: isDark ? 0.45 : 0.08),
+                color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.05),
                 blurRadius: 24,
                 offset: const Offset(0, 8),
               ),
@@ -226,7 +226,7 @@ class FloatingQuranAudioDock extends StatelessWidget {
                       color: isDark ? JiraTheme.darkContainer : JiraTheme.lightContainer,
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: (isDark ? JiraTheme.darkBorder : JiraTheme.lightBorder).withValues(alpha: 0.6),
+                        color: (isDark ? JiraTheme.darkBorderSubtle : JiraTheme.lightBorderSubtle),
                         width: 1.0,
                       ),
                     ),
@@ -248,9 +248,9 @@ class FloatingQuranAudioDock extends StatelessWidget {
                       children: [
                         Text(
                           shortQariName,
-                          style: GoogleFonts.outfit(
+                          style: GoogleFonts.plusJakartaSans(
                             fontSize: 14,
-                            fontWeight: FontWeight.w800,
+                            fontWeight: FontWeight.w600,
                             color: themeProvider.textPrimary,
                           ),
                           maxLines: 1,
@@ -261,7 +261,7 @@ class FloatingQuranAudioDock extends StatelessWidget {
                           '${surah.englishName} • Verse $currentAyahNumber',
                           style: GoogleFonts.inter(
                             fontSize: 11.5,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.w400,
                             color: themeProvider.textSecondary.withValues(alpha: 0.85),
                           ),
                         ),
@@ -455,7 +455,7 @@ class FloatingQuranAudioDock extends StatelessWidget {
                             '${quranProvider.playbackSpeed.toStringAsFixed(quranProvider.playbackSpeed == 1.0 || quranProvider.playbackSpeed == 2.0 ? 0 : 2)}x',
                             style: GoogleFonts.inter(
                               fontSize: 10,
-                              fontWeight: FontWeight.w800,
+                              fontWeight: FontWeight.w600,
                               color: themeProvider.textPrimary,
                             ),
                           ),

@@ -33,7 +33,7 @@ class JiraCard extends StatelessWidget {
 
     final defaultBorder = selected
         ? JiraTheme.primaryBlue
-        : (isDark ? JiraTheme.darkBorder : JiraTheme.lightBorder);
+        : (isDark ? JiraTheme.darkBorderSubtle : JiraTheme.lightBorderSubtle);
 
     final effectiveBg = backgroundColor ?? defaultBg;
     final effectiveBorder = borderColor ?? defaultBorder;

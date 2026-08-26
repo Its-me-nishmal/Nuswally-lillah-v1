@@ -78,9 +78,9 @@ class _ReciterPickerSheetState extends State<ReciterPickerSheet> {
                   children: [
                     Text(
                       'Choose Reciter (Qari)',
-                      style: GoogleFonts.outfit(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w600,
                         color: const Color(0xFFF0F6FC),
                       ),
                     ),
@@ -103,9 +103,9 @@ class _ReciterPickerSheetState extends State<ReciterPickerSheet> {
                 ),
                 child: Text(
                   '${allQaris.length} QARIS',
-                  style: GoogleFonts.outfit(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w600,
                     color: const Color(0xFF93C5FD),
                   ),
                 ),
@@ -216,9 +216,9 @@ class _ReciterPickerSheetState extends State<ReciterPickerSheet> {
                                   children: [
                                     Text(
                                       qari.name,
-                                      style: GoogleFonts.outfit(
+                                      style: GoogleFonts.plusJakartaSans(
                                         fontSize: 14,
-                                        fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                                         color: isSelected
                                             ? JiraTheme.primaryBlue
                                             : const Color(0xFFF0F6FC),

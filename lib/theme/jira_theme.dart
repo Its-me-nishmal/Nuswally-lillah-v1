@@ -64,20 +64,20 @@ class JiraTheme {
   // 4. Neutral Tones (#0B0E14) - Obsidian Midnight
   static const Color neutral = Color(0xFF0B0E14);
   static const Color darkBackground = Color(0xFF0B0E14);
-  static const Color darkSurface = Color(0xFF161B22);
-  static const Color darkContainer = Color(0xFF1F242C);
-  static const Color darkBorder = Color(0xFF30363D);
-  static const Color darkBorderSubtle = Color(0xFF21262D);
+  static const Color darkSurface = Color(0xFF141920);
+  static const Color darkContainer = Color(0xFF1B222C);
+  static const Color darkBorder = Color(0xFF262C36);
+  static const Color darkBorderSubtle = Color(0xFF1C222B);
   static const Color darkTextPrimary = Color(0xFFF0F6FC);
   static const Color darkTextSecondary = Color(0xFF8B949E);
   static const Color darkTextMuted = Color(0xFF6E7681);
 
   // Neutral Color Swatch Ramp
   static const Color neutral950 = Color(0xFF0B0E14);
-  static const Color neutral900 = Color(0xFF161B22);
-  static const Color neutral850 = Color(0xFF1F242C);
-  static const Color neutral800 = Color(0xFF30363D);
-  static const Color neutral700 = Color(0xFF21262D);
+  static const Color neutral900 = Color(0xFF141920);
+  static const Color neutral850 = Color(0xFF1B222C);
+  static const Color neutral800 = Color(0xFF262C36);
+  static const Color neutral700 = Color(0xFF1C222B);
   static const Color neutral600 = Color(0xFF484F58);
   static const Color neutral500 = Color(0xFF6E7681);
   static const Color neutral400 = Color(0xFF8B949E);
@@ -88,14 +88,14 @@ class JiraTheme {
   static const Color neutral0 = Color(0xFFF0F6FC);
 
   // Light Mode Tokens
-  static const Color lightBackground = Color(0xFFF7F8FA);
+  static const Color lightBackground = Color(0xFFF8FAFC);
   static const Color lightSurface = Color(0xFFFFFFFF);
-  static const Color lightContainer = Color(0xFFF1F3F5);
-  static const Color lightBorder = Color(0xFFD0D7DE);
-  static const Color lightBorderSubtle = Color(0xFFE2E8F0);
-  static const Color lightTextPrimary = Color(0xFF172B4D);
-  static const Color lightTextSecondary = Color(0xFF44546F);
-  static const Color lightTextMuted = Color(0xFF626F86);
+  static const Color lightContainer = Color(0xFFF1F5F9);
+  static const Color lightBorder = Color(0xFFE2E8F0);
+  static const Color lightBorderSubtle = Color(0xFFEDF2F7);
+  static const Color lightTextPrimary = Color(0xFF0F172A);
+  static const Color lightTextSecondary = Color(0xFF475569);
+  static const Color lightTextMuted = Color(0xFF64748B);
 
   // Info & Status Tones
   static const Color infoBlue = Color(0xFF0C66E4);

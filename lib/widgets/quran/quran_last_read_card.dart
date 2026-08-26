@@ -19,7 +19,7 @@ class QuranLastReadCard extends StatelessWidget {
     final isDark = themeProvider.isDarkMode;
 
     final surfaceColor = isDark ? JiraTheme.darkSurface : JiraTheme.lightSurface;
-    final borderColor = isDark ? JiraTheme.darkBorder : JiraTheme.lightBorder;
+    final borderColor = isDark ? JiraTheme.darkBorderSubtle : JiraTheme.lightBorderSubtle;
 
     // Use actual last read if available, else standard Al-Baqarah
     final surahNumber = quranProvider.lastReadSurahNumber ?? 2;
@@ -39,17 +39,22 @@ class QuranLastReadCard extends StatelessWidget {
     return HeartbeatTap(
       onTap: () {
         HapticFeedback.selectionClick();
-        if (surah != null) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => SurahDetailScreen(
-                surah: surah,
-                initialAyahIndex: ayahIndex,
-              ),
+        final qp = context.read<QuranProvider>();
+        if (qp.surahs.isEmpty) return;
+        final targetSurah = qp.surahs.firstWhere(
+          (s) => s.number == surahNumber,
+          orElse: () => qp.surahs.first,
+        );
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SurahDetailScreen(
+              surah: targetSurah,
+              initialAyahIndex: ayahIndex,
             ),
-          );
-        }
+          ),
+        );
       },
       child: Container(
         width: double.infinity,
@@ -58,14 +63,14 @@ class QuranLastReadCard extends StatelessWidget {
           color: surfaceColor,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: borderColor.withValues(alpha: isDark ? 0.6 : 0.9),
+            color: borderColor,
             width: 1.0,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.05),
-              blurRadius: 18,
-              offset: const Offset(0, 6),
+              color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.04),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
             ),
           ],
         ),
@@ -73,19 +78,15 @@ class QuranLastReadCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Top Row: Last Read Capsule + Time Ago
+            // Top Row: LAST READ Pill + Time
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF0F291E) : const Color(0xFFDCFCE7),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: JiraTheme.secondaryGreen.withValues(alpha: 0.3),
-                      width: 1.0,
-                    ),
+                    color: JiraTheme.secondaryGreen.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -103,9 +104,9 @@ class QuranLastReadCard extends StatelessWidget {
                         'LAST READ • $ayahDisplay',
                         style: GoogleFonts.inter(
                           fontSize: 10.5,
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w600,
                           color: JiraTheme.secondaryGreen,
-                          letterSpacing: 0.4,
+                          letterSpacing: 0.3,
                         ),
                       ),
                     ],
@@ -115,7 +116,7 @@ class QuranLastReadCard extends StatelessWidget {
                   '2h ago',
                   style: GoogleFonts.inter(
                     fontSize: 11,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w400,
                     color: themeProvider.textSecondary.withValues(alpha: 0.8),
                   ),
                 ),
@@ -135,11 +136,11 @@ class QuranLastReadCard extends StatelessWidget {
                     children: [
                       Text(
                         surahName,
-                        style: GoogleFonts.outfit(
-                          fontSize: 25,
-                          fontWeight: FontWeight.w900,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
                           color: themeProvider.textPrimary,
-                          letterSpacing: 0.2,
+                          letterSpacing: -0.2,
                           height: 1.15,
                         ),
                       ),
@@ -148,7 +149,7 @@ class QuranLastReadCard extends StatelessWidget {
                         '$surahMeaning • Page 23',
                         style: GoogleFonts.inter(
                           fontSize: 12,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: FontWeight.w400,
                           color: themeProvider.textSecondary.withValues(alpha: 0.85),
                         ),
                       ),
@@ -162,8 +163,8 @@ class QuranLastReadCard extends StatelessWidget {
                   textAlign: TextAlign.right,
                   style: const TextStyle(
                     fontFamily: 'HafsFont',
-                    fontSize: 23,
-                    fontWeight: FontWeight.w700,
+                    fontSize: 21,
+                    fontWeight: FontWeight.w600,
                     color: Color(0xFFC7D2FE),
                     height: 1.35,
                   ),

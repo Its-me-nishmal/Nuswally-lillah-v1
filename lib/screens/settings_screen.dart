@@ -49,16 +49,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF30363D),
+                      color: JiraTheme.darkBorderSubtle,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'Arabic Font Size (${tempSize.toInt()} px)',
-                    style: GoogleFonts.outfit(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
                       color: const Color(0xFFF0F6FC),
                     ),
                   ),
@@ -69,7 +69,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     decoration: BoxDecoration(
                       color: const Color(0xFF0B0E14),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFF30363D)),
+                      border: Border.all(color: JiraTheme.darkBorderSubtle),
                     ),
                     child: Center(
                       child: Text(
@@ -148,9 +148,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const SizedBox(height: 16),
               Text(
                 'Asr Calculation Method',
-                style: GoogleFonts.outfit(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
                   color: const Color(0xFFF0F6FC),
                 ),
                 textAlign: TextAlign.center,
@@ -173,9 +173,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         children: [
                           Text(
                             "Standard (Shafi'i, Hanbali, Maliki)",
-                            style: GoogleFonts.outfit(
+                            style: GoogleFonts.plusJakartaSans(
                               fontSize: 14,
-                              fontWeight: FontWeight.w800,
+                              fontWeight: FontWeight.w600,
                               color: const Color(0xFFF0F6FC),
                             ),
                           ),
@@ -566,9 +566,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     Text(
                       'App Language',
-                      style: GoogleFonts.outfit(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
                         color: const Color(0xFFF0F6FC),
                       ),
                     ),
@@ -593,7 +593,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             decoration: BoxDecoration(
               color: const Color(0xFF0D121D),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFF30363D)),
+              border: Border.all(color: JiraTheme.darkBorderSubtle),
             ),
             child: Row(
               children: [
@@ -605,7 +605,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       themeProvider.setAppLanguage('en');
                     },
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      padding: const EdgeInsets.symmetric(vertical: 9),
                       decoration: BoxDecoration(
                         color: !isMalayalam ? JiraTheme.primaryBlue : Colors.transparent,
                         borderRadius: BorderRadius.circular(10),
@@ -613,11 +613,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       child: Center(
                         child: Text(
                           'ENGLISH',
-                          style: GoogleFonts.outfit(
-                            fontSize: 12.5,
-                            fontWeight: !isMalayalam ? FontWeight.w800 : FontWeight.w600,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 12,
+                            fontWeight: !isMalayalam ? FontWeight.w600 : FontWeight.w500,
                             color: !isMalayalam ? Colors.white : const Color(0xFF8B949E),
-                            letterSpacing: 0.5,
+                            letterSpacing: 0.3,
                           ),
                         ),
                       ),
@@ -633,7 +633,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       themeProvider.setAppLanguage('ml');
                     },
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      padding: const EdgeInsets.symmetric(vertical: 9),
                       decoration: BoxDecoration(
                         color: isMalayalam ? JiraTheme.primaryBlue : Colors.transparent,
                         borderRadius: BorderRadius.circular(10),
@@ -641,11 +641,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       child: Center(
                         child: Text(
                           'MALAYALAM',
-                          style: GoogleFonts.outfit(
-                            fontSize: 12.5,
-                            fontWeight: isMalayalam ? FontWeight.w800 : FontWeight.w600,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 12,
+                            fontWeight: isMalayalam ? FontWeight.w600 : FontWeight.w500,
                             color: isMalayalam ? Colors.white : const Color(0xFF8B949E),
-                            letterSpacing: 0.5,
+                            letterSpacing: 0.3,
                           ),
                         ),
                       ),
@@ -665,10 +665,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
       padding: const EdgeInsets.only(left: 4),
       child: Text(
         title,
-        style: GoogleFonts.outfit(
-          fontSize: 10.5,
-          fontWeight: FontWeight.w800,
-          letterSpacing: 2.0,
+        style: GoogleFonts.plusJakartaSans(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 1.2,
           color: const Color(0xFF8B949E),
         ),
       ),
@@ -678,9 +678,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildGroupContainer(List<Widget> children) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF161B22),
+        color: JiraTheme.darkSurface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF30363D)),
+        border: Border.all(color: JiraTheme.darkBorderSubtle),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -713,9 +713,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Expanded(
               child: Text(
                 title,
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.plusJakartaSans(
                   fontSize: 14,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w500,
                   color: const Color(0xFFF0F6FC),
                 ),
               ),
@@ -725,7 +725,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 trailingValue,
                 style: GoogleFonts.inter(
                   fontSize: 12.5,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w400,
                   color: trailingColor ?? const Color(0xFF8B949E),
                 ),
               ),

@@ -43,7 +43,7 @@ class HomeTopHeader extends StatelessWidget {
     final themeProvider = context.watch<ThemeProvider>();
     final isDark = themeProvider.isDarkMode;
     final surfaceColor = isDark ? JiraTheme.darkSurface : JiraTheme.lightSurface;
-    final borderColor = isDark ? JiraTheme.darkBorder : JiraTheme.lightBorder;
+    final borderColor = isDark ? JiraTheme.darkBorderSubtle : JiraTheme.lightBorderSubtle;
 
     return Selector<PrayerProvider, String>(
       selector: (_, provider) => provider.selectedLocation != null
@@ -85,7 +85,7 @@ class HomeTopHeader extends StatelessWidget {
                     children: [
                       Icon(
                         Icons.location_on_outlined,
-                        size: 17,
+                        size: 16,
                         color: themeProvider.textSecondary,
                       ),
                       const SizedBox(width: 8),
@@ -95,19 +95,19 @@ class HomeTopHeader extends StatelessWidget {
                         children: [
                           Text(
                             displayLoc,
-                            style: GoogleFonts.outfit(
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w700,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
                               color: themeProvider.textPrimary,
-                              letterSpacing: 0.2,
+                              letterSpacing: 0.1,
                             ),
                           ),
                           const SizedBox(height: 1),
                           Text(
                             _getHijriDateString(),
                             style: GoogleFonts.inter(
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.w500,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w400,
                               color: themeProvider.textSecondary.withValues(alpha: 0.85),
                             ),
                           ),

@@ -157,11 +157,11 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
             children: [
               Text(
                 'DUA FOCUS',
-                style: GoogleFonts.outfit(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w600,
                   color: tp.textPrimary,
-                  letterSpacing: 1.5,
+                  letterSpacing: 1.0,
                 ),
               ),
               const SizedBox(width: 6),
@@ -281,11 +281,11 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
                     const SizedBox(width: 5),
                     Text(
                       'REPEAT $_targetCount TIMES',
-                      style: GoogleFonts.outfit(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w800,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
                         color: JiraTheme.secondaryGreen,
-                        letterSpacing: 0.5,
+                        letterSpacing: 0.3,
                       ),
                     ),
                   ],
@@ -295,9 +295,9 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
               // Dua Reference Number
               Text(
                 '#${dua.id.toString().padLeft(2, '0')}',
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.plusJakartaSans(
                   fontSize: 12,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w500,
                   color: tp.textSecondary,
                 ),
               ),
@@ -422,10 +422,10 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
         children: [
           Text(
             'TRANSLITERATION',
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.plusJakartaSans(
               fontSize: 10.5,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 2.0,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 1.2,
               color: tp.textSecondary,
             ),
           ),
@@ -451,17 +451,17 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
     return HeartbeatTap(
       onTap: _incrementCount,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
         decoration: BoxDecoration(
           color: tp.surfaceColor.withValues(alpha: 0.95),
           borderRadius: BorderRadius.circular(25),
           border: Border.all(
-            color: isCompleted ? JiraTheme.secondaryGreen : tp.borderColor,
-            width: 1.2,
+            color: isCompleted ? JiraTheme.secondaryGreen : tp.borderColor.withValues(alpha: 0.7),
+            width: 1.0,
           ),
           boxShadow: [
             BoxShadow(
-              color: (isCompleted ? JiraTheme.secondaryGreen : Colors.black).withValues(alpha: 0.3),
+              color: (isCompleted ? JiraTheme.secondaryGreen : Colors.black).withValues(alpha: 0.2),
               blurRadius: 16,
               offset: const Offset(0, 4),
             ),
@@ -472,11 +472,11 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
           children: [
             Text(
               isCompleted ? 'COMPLETED' : 'TAP TO COUNT',
-              style: GoogleFonts.outfit(
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
                 color: isCompleted ? JiraTheme.secondaryGreen : tp.textPrimary,
-                letterSpacing: 1.0,
+                letterSpacing: 0.5,
               ),
             ),
             const SizedBox(width: 10),
@@ -488,9 +488,9 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
               ),
               child: Text(
                 '$_count/$_targetCount',
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.plusJakartaSans(
                   fontSize: 11,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w600,
                   color: isCompleted ? Colors.white : tp.primaryAccent,
                 ),
               ),

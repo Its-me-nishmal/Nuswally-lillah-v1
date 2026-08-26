@@ -170,11 +170,11 @@ class _HeroBannerCard extends StatelessWidget {
               const SizedBox(width: 12),
               Text(
                 isMl ? 'അവ്റാദ് ലൈബ്രറി' : 'AWRAAD LIBRARY',
-                style: GoogleFonts.outfit(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1.2,
-                  color: Colors.white.withValues(alpha: 0.85),
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 1.0,
+                  color: Colors.white.withValues(alpha: 0.9),
                 ),
               ),
             ],
@@ -184,19 +184,19 @@ class _HeroBannerCard extends StatelessWidget {
             isMl ? 'അവ്റാദ് & അദ്കാർ' : 'AWRAAD & ADHKAAR',
             textDirection: TextDirection.ltr,
             style: TextStyle(
-              fontFamily: isMl ? kMlFont : GoogleFonts.outfit().fontFamily,
-              fontSize: 28,
+              fontFamily: isMl ? kMlFont : GoogleFonts.plusJakartaSans().fontFamily,
+              fontSize: 26,
               height: 1.1,
               color: Colors.white,
               fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 3),
           Text(
             isMl ? 'അധികൃത പ്രാർത്ഥനകളും ദിക്‌റുകളും' : 'Authentic Adhkaar & Awraad Library',
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.inter(
               fontSize: 12,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w400,
               color: Colors.white.withValues(alpha: 0.9),
             ),
           ),
@@ -450,7 +450,7 @@ class _CategoryCard extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   fontFamily: kMlFont,
-                  fontSize: 14,
+                  fontSize: 13.5,
                   height: 1.2,
                   fontWeight: FontWeight.w600,
                 ),
@@ -460,10 +460,10 @@ class _CategoryCard extends StatelessWidget {
                 (category.titleEn.isNotEmpty ? category.titleEn : category.title).toUpperCase(),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.outfit(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.3,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.2,
                   color: tp.textPrimary,
                 ),
               ),
@@ -486,10 +486,10 @@ class _SectionHeader extends StatelessWidget {
 
     return Text(
       title,
-      style: GoogleFonts.outfit(
+      style: GoogleFonts.plusJakartaSans(
         fontSize: 11,
-        fontWeight: FontWeight.w800,
-        letterSpacing: 1.5,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 1.2,
         color: tp.primaryAccent,
       ),
     );

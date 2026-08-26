@@ -115,20 +115,20 @@ class TodayPrayersTimeline extends StatelessWidget {
               children: [
                 Text(
                   "TODAY'S PRAYERS",
-                  style: GoogleFonts.outfit(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1.0,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.8,
                     color: themeProvider.textSecondary.withValues(alpha: 0.9),
                   ),
                 ),
                 Text(
                   percentText,
-                  style: GoogleFonts.outfit(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w800,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
                     color: JiraTheme.secondaryGreen,
-                    letterSpacing: 0.5,
+                    letterSpacing: 0.3,
                   ),
                 ),
               ],
@@ -287,9 +287,9 @@ class _PrayerTimelineRow extends StatelessWidget {
                         children: [
                           Text(
                             data.name,
-                            style: GoogleFonts.outfit(
-                              fontSize: 15.5,
-                              fontWeight: data.isCurrent ? FontWeight.w800 : FontWeight.w600,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 15,
+                              fontWeight: data.isCurrent ? FontWeight.w600 : FontWeight.w500,
                               color: themeProvider.textPrimary,
                             ),
                           ),
@@ -301,7 +301,7 @@ class _PrayerTimelineRow extends StatelessWidget {
                                 color: containerColor,
                                 borderRadius: BorderRadius.circular(6),
                                 border: Border.all(
-                                  color: borderColor.withValues(alpha: 0.7),
+                                  color: borderColor.withValues(alpha: 0.5),
                                   width: 1.0,
                                 ),
                               ),
@@ -309,9 +309,9 @@ class _PrayerTimelineRow extends StatelessWidget {
                                 'NOW',
                                 style: GoogleFonts.inter(
                                   fontSize: 9.5,
-                                  fontWeight: FontWeight.w800,
+                                  fontWeight: FontWeight.w600,
                                   color: themeProvider.textSecondary,
-                                  letterSpacing: 0.5,
+                                  letterSpacing: 0.4,
                                 ),
                               ),
                             ),
@@ -322,9 +322,9 @@ class _PrayerTimelineRow extends StatelessWidget {
                       // Prayer Time
                       Text(
                         data.time,
-                        style: GoogleFonts.outfit(
-                          fontSize: data.isCurrent ? 15.5 : 13.5,
-                          fontWeight: data.isCurrent ? FontWeight.w800 : FontWeight.w500,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: data.isCurrent ? 14.5 : 13.5,
+                          fontWeight: data.isCurrent ? FontWeight.w600 : FontWeight.w400,
                           color: data.isCurrent
                               ? themeProvider.textPrimary
                               : themeProvider.textSecondary.withValues(alpha: 0.85),
@@ -369,26 +369,23 @@ class _PrayerTimelineRow extends StatelessWidget {
     }
 
     if (data.isCurrent) {
-      // Active "NOW" Glowing Sun Node
+      // Active "NOW" Clean Modern Node (No harsh neon glow)
       return Container(
-        width: 34,
-        height: 34,
-        decoration: const BoxDecoration(
-          color: JiraTheme.primaryBlue,
+        width: 32,
+        height: 32,
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF0C2B59) : const Color(0xFFE0EDFE),
           shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: Color(0xFF38BDF8),
-              blurRadius: 12,
-              spreadRadius: 1,
-            ),
-          ],
+          border: Border.all(
+            color: JiraTheme.primaryBlue.withValues(alpha: 0.6),
+            width: 1.5,
+          ),
         ),
         child: const Center(
           child: Icon(
-            Icons.wb_sunny_rounded,
-            size: 17,
-            color: Colors.white,
+            Icons.access_time_filled_rounded,
+            size: 15,
+            color: JiraTheme.primaryBlue,
           ),
         ),
       );
