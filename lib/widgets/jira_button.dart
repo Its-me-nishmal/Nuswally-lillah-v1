@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/jira_theme.dart';
+import '../theme/app_colors.dart';
 
 enum JiraButtonType { primary, secondary, outline, ghost }
 
@@ -27,7 +28,7 @@ class JiraButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    context.watchTheme();
 
     // Padding specs
     EdgeInsets padding;
@@ -63,28 +64,22 @@ class JiraButton extends StatelessWidget {
 
     switch (type) {
       case JiraButtonType.primary:
-        bgColor = JiraTheme.primaryBlue;
+        bgColor = context.accent;
         fgColor = Colors.white;
         break;
       case JiraButtonType.secondary:
-        bgColor = isDark ? JiraTheme.darkContainer : JiraTheme.lightContainer;
-        fgColor = isDark ? JiraTheme.darkTextPrimary : JiraTheme.lightTextPrimary;
-        borderSide = BorderSide(
-          color: isDark ? JiraTheme.darkBorderSubtle : JiraTheme.lightBorderSubtle,
-          width: 1,
-        );
+        bgColor = context.cardBottom;
+        fgColor = context.textPrimary;
+        borderSide = BorderSide(color: context.cardBorder, width: 1);
         break;
       case JiraButtonType.outline:
         bgColor = Colors.transparent;
-        fgColor = isDark ? JiraTheme.darkTextPrimary : JiraTheme.lightTextPrimary;
-        borderSide = BorderSide(
-          color: isDark ? JiraTheme.darkBorderSubtle : JiraTheme.lightBorderSubtle,
-          width: 1,
-        );
+        fgColor = context.textPrimary;
+        borderSide = BorderSide(color: context.cardBorder, width: 1);
         break;
       case JiraButtonType.ghost:
         bgColor = Colors.transparent;
-        fgColor = isDark ? JiraTheme.darkTextSecondary : JiraTheme.lightTextSecondary;
+        fgColor = context.textSecondary;
         break;
     }
 
@@ -131,7 +126,9 @@ class JiraButton extends StatelessWidget {
             padding: padding,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(JiraTheme.radiusMedium),
-              border: borderSide != BorderSide.none ? Border.fromBorderSide(borderSide) : null,
+              border: borderSide != BorderSide.none
+                  ? Border.fromBorderSide(borderSide)
+                  : null,
             ),
             child: content,
           ),
@@ -140,10 +137,7 @@ class JiraButton extends StatelessWidget {
     );
 
     if (fullWidth) {
-      return SizedBox(
-        width: double.infinity,
-        child: buttonWidget,
-      );
+      return SizedBox(width: double.infinity, child: buttonWidget);
     }
 
     return buttonWidget;

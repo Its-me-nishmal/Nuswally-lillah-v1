@@ -3,11 +3,15 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../providers/theme_provider.dart';
+import '../../theme/home_design.dart';
 import '../heartbeat_tap.dart';
+import 'home_glyphs.dart';
 import '../../screens/audio_quran_screen.dart';
 import '../../screens/names_screen.dart';
 import '../../screens/tasbeeh_screen.dart';
 
+/// Five titled shortcut cards under the hero. Scrolls horizontally so the
+/// labels never have to shrink on narrow phones.
 class QuickActionsDock extends StatelessWidget {
   final ValueChanged<int>? onNavigateTab;
 
@@ -16,125 +20,179 @@ class QuickActionsDock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
-    final accentColor = themeProvider.primaryAccent;
+    final accent = themeProvider.primaryAccent;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          // 1. Audio Quran Player
-          _buildActionItem(
-            context: context,
-            label: 'Audio',
-            icon: Icons.headphones_rounded,
-            accentColor: accentColor,
-            onTap: () {
-              HapticFeedback.selectionClick();
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const AudioQuranScreen(),
-                ),
-              );
-            },
-          ),
+    final actions = <_QuickAction>[
+      _QuickAction(
+        label: 'Audio',
+        caption: 'Listen & Reflect',
+        tint: accent,
+        icon: Icons.headphones_rounded,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const AudioQuranScreen()),
+        ),
+      ),
+      _QuickAction(
+        label: 'Tasbeeh',
+        caption: 'Dhikr & Count',
+        tint: HomeDesign.gold,
+        glyphBuilder: (size, color) => TasbeehGlyph(size: size, color: color),
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const TasbeehScreen()),
+        ),
+      ),
+      _QuickAction(
+        label: 'Quran',
+        caption: 'Read & Learn',
+        tint: accent,
+        icon: Icons.menu_book_rounded,
+        onTap: () => onNavigateTab?.call(1),
+      ),
+      _QuickAction(
+        label: '99 Names',
+        caption: 'Asma-ul-Husna',
+        tint: HomeDesign.gold,
+        glyphBuilder: (size, color) =>
+            NinetyNineGlyph(size: size, color: color),
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const NamesScreen()),
+        ),
+      ),
+      _QuickAction(
+        label: 'Dua & Adhkaar',
+        caption: 'Awraad & Supplications',
+        tint: accent,
+        icon: Icons.volunteer_activism_rounded,
+        onTap: () => onNavigateTab?.call(2),
+      ),
+    ];
 
-          // 2. Tasbeeh Counter
-          _buildActionItem(
-            context: context,
-            label: 'Tasbeeh',
-            icon: Icons.fingerprint_rounded,
-            accentColor: accentColor,
-            onTap: () {
-              HapticFeedback.selectionClick();
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const TasbeehScreen()),
-              );
-            },
+    // The cards are a fixed height, so cap how far the labels can grow.
+    return MediaQuery.withClampedTextScaling(
+      maxScaleFactor: 1.3,
+      child: SizedBox(
+        height: 108,
+        // Fade the right edge so it reads as "more to scroll".
+        child: ShaderMask(
+          shaderCallback: (rect) => const LinearGradient(
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+            stops: [0.0, 0.86, 1.0],
+            colors: [Colors.white, Colors.white, Colors.transparent],
+          ).createShader(rect),
+          blendMode: BlendMode.dstIn,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            padding: EdgeInsets.zero,
+            clipBehavior: Clip.none,
+            itemCount: actions.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 10),
+            itemBuilder: (context, index) =>
+                _QuickActionCard(action: actions[index]),
           ),
-
-          // 3. Quran Directory Tab
-          _buildActionItem(
-            context: context,
-            label: 'Quran',
-            icon: Icons.menu_book_rounded,
-            accentColor: accentColor,
-            onTap: () {
-              HapticFeedback.selectionClick();
-              if (onNavigateTab != null) {
-                onNavigateTab!(1);
-              }
-            },
-          ),
-
-          // 4. 99 Names of Allah
-          _buildActionItem(
-            context: context,
-            label: '99 Names',
-            icon: Icons.auto_awesome_rounded,
-            accentColor: accentColor,
-            onTap: () {
-              HapticFeedback.selectionClick();
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const NamesScreen()),
-              );
-            },
-          ),
-        ],
+        ),
       ),
     );
   }
+}
 
-  Widget _buildActionItem({
-    required BuildContext context,
-    required String label,
-    required IconData icon,
-    required Color accentColor,
-    required VoidCallback onTap,
-  }) {
+typedef _GlyphBuilder = Widget Function(double size, Color color);
+
+class _QuickAction {
+  final String label;
+  final String caption;
+  final Color tint;
+  final IconData? icon;
+  final _GlyphBuilder? glyphBuilder;
+  final VoidCallback onTap;
+
+  _QuickAction({
+    required this.label,
+    required this.caption,
+    required this.tint,
+    required this.onTap,
+    this.icon,
+    this.glyphBuilder,
+  });
+}
+
+class _QuickActionCard extends StatelessWidget {
+  final _QuickAction action;
+
+  const _QuickActionCard({required this.action});
+
+  @override
+  Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
     final isDark = themeProvider.isDarkMode;
 
     return HeartbeatTap(
-      onTap: onTap,
-      child: SizedBox(
-        width: 72,
+      onTap: () {
+        HapticFeedback.selectionClick();
+        action.onTap();
+      },
+      child: Container(
+        width: 116,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 11),
+        decoration: BoxDecoration(
+          gradient: HomeDesign.cardGradient(isDark),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: HomeDesign.goldLine(isDark), width: 1.0),
+          boxShadow: [
+            BoxShadow(
+              color: HomeDesign.shadow(isDark),
+              blurRadius: 12,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Modern Glass Squircle Icon Tile
             Container(
-              width: 52,
-              height: 52,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
-                color: isDark
-                    ? accentColor.withValues(alpha: 0.10)
-                    : accentColor.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(16),
+                shape: BoxShape.circle,
+                color: action.tint.withValues(alpha: isDark ? 0.13 : 0.11),
                 border: Border.all(
-                  color: isDark
-                      ? accentColor.withValues(alpha: 0.22)
-                      : accentColor.withValues(alpha: 0.30),
+                  color: action.tint.withValues(alpha: isDark ? 0.26 : 0.30),
                   width: 1.0,
                 ),
               ),
-              child: Center(child: Icon(icon, size: 22, color: accentColor)),
+              child: Center(
+                child: action.glyphBuilder != null
+                    ? action.glyphBuilder!(22, action.tint)
+                    : Icon(action.icon, size: 21, color: action.tint),
+              ),
             ),
-            const SizedBox(height: 7),
-            // Label
+            const SizedBox(height: 6),
             Text(
-              label,
+              action.label,
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: GoogleFonts.plusJakartaSans(
-                fontSize: 11.5,
-                fontWeight: FontWeight.w500,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
                 color: themeProvider.textPrimary,
                 letterSpacing: 0.1,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              action.caption,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 9.5,
+                fontWeight: FontWeight.w500,
+                color: themeProvider.textSecondary,
               ),
             ),
           ],

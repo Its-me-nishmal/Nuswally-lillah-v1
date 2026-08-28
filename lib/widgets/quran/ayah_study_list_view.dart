@@ -7,6 +7,8 @@ import '../../providers/quran_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../services/quran_page_helper.dart';
 import '../heartbeat_tap.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/home_design.dart';
 
 class AyahStudyListView extends StatelessWidget {
   final Surah surah;
@@ -22,7 +24,8 @@ class AyahStudyListView extends StatelessWidget {
   void _copyAyah(BuildContext context, Ayah ayah) {
     Clipboard.setData(
       ClipboardData(
-        text: '${ayah.text}\n\n— Surah ${surah.englishName} (${surah.number}:${ayah.numberInSurah})',
+        text:
+            '${ayah.text}\n\n— Surah ${surah.englishName} (${surah.number}:${ayah.numberInSurah})',
       ),
     );
     ScaffoldMessenger.of(context).showSnackBar(
@@ -37,7 +40,8 @@ class AyahStudyListView extends StatelessWidget {
   void _shareAyah(BuildContext context, Ayah ayah) {
     Clipboard.setData(
       ClipboardData(
-        text: '${ayah.text}\n\n— Surah ${surah.englishName} (${surah.number}:${ayah.numberInSurah})\nvia Nuswally Lillah',
+        text:
+            '${ayah.text}\n\n— Surah ${surah.englishName} (${surah.number}:${ayah.numberInSurah})\nvia Nuswally Lillah',
       ),
     );
     ScaffoldMessenger.of(context).showSnackBar(
@@ -49,7 +53,13 @@ class AyahStudyListView extends StatelessWidget {
     );
   }
 
-  Widget _buildPillBadge(String text, bool isDark, Color bg, Color border, Color textColor) {
+  Widget _buildPillBadge(
+    String text,
+    bool isDark,
+    Color bg,
+    Color border,
+    Color textColor,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3.5),
       decoration: BoxDecoration(
@@ -69,20 +79,22 @@ class AyahStudyListView extends StatelessWidget {
     );
   }
 
-  Widget _buildPageSeparator(int page, int juz, bool isDark, ThemeProvider themeProvider) {
-    final lineBorderColor = isDark ? const Color(0xFF222D38) : const Color(0xFFE2E8F0);
+  Widget _buildPageSeparator(
+    int page,
+    int juz,
+    bool isDark,
+    ThemeProvider themeProvider,
+  ) {
+    final lineBorderColor = isDark
+        ? HomeDesign.divider(isDark)
+        : HomeDesign.goldLine(isDark);
 
     return Padding(
       padding: const EdgeInsets.only(top: 14, bottom: 20),
       child: Row(
         children: [
           // Left Line
-          Expanded(
-            child: Container(
-              height: 1.0,
-              color: lineBorderColor,
-            ),
-          ),
+          Expanded(child: Container(height: 1.0, color: lineBorderColor)),
 
           // Center Page & Juz Indicator Pill
           Padding(
@@ -90,12 +102,11 @@ class AyahStudyListView extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF151D24) : const Color(0xFFF1F5F9),
+                color: isDark
+                    ? HomeDesign.cardTop(isDark)
+                    : HomeDesign.cardBottom(isDark),
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: lineBorderColor,
-                  width: 0.8,
-                ),
+                border: Border.all(color: lineBorderColor, width: 0.8),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -129,12 +140,7 @@ class AyahStudyListView extends StatelessWidget {
           ),
 
           // Right Line
-          Expanded(
-            child: Container(
-              height: 1.0,
-              color: lineBorderColor,
-            ),
-          ),
+          Expanded(child: Container(height: 1.0, color: lineBorderColor)),
         ],
       ),
     );
@@ -142,12 +148,17 @@ class AyahStudyListView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    context.watchTheme();
     final themeProvider = context.watch<ThemeProvider>();
     final quranProvider = context.watch<QuranProvider>();
     final isDark = themeProvider.isDarkMode;
 
-    final containerColor = isDark ? const Color(0xFF151D24) : const Color(0xFFF1F5F9);
-    final borderColor = isDark ? const Color(0xFF222D38) : const Color(0xFFE2E8F0);
+    final containerColor = isDark
+        ? HomeDesign.cardTop(isDark)
+        : HomeDesign.cardBottom(isDark);
+    final borderColor = isDark
+        ? HomeDesign.divider(isDark)
+        : HomeDesign.goldLine(isDark);
 
     final topInset = MediaQuery.paddingOf(context).top;
     final bottomInset = MediaQuery.paddingOf(context).bottom;
@@ -164,12 +175,11 @@ class AyahStudyListView extends StatelessWidget {
             margin: const EdgeInsets.only(bottom: 16),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF151D24) : const Color(0xFFFFFFFF),
+              color: isDark
+                  ? HomeDesign.cardTop(isDark)
+                  : const Color(0xFFFFFFFF),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: borderColor,
-                width: 0.8,
-              ),
+              border: Border.all(color: borderColor, width: 0.8),
             ),
             child: Column(
               children: [
@@ -213,7 +223,7 @@ class AyahStudyListView extends StatelessWidget {
                       fontFamily: 'HafsFont',
                       fontSize: 25,
                       fontWeight: FontWeight.w700,
-                      color: isDark ? const Color(0xFFE2E8F0) : themeProvider.primaryAccent,
+                      color: HomeDesign.goldText(isDark),
                       height: 1.5,
                     ),
                   ),
@@ -223,7 +233,9 @@ class AyahStudyListView extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: GoogleFonts.inter(
                       fontSize: 12,
-                      color: themeProvider.textSecondary.withValues(alpha: 0.85),
+                      color: themeProvider.textSecondary.withValues(
+                        alpha: 0.85,
+                      ),
                       height: 1.4,
                     ),
                   ),
@@ -239,7 +251,10 @@ class AyahStudyListView extends StatelessWidget {
         final ayah = quranProvider.ayahs[ayahIndex];
 
         // Real Madani Page and Juz for this Ayah
-        final int currentPage = QuranPageHelper.getPage(surah.number, ayah.numberInSurah);
+        final int currentPage = QuranPageHelper.getPage(
+          surah.number,
+          ayah.numberInSurah,
+        );
         final int currentJuz = QuranPageHelper.getJuzFromPage(currentPage);
 
         // Check for Page Transition / Page Break
@@ -248,7 +263,10 @@ class AyahStudyListView extends StatelessWidget {
           showPageBreak = true;
         } else {
           final prevAyah = quranProvider.ayahs[ayahIndex - 1];
-          final int prevPage = QuranPageHelper.getPage(surah.number, prevAyah.numberInSurah);
+          final int prevPage = QuranPageHelper.getPage(
+            surah.number,
+            prevAyah.numberInSurah,
+          );
           if (prevPage != currentPage) {
             showPageBreak = true;
           }
@@ -261,7 +279,12 @@ class AyahStudyListView extends StatelessWidget {
           children: [
             // Inline Page Separator
             if (showPageBreak)
-              _buildPageSeparator(currentPage, currentJuz, isDark, themeProvider),
+              _buildPageSeparator(
+                currentPage,
+                currentJuz,
+                isDark,
+                themeProvider,
+              ),
 
             // Seamless Ayah Content (Clean, borderless, restful)
             Padding(
@@ -275,7 +298,10 @@ class AyahStudyListView extends StatelessWidget {
                     children: [
                       // Ayah Badge (e.g. "2:1")
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 9,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: themeProvider.primaryAccent.withValues(
                             alpha: isDark ? 0.10 : 0.12,
@@ -362,7 +388,7 @@ class AyahStudyListView extends StatelessWidget {
                       style: TextStyle(
                         fontFamily: 'HafsFont',
                         fontSize: quranProvider.fontSize,
-                        color: isDark ? const Color(0xFFF0F6FC) : const Color(0xFF0F172A),
+                        color: context.textPrimary,
                         height: 1.85,
                         letterSpacing: 0.2,
                       ),
@@ -370,7 +396,8 @@ class AyahStudyListView extends StatelessWidget {
                   ),
 
                   // Translation (English & Malayalam)
-                  if (ayah.translationEn.isNotEmpty || ayah.translationMl.isNotEmpty) ...[
+                  if (ayah.translationEn.isNotEmpty ||
+                      ayah.translationMl.isNotEmpty) ...[
                     const SizedBox(height: 12),
                     Text(
                       themeProvider.isMalayalam && ayah.translationMl.isNotEmpty
@@ -392,7 +419,9 @@ class AyahStudyListView extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 8),
               child: Container(
                 height: 1.0,
-                color: isDark ? const Color(0xFF1E2833) : const Color(0xFFE2E8F0),
+                color: isDark
+                    ? const Color(0xFF1E2833)
+                    : HomeDesign.goldLine(isDark),
               ),
             ),
           ],

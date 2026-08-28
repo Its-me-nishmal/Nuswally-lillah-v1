@@ -5,21 +5,23 @@ import 'package:provider/provider.dart';
 import '../../models/quran_model.dart';
 import '../../providers/quran_provider.dart';
 import '../../providers/theme_provider.dart';
-import '../../theme/jira_theme.dart';
 import '../heartbeat_tap.dart';
 import '../../screens/surah_detail_screen.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/home_design.dart';
 
 class QuranLastReadCard extends StatelessWidget {
   const QuranLastReadCard({super.key});
 
   @override
   Widget build(BuildContext context) {
+    context.watchTheme();
     final themeProvider = context.watch<ThemeProvider>();
     final quranProvider = context.watch<QuranProvider>();
     final isDark = themeProvider.isDarkMode;
 
-    final surfaceColor = isDark ? JiraTheme.darkSurface : JiraTheme.lightSurface;
-    final borderColor = isDark ? JiraTheme.darkBorderSubtle : JiraTheme.lightBorderSubtle;
+    final surfaceColor = context.cardTop;
+    final borderColor = context.cardBorder;
 
     // Use actual last read if available, else standard Al-Baqarah
     final surahNumber = quranProvider.lastReadSurahNumber ?? 2;
@@ -62,10 +64,7 @@ class QuranLastReadCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: surfaceColor,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: borderColor,
-            width: 0.8,
-          ),
+          border: Border.all(color: borderColor, width: 0.8),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: isDark ? 0.22 : 0.03),
@@ -83,12 +82,17 @@ class QuranLastReadCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 3.5,
+                  ),
                   decoration: BoxDecoration(
                     color: themeProvider.primaryAccent.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                      color: themeProvider.primaryAccent.withValues(alpha: 0.25),
+                      color: themeProvider.primaryAccent.withValues(
+                        alpha: 0.25,
+                      ),
                       width: 0.8,
                     ),
                   ),
@@ -153,7 +157,9 @@ class QuranLastReadCard extends StatelessWidget {
                         style: GoogleFonts.inter(
                           fontSize: 11.5,
                           fontWeight: FontWeight.w400,
-                          color: themeProvider.textSecondary.withValues(alpha: 0.85),
+                          color: themeProvider.textSecondary.withValues(
+                            alpha: 0.85,
+                          ),
                         ),
                       ),
                     ],
@@ -168,7 +174,7 @@ class QuranLastReadCard extends StatelessWidget {
                     fontFamily: 'HafsFont',
                     fontSize: 20,
                     fontWeight: FontWeight.w600,
-                    color: isDark ? const Color(0xFFE2E8F0) : themeProvider.primaryAccent,
+                    color: HomeDesign.goldText(isDark),
                     height: 1.3,
                   ),
                 ),

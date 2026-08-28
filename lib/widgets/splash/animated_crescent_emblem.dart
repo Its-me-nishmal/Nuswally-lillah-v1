@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import '../../theme/app_colors.dart';
 
 class AnimatedCrescentEmblem extends StatefulWidget {
   final double size;
@@ -60,9 +61,10 @@ class _AnimatedCrescentEmblemState extends State<AnimatedCrescentEmblem>
       duration: const Duration(milliseconds: 2400),
     );
 
-    _auraPulse = Tween<double>(begin: 0.85, end: 1.15).animate(
-      CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOutSine),
-    );
+    _auraPulse = Tween<double>(
+      begin: 0.85,
+      end: 1.15,
+    ).animate(CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOutSine));
 
     _mainCtrl.forward();
     _pulseCtrl.repeat(reverse: true);
@@ -77,6 +79,7 @@ class _AnimatedCrescentEmblemState extends State<AnimatedCrescentEmblem>
 
   @override
   Widget build(BuildContext context) {
+    context.watchTheme();
     return SizedBox(
       width: widget.size,
       height: widget.size,
@@ -90,7 +93,7 @@ class _AnimatedCrescentEmblemState extends State<AnimatedCrescentEmblem>
               starRotation: _starRotation.value,
               auraScale: _auraPulse.value,
               primaryColor: widget.primaryColor,
-              secondaryColor: widget.secondaryColor ?? const Color(0xFFFBBF24),
+              secondaryColor: widget.secondaryColor ?? context.gold,
             ),
           );
         },
@@ -123,14 +126,17 @@ class _CrescentStarPainter extends CustomPainter {
 
     // 1. Ambient Glow Halo
     final auraPaint = Paint()
-      ..shader = RadialGradient(
-        colors: [
-          primaryColor.withValues(alpha: 0.35 * crescentProgress),
-          primaryColor.withValues(alpha: 0.10 * crescentProgress),
-          Colors.transparent,
-        ],
-        stops: const [0.0, 0.6, 1.0],
-      ).createShader(Rect.fromCircle(center: center, radius: radius * 1.5 * auraScale));
+      ..shader =
+          RadialGradient(
+            colors: [
+              primaryColor.withValues(alpha: 0.35 * crescentProgress),
+              primaryColor.withValues(alpha: 0.10 * crescentProgress),
+              Colors.transparent,
+            ],
+            stops: const [0.0, 0.6, 1.0],
+          ).createShader(
+            Rect.fromCircle(center: center, radius: radius * 1.5 * auraScale),
+          );
 
     canvas.drawCircle(center, radius * 1.5 * auraScale, auraPaint);
 
@@ -141,11 +147,18 @@ class _CrescentStarPainter extends CustomPainter {
       ..addOval(Rect.fromCircle(center: center, radius: radius));
 
     // Inner cutter circle shifted to create elegant thin crescent tip
-    final innerCenter = Offset(center.dx + radius * 0.35, center.dy - radius * 0.12);
+    final innerCenter = Offset(
+      center.dx + radius * 0.35,
+      center.dy - radius * 0.12,
+    );
     final innerPath = Path()
       ..addOval(Rect.fromCircle(center: innerCenter, radius: radius * 0.82));
 
-    final crescentPath = Path.combine(PathOperation.difference, outerPath, innerPath);
+    final crescentPath = Path.combine(
+      PathOperation.difference,
+      outerPath,
+      innerPath,
+    );
 
     // Save and clip with progress rotation arc for smooth reveal
     canvas.save();
@@ -178,7 +191,10 @@ class _CrescentStarPainter extends CustomPainter {
 
     // 3. Draw Radiant 8-Pointed Star in Crescent Nook
     if (starScale > 0.01) {
-      final starCenter = Offset(center.dx + radius * 0.42, center.dy - radius * 0.36);
+      final starCenter = Offset(
+        center.dx + radius * 0.42,
+        center.dy - radius * 0.36,
+      );
       final starRadius = radius * 0.24 * starScale;
 
       canvas.save();
@@ -190,17 +206,17 @@ class _CrescentStarPainter extends CustomPainter {
         ..color = secondaryColor.withValues(alpha: 0.6 * starScale)
         ..maskFilter = const MaskFilter.blur(BlurStyle.outer, 6);
 
-      final starPath = _createOctagramPath(Offset.zero, starRadius, starRadius * 0.48);
+      final starPath = _createOctagramPath(
+        Offset.zero,
+        starRadius,
+        starRadius * 0.48,
+      );
 
       final starPaint = Paint()
         ..shader = LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            secondaryColor,
-            const Color(0xFFFDE68A),
-            primaryColor,
-          ],
+          colors: [secondaryColor, const Color(0xFFFDE68A), primaryColor],
         ).createShader(Rect.fromCircle(center: Offset.zero, radius: starRadius))
         ..style = PaintingStyle.fill;
 
@@ -210,7 +226,11 @@ class _CrescentStarPainter extends CustomPainter {
     }
   }
 
-  Path _createOctagramPath(Offset center, double outerRadius, double innerRadius) {
+  Path _createOctagramPath(
+    Offset center,
+    double outerRadius,
+    double innerRadius,
+  ) {
     final path = Path();
     const points = 8;
     const step = math.pi / points;

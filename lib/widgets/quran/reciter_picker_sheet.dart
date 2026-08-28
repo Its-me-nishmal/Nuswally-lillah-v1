@@ -3,8 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../providers/quran_provider.dart';
-import '../../theme/jira_theme.dart';
 import '../heartbeat_tap.dart';
+import '../../theme/app_colors.dart';
 
 class ReciterPickerSheet extends StatefulWidget {
   const ReciterPickerSheet({super.key});
@@ -13,7 +13,7 @@ class ReciterPickerSheet extends StatefulWidget {
     HapticFeedback.selectionClick();
     return showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF161B22),
+      backgroundColor: context.cardTop,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -38,6 +38,7 @@ class _ReciterPickerSheetState extends State<ReciterPickerSheet> {
 
   @override
   Widget build(BuildContext context) {
+    context.watchTheme();
     final qp = context.watch<QuranProvider>();
     final allQaris = qp.qaris;
     final selectedQari = qp.selectedQariObj;
@@ -62,7 +63,7 @@ class _ReciterPickerSheetState extends State<ReciterPickerSheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: const Color(0xFF30363D),
+                color: context.cardBorder,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -81,32 +82,37 @@ class _ReciterPickerSheetState extends State<ReciterPickerSheet> {
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 17,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFFF0F6FC),
+                        color: context.textPrimary,
                       ),
                     ),
                     Text(
                       'Powered by QuranicAudio • ${allQaris.length} Available Qaris',
                       style: GoogleFonts.inter(
                         fontSize: 11,
-                        color: const Color(0xFF8B949E),
+                        color: context.textSecondary,
                       ),
                     ),
                   ],
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
-                  color: JiraTheme.primaryBlue.withValues(alpha: 0.12),
+                  color: context.accent.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: JiraTheme.primaryBlue.withValues(alpha: 0.3)),
+                  border: Border.all(
+                    color: context.accent.withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Text(
                   '${allQaris.length} QARIS',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 9.5,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF93C5FD),
+                    color: context.accent,
                   ),
                 ),
               ),
@@ -120,22 +126,33 @@ class _ReciterPickerSheetState extends State<ReciterPickerSheet> {
             height: 42,
             padding: const EdgeInsets.symmetric(horizontal: 12),
             decoration: BoxDecoration(
-              color: const Color(0xFF1F242C),
+              color: context.cardBottom,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFF30363D)),
+              border: Border.all(color: context.cardBorder),
             ),
             child: Row(
               children: [
-                const Icon(Icons.search_rounded, size: 18, color: Color(0xFF8B949E)),
+                Icon(
+                  Icons.search_rounded,
+                  size: 18,
+                  color: context.textSecondary,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: TextField(
                     controller: _searchController,
-                    style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFFF0F6FC)),
-                    cursorColor: JiraTheme.primaryBlue,
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      color: context.textPrimary,
+                    ),
+                    cursorColor: context.accent,
                     decoration: InputDecoration(
-                      hintText: 'Search by reciter name (e.g. Sudais, Mishary)...',
-                      hintStyle: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B)),
+                      hintText:
+                          'Search by reciter name (e.g. Sudais, Mishary)...',
+                      hintStyle: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: context.textMuted,
+                      ),
                       border: InputBorder.none,
                       isDense: true,
                       contentPadding: EdgeInsets.zero,
@@ -149,7 +166,11 @@ class _ReciterPickerSheetState extends State<ReciterPickerSheet> {
                       _searchController.clear();
                       setState(() => _searchQuery = '');
                     },
-                    child: const Icon(Icons.close_rounded, size: 16, color: Color(0xFF8B949E)),
+                    child: Icon(
+                      Icons.close_rounded,
+                      size: 16,
+                      color: context.textSecondary,
+                    ),
                   ),
               ],
             ),
@@ -163,7 +184,10 @@ class _ReciterPickerSheetState extends State<ReciterPickerSheet> {
                 ? Center(
                     child: Text(
                       'No reciters match "$_searchQuery"',
-                      style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF8B949E)),
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        color: context.textSecondary,
+                      ),
                     ),
                   )
                 : ListView.builder(
@@ -171,7 +195,8 @@ class _ReciterPickerSheetState extends State<ReciterPickerSheet> {
                     itemCount: filtered.length,
                     itemBuilder: (context, index) {
                       final qari = filtered[index];
-                      final isSelected = selectedQari.id == qari.id ||
+                      final isSelected =
+                          selectedQari.id == qari.id ||
                           selectedQari.relativePath == qari.relativePath;
 
                       return HeartbeatTap(
@@ -182,14 +207,19 @@ class _ReciterPickerSheetState extends State<ReciterPickerSheet> {
                         },
                         child: Container(
                           margin: const EdgeInsets.only(bottom: 8),
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? JiraTheme.primaryBlue.withValues(alpha: 0.15)
-                                : const Color(0xFF1F242C),
+                                ? context.accent.withValues(alpha: 0.15)
+                                : context.cardBottom,
                             borderRadius: BorderRadius.circular(14),
                             border: Border.all(
-                              color: isSelected ? JiraTheme.primaryBlue : const Color(0xFF30363D),
+                              color: isSelected
+                                  ? context.accent
+                                  : context.cardBorder,
                             ),
                           ),
                           child: Row(
@@ -199,13 +229,15 @@ class _ReciterPickerSheetState extends State<ReciterPickerSheet> {
                                 height: 36,
                                 decoration: BoxDecoration(
                                   color: isSelected
-                                      ? JiraTheme.primaryBlue
-                                      : const Color(0xFF161B22),
+                                      ? context.accent
+                                      : context.cardTop,
                                   shape: BoxShape.circle,
                                 ),
                                 child: Icon(
                                   Icons.headphones_rounded,
-                                  color: isSelected ? Colors.white : const Color(0xFF8B949E),
+                                  color: isSelected
+                                      ? Colors.white
+                                      : context.textSecondary,
                                   size: 18,
                                 ),
                               ),
@@ -218,20 +250,22 @@ class _ReciterPickerSheetState extends State<ReciterPickerSheet> {
                                       qari.name,
                                       style: GoogleFonts.plusJakartaSans(
                                         fontSize: 14,
-                                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                                        fontWeight: isSelected
+                                            ? FontWeight.w600
+                                            : FontWeight.w500,
                                         color: isSelected
-                                            ? JiraTheme.primaryBlue
-                                            : const Color(0xFFF0F6FC),
+                                            ? context.accent
+                                            : context.textPrimary,
                                       ),
                                     ),
                                     if (qari.arabicName.isNotEmpty) ...[
                                       const SizedBox(height: 2),
                                       Text(
                                         qari.arabicName,
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontFamily: 'HafsFont',
                                           fontSize: 13,
-                                          color: Color(0xFF8B949E),
+                                          color: context.textSecondary,
                                         ),
                                       ),
                                     ],
@@ -239,9 +273,9 @@ class _ReciterPickerSheetState extends State<ReciterPickerSheet> {
                                 ),
                               ),
                               if (isSelected)
-                                const Icon(
+                                Icon(
                                   Icons.check_circle_rounded,
-                                  color: JiraTheme.primaryBlue,
+                                  color: context.accent,
                                   size: 20,
                                 ),
                             ],

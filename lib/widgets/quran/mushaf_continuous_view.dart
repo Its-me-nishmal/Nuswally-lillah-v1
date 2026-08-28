@@ -7,6 +7,8 @@ import '../../models/quran_model.dart';
 import '../../providers/quran_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../services/quran_page_helper.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/home_design.dart';
 
 class MushafContinuousView extends StatelessWidget {
   final Surah surah;
@@ -26,20 +28,22 @@ class MushafContinuousView extends StatelessWidget {
     }).join();
   }
 
-  Widget _buildPageSeparator(int page, int juz, bool isDark, ThemeProvider themeProvider) {
-    final lineBorderColor = isDark ? const Color(0xFF2E3D4D) : const Color(0xFFCBD5E1);
+  Widget _buildPageSeparator(
+    int page,
+    int juz,
+    bool isDark,
+    ThemeProvider themeProvider,
+  ) {
+    final lineBorderColor = isDark
+        ? const Color(0xFF2E3D4D)
+        : const Color(0xFFCBD5E1);
 
     return Padding(
       padding: const EdgeInsets.only(top: 20, bottom: 20),
       child: Row(
         children: [
           // Left Line
-          Expanded(
-            child: Container(
-              height: 1.0,
-              color: lineBorderColor,
-            ),
-          ),
+          Expanded(child: Container(height: 1.0, color: lineBorderColor)),
 
           // Center Page & Juz Indicator Pill
           Padding(
@@ -47,12 +51,11 @@ class MushafContinuousView extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF151D24) : const Color(0xFFF1F5F9),
+                color: isDark
+                    ? HomeDesign.cardTop(isDark)
+                    : HomeDesign.cardBottom(isDark),
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: lineBorderColor,
-                  width: 0.8,
-                ),
+                border: Border.all(color: lineBorderColor, width: 0.8),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -86,12 +89,7 @@ class MushafContinuousView extends StatelessWidget {
           ),
 
           // Right Line
-          Expanded(
-            child: Container(
-              height: 1.0,
-              color: lineBorderColor,
-            ),
-          ),
+          Expanded(child: Container(height: 1.0, color: lineBorderColor)),
         ],
       ),
     );
@@ -99,6 +97,7 @@ class MushafContinuousView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    context.watchTheme();
     final themeProvider = context.watch<ThemeProvider>();
     final quranProvider = context.watch<QuranProvider>();
     final isDark = themeProvider.isDarkMode;
@@ -131,7 +130,7 @@ class MushafContinuousView extends StatelessWidget {
                 fontFamily: 'HafsFont',
                 fontSize: 26,
                 fontWeight: FontWeight.w700,
-                color: isDark ? const Color(0xFFE2E8F0) : themeProvider.primaryAccent,
+                color: HomeDesign.goldText(isDark),
               ),
             ),
           ),
@@ -147,7 +146,7 @@ class MushafContinuousView extends StatelessWidget {
                   fontFamily: 'HafsFont',
                   fontSize: 23,
                   fontWeight: FontWeight.w600,
-                  color: isDark ? const Color(0xFFE2E8F0) : themeProvider.primaryAccent,
+                  color: HomeDesign.goldText(isDark),
                   height: 1.5,
                 ),
               ),
@@ -175,7 +174,9 @@ class MushafContinuousView extends StatelessWidget {
                     textAlign: TextAlign.justify,
                     text: TextSpan(
                       children: ayahsOnPage.map((ayah) {
-                        final verseNumberArabic = _toArabicDigits(ayah.numberInSurah);
+                        final verseNumberArabic = _toArabicDigits(
+                          ayah.numberInSurah,
+                        );
                         return TextSpan(
                           children: [
                             TextSpan(
@@ -183,7 +184,7 @@ class MushafContinuousView extends StatelessWidget {
                               style: TextStyle(
                                 fontFamily: 'HafsFont',
                                 fontSize: quranProvider.fontSize,
-                                color: isDark ? const Color(0xFFF0F6FC) : const Color(0xFF0F172A),
+                                color: context.textPrimary,
                                 height: 2.2,
                                 letterSpacing: 0.2,
                               ),

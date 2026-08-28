@@ -14,12 +14,18 @@ import 'screens/splash_screen.dart';
 import 'screens/app_update_screen.dart';
 import 'services/notification_service.dart';
 import 'theme/jira_theme.dart';
+import 'theme/app_colors.dart';
 
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 bool _onboardingComplete = false;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Every Google font the app uses is bundled under assets/google_fonts/, so
+  // typography is correct on a first launch with no network. Fetching stays
+  // off to guarantee the bundled files are what render.
+  GoogleFonts.config.allowRuntimeFetching = false;
 
   // Set up notification action routing
   NotificationService.onActionClicked = (actionId, payload) {
@@ -83,57 +89,100 @@ class AzanApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    context.watchTheme();
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, _) {
         final isDark = themeProvider.isDarkMode;
 
-        final baseTheme = isDark ? ThemeData.dark().textTheme : ThemeData.light().textTheme;
+        final baseTheme = isDark
+            ? ThemeData.dark().textTheme
+            : ThemeData.light().textTheme;
         final interTheme = GoogleFonts.interTextTheme(baseTheme);
         final textTheme = interTheme.copyWith(
           displayLarge: GoogleFonts.plusJakartaSans(
-            textStyle: baseTheme.displayLarge?.copyWith(fontWeight: FontWeight.w700, letterSpacing: -0.5),
+            textStyle: baseTheme.displayLarge?.copyWith(
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.5,
+            ),
           ),
           displayMedium: GoogleFonts.plusJakartaSans(
-            textStyle: baseTheme.displayMedium?.copyWith(fontWeight: FontWeight.w700, letterSpacing: -0.4),
+            textStyle: baseTheme.displayMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.4,
+            ),
           ),
           displaySmall: GoogleFonts.plusJakartaSans(
-            textStyle: baseTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600, letterSpacing: -0.3),
+            textStyle: baseTheme.displaySmall?.copyWith(
+              fontWeight: FontWeight.w600,
+              letterSpacing: -0.3,
+            ),
           ),
           headlineLarge: GoogleFonts.plusJakartaSans(
-            textStyle: baseTheme.headlineLarge?.copyWith(fontWeight: FontWeight.w600, letterSpacing: -0.2),
+            textStyle: baseTheme.headlineLarge?.copyWith(
+              fontWeight: FontWeight.w600,
+              letterSpacing: -0.2,
+            ),
           ),
           headlineMedium: GoogleFonts.plusJakartaSans(
-            textStyle: baseTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w600, letterSpacing: -0.2),
+            textStyle: baseTheme.headlineMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+              letterSpacing: -0.2,
+            ),
           ),
           headlineSmall: GoogleFonts.plusJakartaSans(
-            textStyle: baseTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w600, letterSpacing: -0.1),
+            textStyle: baseTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+              letterSpacing: -0.1,
+            ),
           ),
           titleLarge: GoogleFonts.plusJakartaSans(
-            textStyle: baseTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600, letterSpacing: -0.1),
+            textStyle: baseTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w600,
+              letterSpacing: -0.1,
+            ),
           ),
           titleMedium: GoogleFonts.plusJakartaSans(
-            textStyle: baseTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+            textStyle: baseTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
           titleSmall: GoogleFonts.plusJakartaSans(
-            textStyle: baseTheme.titleSmall?.copyWith(fontWeight: FontWeight.w500),
+            textStyle: baseTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w500,
+            ),
           ),
           bodyLarge: GoogleFonts.inter(
-            textStyle: baseTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w400, height: 1.4),
+            textStyle: baseTheme.bodyLarge?.copyWith(
+              fontWeight: FontWeight.w400,
+              height: 1.4,
+            ),
           ),
           bodyMedium: GoogleFonts.inter(
-            textStyle: baseTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w400, height: 1.4),
+            textStyle: baseTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w400,
+              height: 1.4,
+            ),
           ),
           bodySmall: GoogleFonts.inter(
-            textStyle: baseTheme.bodySmall?.copyWith(fontWeight: FontWeight.w400, height: 1.3),
+            textStyle: baseTheme.bodySmall?.copyWith(
+              fontWeight: FontWeight.w400,
+              height: 1.3,
+            ),
           ),
           labelLarge: GoogleFonts.inter(
-            textStyle: baseTheme.labelLarge?.copyWith(fontWeight: FontWeight.w500),
+            textStyle: baseTheme.labelLarge?.copyWith(
+              fontWeight: FontWeight.w500,
+            ),
           ),
           labelMedium: GoogleFonts.inter(
-            textStyle: baseTheme.labelMedium?.copyWith(fontWeight: FontWeight.w500),
+            textStyle: baseTheme.labelMedium?.copyWith(
+              fontWeight: FontWeight.w500,
+            ),
           ),
           labelSmall: GoogleFonts.inter(
-            textStyle: baseTheme.labelSmall?.copyWith(fontWeight: FontWeight.w500),
+            textStyle: baseTheme.labelSmall?.copyWith(
+              fontWeight: FontWeight.w500,
+            ),
           ),
         );
 
@@ -150,24 +199,24 @@ class AzanApp extends StatelessWidget {
         final darkThemeData = ThemeData(
           useMaterial3: true,
           brightness: Brightness.dark,
-          scaffoldBackgroundColor: JiraTheme.darkBackground,
+          scaffoldBackgroundColor: context.pageTop,
           pageTransitionsTheme: pageTransitionsTheme,
-          colorScheme: const ColorScheme.dark(
-            primary: JiraTheme.primaryBlue,
-            secondary: JiraTheme.secondaryGreen,
-            tertiary: JiraTheme.tertiaryOrange,
-            surface: JiraTheme.darkSurface,
-            surfaceContainerHighest: JiraTheme.darkContainer,
-            onSurface: JiraTheme.darkTextPrimary,
-            outline: JiraTheme.darkBorder,
+          colorScheme: ColorScheme.dark(
+            primary: context.accent,
+            secondary: context.accent,
+            tertiary: context.gold,
+            surface: context.cardTop,
+            surfaceContainerHighest: context.cardBottom,
+            onSurface: context.textPrimary,
+            outline: context.cardBorder,
           ),
           textTheme: textTheme,
           cardTheme: CardThemeData(
             elevation: 0,
-            color: JiraTheme.darkSurface,
+            color: context.cardTop,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(JiraTheme.radiusCard),
-              side: const BorderSide(color: JiraTheme.darkBorderSubtle, width: 1),
+              side: BorderSide(color: context.cardBorder, width: 1),
             ),
           ),
           appBarTheme: const AppBarTheme(
@@ -176,8 +225,8 @@ class AzanApp extends StatelessWidget {
             scrolledUnderElevation: 0,
             centerTitle: false,
           ),
-          dividerTheme: const DividerThemeData(
-            color: JiraTheme.darkBorderSubtle,
+          dividerTheme: DividerThemeData(
+            color: context.cardBorder,
             thickness: 1,
             space: 1,
           ),
@@ -186,24 +235,24 @@ class AzanApp extends StatelessWidget {
         final lightThemeData = ThemeData(
           useMaterial3: true,
           brightness: Brightness.light,
-          scaffoldBackgroundColor: JiraTheme.lightBackground,
+          scaffoldBackgroundColor: context.pageTop,
           pageTransitionsTheme: pageTransitionsTheme,
-          colorScheme: const ColorScheme.light(
-            primary: JiraTheme.primaryBlue,
-            secondary: JiraTheme.secondaryGreen,
-            tertiary: JiraTheme.tertiaryOrange,
-            surface: JiraTheme.lightSurface,
-            surfaceContainerHighest: JiraTheme.lightContainer,
-            onSurface: JiraTheme.lightTextPrimary,
-            outline: JiraTheme.lightBorder,
+          colorScheme: ColorScheme.light(
+            primary: context.accent,
+            secondary: context.accent,
+            tertiary: context.gold,
+            surface: context.cardTop,
+            surfaceContainerHighest: context.cardBottom,
+            onSurface: context.textPrimary,
+            outline: context.cardBorder,
           ),
           textTheme: textTheme,
           cardTheme: CardThemeData(
             elevation: 0,
-            color: JiraTheme.lightSurface,
+            color: context.cardTop,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(JiraTheme.radiusCard),
-              side: const BorderSide(color: JiraTheme.lightBorderSubtle, width: 1),
+              side: BorderSide(color: context.cardBorder, width: 1),
             ),
           ),
           appBarTheme: const AppBarTheme(
@@ -212,8 +261,8 @@ class AzanApp extends StatelessWidget {
             scrolledUnderElevation: 0,
             centerTitle: false,
           ),
-          dividerTheme: const DividerThemeData(
-            color: JiraTheme.lightBorderSubtle,
+          dividerTheme: DividerThemeData(
+            color: context.cardBorder,
             thickness: 1,
             space: 1,
           ),
@@ -263,9 +312,6 @@ class ObsidianFadePageTransitionsBuilder extends PageTransitionsBuilder {
       reverseCurve: Curves.easeInCubic,
     );
 
-    return FadeTransition(
-      opacity: curvedAnimation,
-      child: child,
-    );
+    return FadeTransition(opacity: curvedAnimation, child: child);
   }
 }

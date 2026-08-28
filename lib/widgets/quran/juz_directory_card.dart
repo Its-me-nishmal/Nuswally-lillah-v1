@@ -7,27 +7,56 @@ import '../../providers/quran_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../screens/surah_detail_screen.dart';
 import '../heartbeat_tap.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/home_design.dart';
 
 class JuzDirectoryCard extends StatelessWidget {
   final JuzModel juz;
 
-  const JuzDirectoryCard({
-    super.key,
-    required this.juz,
-  });
+  const JuzDirectoryCard({super.key, required this.juz});
 
   static const List<String> _arabicNumerals = [
-    '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩', '١٠',
-    '١١', '١٢', '١٣', '١٤', '١٥', '١٦', '١٧', '١٨', '١٩', '٢٠',
-    '٢١', '٢٢', '٢٣', '٢٤', '٢٥', '٢٦', '٢٧', '٢٨', '٢٩', '٣٠'
+    '١',
+    '٢',
+    '٣',
+    '٤',
+    '٥',
+    '٦',
+    '٧',
+    '٨',
+    '٩',
+    '١٠',
+    '١١',
+    '١٢',
+    '١٣',
+    '١٤',
+    '١٥',
+    '١٦',
+    '١٧',
+    '١٨',
+    '١٩',
+    '٢٠',
+    '٢١',
+    '٢٢',
+    '٢٣',
+    '٢٤',
+    '٢٥',
+    '٢٦',
+    '٢٧',
+    '٢٨',
+    '٢٩',
+    '٣٠',
   ];
 
   @override
   Widget build(BuildContext context) {
+    context.watchTheme();
     final themeProvider = context.watch<ThemeProvider>();
     final isDark = themeProvider.isDarkMode;
 
-    final arabicDigit = (juz.id >= 1 && juz.id <= 30) ? _arabicNumerals[juz.id - 1] : juz.id.toString();
+    final arabicDigit = (juz.id >= 1 && juz.id <= 30)
+        ? _arabicNumerals[juz.id - 1]
+        : juz.id.toString();
 
     return HeartbeatTap(
       onTap: () {
@@ -39,8 +68,15 @@ class JuzDirectoryCard extends StatelessWidget {
           orElse: () => qp.surahs.first,
         );
 
-        final targetIndex = (juz.startAyah - 1).clamp(0, targetSurah.numberOfAyahs - 1);
-        qp.saveLastRead(targetSurah.number, targetSurah.englishName, targetIndex);
+        final targetIndex = (juz.startAyah - 1).clamp(
+          0,
+          targetSurah.numberOfAyahs - 1,
+        );
+        qp.saveLastRead(
+          targetSurah.number,
+          targetSurah.englishName,
+          targetIndex,
+        );
 
         Navigator.push(
           context,
@@ -107,7 +143,9 @@ class JuzDirectoryCard extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 10.5,
                       fontWeight: FontWeight.w400,
-                      color: themeProvider.textSecondary.withValues(alpha: 0.85),
+                      color: themeProvider.textSecondary.withValues(
+                        alpha: 0.85,
+                      ),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -125,7 +163,7 @@ class JuzDirectoryCard extends StatelessWidget {
                 fontFamily: 'HafsFont',
                 fontSize: 18,
                 fontWeight: FontWeight.w500,
-                color: isDark ? const Color(0xFFE2E8F0) : themeProvider.primaryAccent,
+                color: HomeDesign.goldText(isDark),
               ),
               textDirection: TextDirection.rtl,
             ),

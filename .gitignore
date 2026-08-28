@@ -53,3 +53,13 @@ node_modules/
 stitch-*.txt
 stitch-*.md
 opencode.json
+
+# Flutter/Dart tooling
+devtools_options.yaml
+
+# Theming-verification goldens: regenerable eyeball artifacts for the
+# skipped harness in test/light_mode_sweep_test.dart and
+# test/screens_theme_golden_test.dart (~3.9 MB of screenshots).
+test/goldens/light_*.png
+test/goldens/settings_*.png
+test/goldens/notifications_*.png

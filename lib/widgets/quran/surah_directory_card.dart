@@ -6,6 +6,8 @@ import '../../models/quran_model.dart';
 import '../../providers/theme_provider.dart';
 import '../heartbeat_tap.dart';
 import '../../screens/surah_detail_screen.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/home_design.dart';
 
 class SurahDirectoryCard extends StatelessWidget {
   final Surah surah;
@@ -29,6 +31,7 @@ class SurahDirectoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    context.watchTheme();
     final themeProvider = context.watch<ThemeProvider>();
     final isDark = themeProvider.isDarkMode;
 
@@ -103,7 +106,9 @@ class SurahDirectoryCard extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 10.5,
                       fontWeight: FontWeight.w500,
-                      color: themeProvider.textSecondary.withValues(alpha: 0.85),
+                      color: themeProvider.textSecondary.withValues(
+                        alpha: 0.85,
+                      ),
                       letterSpacing: 0.2,
                     ),
                     maxLines: 1,
@@ -114,7 +119,7 @@ class SurahDirectoryCard extends StatelessWidget {
             ),
             const SizedBox(width: 10),
 
-            // Right Arabic Name (Soft Off-White Calligraphy)
+            // Right Arabic Name (gold calligraphy, legible in both modes)
             Text(
               surah.name.replaceAll('سُورَةُ ', ''),
               textAlign: TextAlign.right,
@@ -122,7 +127,7 @@ class SurahDirectoryCard extends StatelessWidget {
                 fontFamily: 'HafsFont',
                 fontSize: 20,
                 fontWeight: FontWeight.w500,
-                color: isDark ? const Color(0xFFE2E8F0) : themeProvider.primaryAccent,
+                color: HomeDesign.goldText(isDark),
               ),
             ),
           ],

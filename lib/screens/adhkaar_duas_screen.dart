@@ -8,6 +8,8 @@ import '../providers/adhkaar_provider.dart';
 import '../providers/theme_provider.dart';
 import '../widgets/heartbeat_tap.dart';
 import 'dua_detail_screen.dart';
+import '../theme/app_colors.dart';
+import '../theme/home_design.dart';
 
 class AdhkaarDuasScreen extends StatelessWidget {
   final AdhkaarSubCategory sub;
@@ -16,6 +18,7 @@ class AdhkaarDuasScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    context.watchTheme();
     final tp = context.watch<ThemeProvider>();
     final isDark = tp.isDarkMode;
     final isMl = tp.isMalayalam;
@@ -27,9 +30,7 @@ class AdhkaarDuasScreen extends StatelessWidget {
     if (bundle == null) {
       return Scaffold(
         backgroundColor: tp.backgroundTop,
-        body: Center(
-          child: CircularProgressIndicator(color: tp.primaryAccent),
-        ),
+        body: Center(child: CircularProgressIndicator(color: tp.primaryAccent)),
       );
     }
 
@@ -74,20 +75,30 @@ class AdhkaarDuasScreen extends StatelessWidget {
           Positioned.fill(
             child: ListView(
               physics: const BouncingScrollPhysics(),
-              padding: EdgeInsets.fromLTRB(16, topInset + kTopBarHeight + 12, 16, bottomInset + 24),
+              padding: EdgeInsets.fromLTRB(
+                16,
+                topInset + kTopBarHeight + 12,
+                16,
+                bottomInset + 24,
+              ),
               children: [
                 // Chapter Banner
                 if (sub.titleArabic.trim().isNotEmpty) ...[
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 16,
+                    ),
                     decoration: BoxDecoration(
                       color: tp.surfaceColor,
                       borderRadius: BorderRadius.circular(18),
                       border: Border.all(color: tp.borderColor, width: 0.8),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.03),
+                          color: Colors.black.withValues(
+                            alpha: isDark ? 0.25 : 0.03,
+                          ),
                           blurRadius: 16,
                           offset: const Offset(0, 4),
                         ),
@@ -104,13 +115,17 @@ class AdhkaarDuasScreen extends StatelessWidget {
                             fontFamily: 'HafsFont',
                             fontSize: 20,
                             fontWeight: FontWeight.w700,
-                            color: isDark ? const Color(0xFFE2E8F0) : tp.primaryAccent,
+                            color: isDark
+                                ? HomeDesign.goldText(isDark)
+                                : tp.primaryAccent,
                             height: 1.4,
                           ),
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          isMl ? '${duas.length} പ്രാർത്ഥനകൾ' : '${duas.length} Authentic Supplications',
+                          isMl
+                              ? '${duas.length} പ്രാർത്ഥനകൾ'
+                              : '${duas.length} Authentic Supplications',
                           textAlign: TextAlign.center,
                           style: GoogleFonts.inter(
                             fontSize: 11.5,
@@ -128,7 +143,11 @@ class AdhkaarDuasScreen extends StatelessWidget {
                 ...duas.asMap().entries.map((entry) {
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 12),
-                    child: _DuaCard(dua: entry.value, index: entry.key + 1, isMl: isMl),
+                    child: _DuaCard(
+                      dua: entry.value,
+                      index: entry.key + 1,
+                      isMl: isMl,
+                    ),
                   );
                 }),
               ],
@@ -147,7 +166,9 @@ class AdhkaarDuasScreen extends StatelessWidget {
                 child: Container(
                   padding: EdgeInsets.only(top: topInset),
                   decoration: BoxDecoration(
-                    color: tp.backgroundTop.withValues(alpha: isDark ? 0.85 : 0.90),
+                    color: tp.backgroundTop.withValues(
+                      alpha: isDark ? 0.85 : 0.90,
+                    ),
                     border: Border(
                       bottom: BorderSide(
                         color: tp.borderColor.withValues(alpha: 0.35),
@@ -175,10 +196,17 @@ class AdhkaarDuasScreen extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: tp.surfaceColor,
                               shape: BoxShape.circle,
-                              border: Border.all(color: tp.borderColor, width: 0.8),
+                              border: Border.all(
+                                color: tp.borderColor,
+                                width: 0.8,
+                              ),
                             ),
                             child: Center(
-                              child: Icon(Icons.arrow_back_ios_new_rounded, color: tp.textPrimary, size: 16),
+                              child: Icon(
+                                Icons.arrow_back_ios_new_rounded,
+                                color: tp.textPrimary,
+                                size: 16,
+                              ),
                             ),
                           ),
                         ),
@@ -217,12 +245,19 @@ class AdhkaarDuasScreen extends StatelessWidget {
 
                         // Count Pill
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
-                            color: tp.primaryAccent.withValues(alpha: isDark ? 0.12 : 0.14),
+                            color: tp.primaryAccent.withValues(
+                              alpha: isDark ? 0.12 : 0.14,
+                            ),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: tp.primaryAccent.withValues(alpha: isDark ? 0.25 : 0.35),
+                              color: tp.primaryAccent.withValues(
+                                alpha: isDark ? 0.25 : 0.35,
+                              ),
                               width: 0.8,
                             ),
                           ),
@@ -257,6 +292,7 @@ class _DuaCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    context.watchTheme();
     final tp = context.watch<ThemeProvider>();
     final isDark = tp.isDarkMode;
 
@@ -265,9 +301,7 @@ class _DuaCard extends StatelessWidget {
         HapticFeedback.selectionClick();
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (_) => DuaDetailScreen(dua: dua),
-          ),
+          MaterialPageRoute(builder: (_) => DuaDetailScreen(dua: dua)),
         );
       },
       child: Container(
@@ -293,12 +327,19 @@ class _DuaCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 3.5,
+                  ),
                   decoration: BoxDecoration(
-                    color: tp.primaryAccent.withValues(alpha: isDark ? 0.12 : 0.14),
+                    color: tp.primaryAccent.withValues(
+                      alpha: isDark ? 0.12 : 0.14,
+                    ),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: tp.primaryAccent.withValues(alpha: isDark ? 0.25 : 0.35),
+                      color: tp.primaryAccent.withValues(
+                        alpha: isDark ? 0.25 : 0.35,
+                      ),
                       width: 0.8,
                     ),
                   ),
@@ -313,19 +354,26 @@ class _DuaCard extends StatelessWidget {
                 ),
                 if (dua.hint.isNotEmpty)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF151D24) : const Color(0xFFF1F5F9),
+                      color: isDark ? context.cardTop : context.cardBottom,
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: isDark ? const Color(0xFF222D38) : const Color(0xFFE2E8F0),
+                        color: isDark ? context.hairline : context.cardBorder,
                         width: 0.8,
                       ),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.repeat_rounded, size: 12, color: tp.textSecondary),
+                        Icon(
+                          Icons.repeat_rounded,
+                          size: 12,
+                          color: tp.textSecondary,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           dua.hint,
@@ -350,7 +398,7 @@ class _DuaCard extends StatelessWidget {
               style: TextStyle(
                 fontFamily: 'HafsFont',
                 fontSize: 20,
-                color: isDark ? const Color(0xFFF0F6FC) : const Color(0xFF0F172A),
+                color: context.textPrimary,
                 height: 1.7,
                 letterSpacing: 0.2,
               ),
@@ -359,7 +407,9 @@ class _DuaCard extends StatelessWidget {
 
             // Translation
             Text(
-              isMl && dua.trans.isNotEmpty ? dua.trans : (dua.descEn.isNotEmpty ? dua.descEn : dua.transli),
+              isMl && dua.trans.isNotEmpty
+                  ? dua.trans
+                  : (dua.descEn.isNotEmpty ? dua.descEn : dua.transli),
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 13,
                 color: tp.textSecondary,

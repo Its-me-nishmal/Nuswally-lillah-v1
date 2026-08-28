@@ -7,11 +7,11 @@ import 'package:provider/provider.dart';
 import '../models/quran_model.dart';
 import '../providers/quran_provider.dart';
 import '../providers/theme_provider.dart';
-import '../theme/jira_theme.dart';
 import '../widgets/heartbeat_tap.dart';
 import '../widgets/quran/surah_detail_top_bar.dart';
 import '../widgets/quran/mushaf_continuous_view.dart';
 import '../widgets/quran/ayah_study_list_view.dart';
+import '../theme/app_colors.dart';
 
 enum BottomBarMode { scroll, fontSize }
 
@@ -42,7 +42,9 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
   double _accumulatedDownwardScroll = 0.0;
 
   ScrollController get _activeScrollController =>
-      _viewMode == QuranViewMode.mushaf ? _mushafScrollController : _studyScrollController;
+      _viewMode == QuranViewMode.mushaf
+      ? _mushafScrollController
+      : _studyScrollController;
 
   // Auto-scroll State
   double _autoScrollSpeed = 0.0; // 0.0 to 5.0 (0.0 is OFF)
@@ -71,8 +73,15 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
             ? QuranViewMode.list
             : QuranViewMode.mushaf;
       });
-      provider.fetchSurahDetails(widget.surah.number, initialIndex: widget.initialAyahIndex);
-      provider.saveLastRead(widget.surah.number, widget.surah.englishName, widget.initialAyahIndex);
+      provider.fetchSurahDetails(
+        widget.surah.number,
+        initialIndex: widget.initialAyahIndex,
+      );
+      provider.saveLastRead(
+        widget.surah.number,
+        widget.surah.englishName,
+        widget.initialAyahIndex,
+      );
     });
   }
 
@@ -127,13 +136,16 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
     setState(() {
       _autoScrollSpeed = newSpeed;
       if (newSpeed > 0) {
-        _isTopBarCollapsed = true; // Auto-collapse top bar on auto-scroll start for immersion
+        _isTopBarCollapsed =
+            true; // Auto-collapse top bar on auto-scroll start for immersion
       }
     });
 
     _autoScrollTimer?.cancel();
     if (_autoScrollSpeed > 0) {
-      _autoScrollTimer = Timer.periodic(const Duration(milliseconds: 20), (timer) {
+      _autoScrollTimer = Timer.periodic(const Duration(milliseconds: 20), (
+        timer,
+      ) {
         if (!mounted || _autoScrollSpeed <= 0) {
           timer.cancel();
           return;
@@ -160,6 +172,7 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    context.watchTheme();
     final themeProvider = context.watch<ThemeProvider>();
     final isDark = themeProvider.isDarkMode;
     final topInset = MediaQuery.paddingOf(context).top;
@@ -204,60 +217,64 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
             child: Consumer<QuranProvider>(
               builder: (context, provider, child) {
                 return GestureDetector(
-                    onScaleStart: (details) {
-                      if (details.pointerCount >= 2) {
-                        _isPinching = true;
-                        _basePinchFontSize = provider.fontSize;
-                      }
-                    },
-                    onScaleUpdate: (details) {
-                      if (_isPinching && details.pointerCount >= 2) {
-                        final targetSize = (_basePinchFontSize * details.scale).clamp(20.0, 44.0);
-                        setState(() {
-                          _pinchFeedbackFontSize = targetSize;
-                        });
-                        _pinchFeedbackTimer?.cancel();
-                        _pinchFeedbackTimer = Timer(const Duration(milliseconds: 600), () {
+                  onScaleStart: (details) {
+                    if (details.pointerCount >= 2) {
+                      _isPinching = true;
+                      _basePinchFontSize = provider.fontSize;
+                    }
+                  },
+                  onScaleUpdate: (details) {
+                    if (_isPinching && details.pointerCount >= 2) {
+                      final targetSize = (_basePinchFontSize * details.scale)
+                          .clamp(20.0, 44.0);
+                      setState(() {
+                        _pinchFeedbackFontSize = targetSize;
+                      });
+                      _pinchFeedbackTimer?.cancel();
+                      _pinchFeedbackTimer = Timer(
+                        const Duration(milliseconds: 600),
+                        () {
                           if (mounted) {
                             setState(() {
                               _pinchFeedbackFontSize = null;
                             });
                           }
-                        });
-                        provider.updateFontSize(targetSize);
-                      }
-                    },
-                    onScaleEnd: (details) {
-                      _isPinching = false;
-                    },
-                    child: provider.isLoadingAyahs
-                        ? Center(
-                            child: CircularProgressIndicator(
-                              color: themeProvider.primaryAccent,
-                            ),
-                          )
-                        : provider.ayahs.isEmpty
-                            ? _buildErrorView(context, provider)
-                            : AnimatedSwitcher(
-                                duration: const Duration(milliseconds: 300),
-                                switchInCurve: Curves.easeOutCubic,
-                                switchOutCurve: Curves.easeInCubic,
-                                child: _viewMode == QuranViewMode.mushaf
-                                    ? MushafContinuousView(
-                                        key: ValueKey('mushaf_${activeSurah.number}'),
-                                        surah: activeSurah,
-                                        scrollController: _mushafScrollController,
-                                      )
-                                    : AyahStudyListView(
-                                        key: ValueKey('list_${activeSurah.number}'),
-                                        surah: activeSurah,
-                                        scrollController: _studyScrollController,
-                                      ),
-                              ),
-                  );
-                },
-              ),
+                        },
+                      );
+                      provider.updateFontSize(targetSize);
+                    }
+                  },
+                  onScaleEnd: (details) {
+                    _isPinching = false;
+                  },
+                  child: provider.isLoadingAyahs
+                      ? Center(
+                          child: CircularProgressIndicator(
+                            color: themeProvider.primaryAccent,
+                          ),
+                        )
+                      : provider.ayahs.isEmpty
+                      ? _buildErrorView(context, provider)
+                      : AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 300),
+                          switchInCurve: Curves.easeOutCubic,
+                          switchOutCurve: Curves.easeInCubic,
+                          child: _viewMode == QuranViewMode.mushaf
+                              ? MushafContinuousView(
+                                  key: ValueKey('mushaf_${activeSurah.number}'),
+                                  surah: activeSurah,
+                                  scrollController: _mushafScrollController,
+                                )
+                              : AyahStudyListView(
+                                  key: ValueKey('list_${activeSurah.number}'),
+                                  surah: activeSurah,
+                                  scrollController: _studyScrollController,
+                                ),
+                        ),
+                );
+              },
             ),
+          ),
 
           // Collapsible Frosted Top App Bar (Pinned 56px with Blur)
           Positioned(
@@ -318,31 +335,43 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
                 child: Container(
-                  padding: EdgeInsets.fromLTRB(16, 8, 16, bottomInset > 0 ? bottomInset + 4 : 12),
+                  padding: EdgeInsets.fromLTRB(
+                    16,
+                    8,
+                    16,
+                    bottomInset > 0 ? bottomInset + 4 : 12,
+                  ),
                   decoration: BoxDecoration(
-                    color: (isDark ? const Color(0xFF0E1418) : Colors.white).withValues(
+                    color: (isDark ? context.pageTop : Colors.white).withValues(
                       alpha: isDark ? 0.92 : 0.95,
                     ),
                     border: Border(
                       top: BorderSide(
-                        color: themeProvider.borderColor.withValues(alpha: 0.35),
+                        color: themeProvider.borderColor.withValues(
+                          alpha: 0.35,
+                        ),
                         width: 0.8,
                       ),
                     ),
                   ),
                   child: Consumer<QuranProvider>(
                     builder: (context, provider, child) {
-                      final isScrollMode = _bottomBarMode == BottomBarMode.scroll;
+                      final isScrollMode =
+                          _bottomBarMode == BottomBarMode.scroll;
                       return Row(
                         children: [
                           // 1. Mode Switcher Capsule: [Speed / Font Size]
                           Container(
                             padding: const EdgeInsets.all(2.5),
                             decoration: BoxDecoration(
-                              color: isDark ? const Color(0xFF151D24) : const Color(0xFFF1F5F9),
+                              color: isDark
+                                  ? context.cardTop
+                                  : context.cardBottom,
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
-                                color: themeProvider.borderColor.withValues(alpha: 0.5),
+                                color: themeProvider.borderColor.withValues(
+                                  alpha: 0.5,
+                                ),
                                 width: 0.8,
                               ),
                             ),
@@ -358,17 +387,25 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
                                     });
                                   },
                                   child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 9,
+                                      vertical: 5,
+                                    ),
                                     decoration: BoxDecoration(
                                       color: isScrollMode
-                                          ? themeProvider.primaryAccent.withValues(alpha: isDark ? 0.18 : 0.15)
+                                          ? themeProvider.primaryAccent
+                                                .withValues(
+                                                  alpha: isDark ? 0.18 : 0.15,
+                                                )
                                           : Colors.transparent,
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Icon(
                                       Icons.speed_rounded,
                                       size: 16,
-                                      color: isScrollMode ? themeProvider.primaryAccent : themeProvider.textSecondary,
+                                      color: isScrollMode
+                                          ? themeProvider.primaryAccent
+                                          : themeProvider.textSecondary,
                                     ),
                                   ),
                                 ),
@@ -381,17 +418,25 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
                                     });
                                   },
                                   child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 9,
+                                      vertical: 5,
+                                    ),
                                     decoration: BoxDecoration(
                                       color: !isScrollMode
-                                          ? themeProvider.primaryAccent.withValues(alpha: isDark ? 0.18 : 0.15)
+                                          ? themeProvider.primaryAccent
+                                                .withValues(
+                                                  alpha: isDark ? 0.18 : 0.15,
+                                                )
                                           : Colors.transparent,
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Icon(
                                       Icons.format_size_rounded,
                                       size: 16,
-                                      color: !isScrollMode ? themeProvider.primaryAccent : themeProvider.textSecondary,
+                                      color: !isScrollMode
+                                          ? themeProvider.primaryAccent
+                                          : themeProvider.textSecondary,
                                     ),
                                   ),
                                 ),
@@ -405,13 +450,17 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
                             width: 48,
                             child: Text(
                               isScrollMode
-                                  ? (_autoScrollSpeed == 0 ? 'OFF' : '${_autoScrollSpeed.toStringAsFixed(1)}x')
+                                  ? (_autoScrollSpeed == 0
+                                        ? 'OFF'
+                                        : '${_autoScrollSpeed.toStringAsFixed(1)}x')
                                   : '${provider.fontSize.toInt()}px',
                               style: GoogleFonts.plusJakartaSans(
                                 fontSize: 11.5,
                                 fontWeight: FontWeight.w700,
                                 color: isScrollMode
-                                    ? (_autoScrollSpeed > 0 ? themeProvider.primaryAccent : themeProvider.textSecondary)
+                                    ? (_autoScrollSpeed > 0
+                                          ? themeProvider.primaryAccent
+                                          : themeProvider.textSecondary)
                                     : themeProvider.primaryAccent,
                               ),
                             ),
@@ -423,11 +472,18 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
                               data: SliderTheme.of(context).copyWith(
                                 trackHeight: 3.5,
                                 activeTrackColor: themeProvider.primaryAccent,
-                                inactiveTrackColor: isDark ? const Color(0xFF222D38) : const Color(0xFFE2E8F0),
+                                inactiveTrackColor: isDark
+                                    ? context.hairline
+                                    : context.cardBorder,
                                 thumbColor: themeProvider.primaryAccent,
-                                overlayColor: themeProvider.primaryAccent.withValues(alpha: 0.2),
-                                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6.5),
-                                overlayShape: const RoundSliderOverlayShape(overlayRadius: 13.0),
+                                overlayColor: themeProvider.primaryAccent
+                                    .withValues(alpha: 0.2),
+                                thumbShape: const RoundSliderThumbShape(
+                                  enabledThumbRadius: 6.5,
+                                ),
+                                overlayShape: const RoundSliderOverlayShape(
+                                  overlayRadius: 13.0,
+                                ),
                               ),
                               child: isScrollMode
                                   ? Slider(
@@ -440,7 +496,10 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
                                       },
                                     )
                                   : Slider(
-                                      value: provider.fontSize.clamp(20.0, 44.0),
+                                      value: provider.fontSize.clamp(
+                                        20.0,
+                                        44.0,
+                                      ),
                                       min: 20.0,
                                       max: 44.0,
                                       divisions: 12,
@@ -480,9 +539,12 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
           if (_pinchFeedbackFontSize != null)
             Center(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
-                  color: (isDark ? JiraTheme.darkSurface : JiraTheme.lightSurface).withValues(alpha: 0.94),
+                  color: (context.cardTop).withValues(alpha: 0.94),
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
                     color: themeProvider.primaryAccent.withValues(alpha: 0.5),
@@ -490,7 +552,9 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: isDark ? 0.45 : 0.1),
+                      color: Colors.black.withValues(
+                        alpha: isDark ? 0.45 : 0.1,
+                      ),
                       blurRadius: 20,
                       offset: const Offset(0, 6),
                     ),
@@ -544,7 +608,9 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: tp.primaryAccent,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             child: const Text('Retry'),
           ),

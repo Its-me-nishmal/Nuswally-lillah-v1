@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../services/notification_service.dart';
-import '../../theme/jira_theme.dart';
 import '../../widgets/heartbeat_tap.dart';
+import '../../theme/app_colors.dart';
 
 class ObPage5Notifications extends StatefulWidget {
   final VoidCallback onNext;
@@ -45,8 +45,9 @@ class _ObPage5NotificationsState extends State<ObPage5Notifications> {
 
   @override
   Widget build(BuildContext context) {
+    context.watchTheme();
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0E14),
+      backgroundColor: context.pageTop,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -68,7 +69,7 @@ class _ObPage5NotificationsState extends State<ObPage5Notifications> {
                           style: GoogleFonts.outfit(
                             fontSize: 22,
                             fontWeight: FontWeight.w800,
-                            color: const Color(0xFFF0F6FC),
+                            color: context.textPrimary,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -76,7 +77,7 @@ class _ObPage5NotificationsState extends State<ObPage5Notifications> {
                           'Receive precise Adhan alerts so you never miss a prayer.',
                           style: GoogleFonts.inter(
                             fontSize: 12.5,
-                            color: const Color(0xFF8B949E),
+                            color: context.textSecondary,
                             height: 1.4,
                           ),
                         ),
@@ -87,10 +88,12 @@ class _ObPage5NotificationsState extends State<ObPage5Notifications> {
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF161B22),
+                            color: context.cardTop,
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: _notificationsEnabled ? JiraTheme.primaryBlue.withValues(alpha: 0.6) : const Color(0xFF30363D),
+                              color: _notificationsEnabled
+                                  ? context.accent.withValues(alpha: 0.6)
+                                  : context.cardBorder,
                             ),
                           ),
                           child: Row(
@@ -99,12 +102,16 @@ class _ObPage5NotificationsState extends State<ObPage5Notifications> {
                                 width: 44,
                                 height: 44,
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF1F242C),
+                                  color: context.cardBottom,
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Icon(
-                                  _notificationsEnabled ? Icons.notifications_active_rounded : Icons.notifications_off_outlined,
-                                  color: _notificationsEnabled ? JiraTheme.primaryBlue : const Color(0xFF8B949E),
+                                  _notificationsEnabled
+                                      ? Icons.notifications_active_rounded
+                                      : Icons.notifications_off_outlined,
+                                  color: _notificationsEnabled
+                                      ? context.accent
+                                      : context.textSecondary,
                                   size: 22,
                                 ),
                               ),
@@ -118,7 +125,7 @@ class _ObPage5NotificationsState extends State<ObPage5Notifications> {
                                       style: GoogleFonts.outfit(
                                         fontSize: 15,
                                         fontWeight: FontWeight.w700,
-                                        color: const Color(0xFFF0F6FC),
+                                        color: context.textPrimary,
                                       ),
                                     ),
                                     const SizedBox(height: 2),
@@ -126,7 +133,7 @@ class _ObPage5NotificationsState extends State<ObPage5Notifications> {
                                       'Automatic calls for all 5 daily prayers',
                                       style: GoogleFonts.inter(
                                         fontSize: 11.5,
-                                        color: const Color(0xFF8B949E),
+                                        color: context.textSecondary,
                                       ),
                                     ),
                                   ],
@@ -134,7 +141,7 @@ class _ObPage5NotificationsState extends State<ObPage5Notifications> {
                               ),
                               Switch.adaptive(
                                 value: _notificationsEnabled,
-                                activeTrackColor: JiraTheme.primaryBlue,
+                                activeTrackColor: context.accent,
                                 onChanged: (val) {
                                   HapticFeedback.selectionClick();
                                   setState(() => _notificationsEnabled = val);
@@ -150,9 +157,9 @@ class _ObPage5NotificationsState extends State<ObPage5Notifications> {
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF161B22),
+                            color: context.cardTop,
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: const Color(0xFF30363D)),
+                            border: Border.all(color: context.cardBorder),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -163,26 +170,27 @@ class _ObPage5NotificationsState extends State<ObPage5Notifications> {
                                     width: 40,
                                     height: 40,
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFF1F242C),
+                                      color: context.cardBottom,
                                       borderRadius: BorderRadius.circular(10),
                                     ),
-                                    child: const Icon(
+                                    child: Icon(
                                       Icons.alarm_on_rounded,
-                                      color: JiraTheme.secondaryGreen,
+                                      color: context.accent,
                                       size: 20,
                                     ),
                                   ),
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           'Exact Alarms & Battery Exemption',
                                           style: GoogleFonts.outfit(
                                             fontSize: 14,
                                             fontWeight: FontWeight.w700,
-                                            color: const Color(0xFFF0F6FC),
+                                            color: context.textPrimary,
                                           ),
                                         ),
                                         const SizedBox(height: 2),
@@ -190,7 +198,7 @@ class _ObPage5NotificationsState extends State<ObPage5Notifications> {
                                           'Prevents Android from delaying Adhan alerts',
                                           style: GoogleFonts.inter(
                                             fontSize: 11,
-                                            color: const Color(0xFF8B949E),
+                                            color: context.textSecondary,
                                           ),
                                         ),
                                       ],
@@ -206,20 +214,24 @@ class _ObPage5NotificationsState extends State<ObPage5Notifications> {
                                   height: 38,
                                   decoration: BoxDecoration(
                                     color: _exactAlarmsGranted
-                                        ? JiraTheme.secondaryGreen.withValues(alpha: 0.15)
-                                        : const Color(0xFF1F242C),
+                                        ? context.accent.withValues(alpha: 0.15)
+                                        : context.cardBottom,
                                     borderRadius: BorderRadius.circular(10),
                                     border: Border.all(
-                                      color: _exactAlarmsGranted ? JiraTheme.secondaryGreen : const Color(0xFF30363D),
+                                      color: _exactAlarmsGranted
+                                          ? context.accent
+                                          : context.cardBorder,
                                     ),
                                   ),
                                   child: Center(
                                     child: Text(
-                                      _exactAlarmsGranted ? 'PERMISSIONS GRANTED ✓' : 'ALLOW EXACT ALARMS',
+                                      _exactAlarmsGranted
+                                          ? 'PERMISSIONS GRANTED ✓'
+                                          : 'ALLOW EXACT ALARMS',
                                       style: GoogleFonts.outfit(
                                         fontSize: 11.5,
                                         fontWeight: FontWeight.w800,
-                                        color: _exactAlarmsGranted ? JiraTheme.secondaryGreen : const Color(0xFF93C5FD),
+                                        color: context.accent,
                                         letterSpacing: 0.5,
                                       ),
                                     ),
@@ -236,9 +248,9 @@ class _ObPage5NotificationsState extends State<ObPage5Notifications> {
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF161B22),
+                            color: context.cardTop,
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: const Color(0xFF30363D)),
+                            border: Border.all(color: context.cardBorder),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -249,13 +261,21 @@ class _ObPage5NotificationsState extends State<ObPage5Notifications> {
                                   fontSize: 10.5,
                                   fontWeight: FontWeight.w800,
                                   letterSpacing: 1.8,
-                                  color: const Color(0xFF8B949E),
+                                  color: context.textSecondary,
                                 ),
                               ),
                               const SizedBox(height: 10),
-                              _buildTimingOption(0, 'Exact Adhan on Prayer Time', 'Play full call to prayer at the solar moment'),
+                              _buildTimingOption(
+                                0,
+                                'Exact Adhan on Prayer Time',
+                                'Play full call to prayer at the solar moment',
+                              ),
                               const SizedBox(height: 8),
-                              _buildTimingOption(1, 'Gentle 10-Minute Reminder', 'Soft chime notification before prayer time'),
+                              _buildTimingOption(
+                                1,
+                                'Gentle 10-Minute Reminder',
+                                'Soft chime notification before prayer time',
+                              ),
                             ],
                           ),
                         ),
@@ -269,11 +289,11 @@ class _ObPage5NotificationsState extends State<ObPage5Notifications> {
                             width: double.infinity,
                             height: 52,
                             decoration: BoxDecoration(
-                              color: JiraTheme.primaryBlue,
+                              color: context.accent,
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: [
                                 BoxShadow(
-                                  color: JiraTheme.primaryBlue.withValues(alpha: 0.35),
+                                  color: context.accent.withValues(alpha: 0.35),
                                   blurRadius: 12,
                                   offset: const Offset(0, 3),
                                 ),
@@ -292,7 +312,11 @@ class _ObPage5NotificationsState extends State<ObPage5Notifications> {
                                   ),
                                 ),
                                 const SizedBox(width: 8),
-                                const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 18),
+                                const Icon(
+                                  Icons.arrow_forward_rounded,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
                               ],
                             ),
                           ),
@@ -321,10 +345,10 @@ class _ObPage5NotificationsState extends State<ObPage5Notifications> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: const Color(0xFF1F242C),
+          color: context.cardBottom,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: isSelected ? JiraTheme.primaryBlue : Colors.transparent,
+            color: isSelected ? context.accent : Colors.transparent,
           ),
         ),
         child: Row(
@@ -338,14 +362,14 @@ class _ObPage5NotificationsState extends State<ObPage5Notifications> {
                     style: GoogleFonts.outfit(
                       fontSize: 13.5,
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFFF0F6FC),
+                      color: context.textPrimary,
                     ),
                   ),
                   Text(
                     subtitle,
                     style: GoogleFonts.inter(
                       fontSize: 11,
-                      color: const Color(0xFF8B949E),
+                      color: context.textSecondary,
                     ),
                   ),
                 ],
@@ -356,14 +380,16 @@ class _ObPage5NotificationsState extends State<ObPage5Notifications> {
               height: 18,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isSelected ? JiraTheme.primaryBlue : Colors.transparent,
+                color: isSelected ? context.accent : Colors.transparent,
                 border: Border.all(
-                  color: isSelected ? JiraTheme.primaryBlue : const Color(0xFF64748B),
+                  color: isSelected ? context.accent : context.textMuted,
                   width: 1.5,
                 ),
               ),
               child: isSelected
-                  ? const Center(child: Icon(Icons.check, size: 11, color: Colors.white))
+                  ? const Center(
+                      child: Icon(Icons.check, size: 11, color: Colors.white),
+                    )
                   : null,
             ),
           ],

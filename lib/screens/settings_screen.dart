@@ -5,15 +5,14 @@ import 'package:provider/provider.dart';
 import '../providers/prayer_provider.dart';
 import '../providers/quran_provider.dart';
 import '../providers/theme_provider.dart';
-import '../theme/jira_theme.dart';
 import '../widgets/heartbeat_tap.dart';
-import '../widgets/theme_palette_sheet.dart';
 import '../widgets/quran/reciter_picker_sheet.dart';
 import '../services/app_share_service.dart';
 import 'app_update_screen.dart';
 import 'developer_profile_screen.dart';
 import 'location_selection_screen.dart';
 import 'notification_settings_screen.dart';
+import '../theme/app_colors.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -34,7 +33,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF161B22),
+      backgroundColor: context.cardTop,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -50,7 +49,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: JiraTheme.darkBorderSubtle,
+                      color: context.cardBorder,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -60,7 +59,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFFF0F6FC),
+                      color: context.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -68,9 +67,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF0B0E14),
+                      color: context.pageTop,
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: JiraTheme.darkBorderSubtle),
+                      border: Border.all(color: context.cardBorder),
                     ),
                     child: Center(
                       child: Text(
@@ -87,10 +86,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(height: 16),
                   SliderTheme(
                     data: SliderTheme.of(context).copyWith(
-                      activeTrackColor: JiraTheme.primaryBlue,
-                      inactiveTrackColor: const Color(0xFF30363D),
+                      activeTrackColor: context.accent,
+                      inactiveTrackColor: context.cardBorder,
                       thumbColor: Colors.white,
-                      overlayColor: JiraTheme.primaryBlue.withValues(alpha: 0.2),
+                      overlayColor: context.accent.withValues(alpha: 0.2),
                     ),
                     child: Slider(
                       value: tempSize,
@@ -107,9 +106,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Smaller (20px)', style: GoogleFonts.inter(fontSize: 11.5, color: const Color(0xFF8B949E))),
-                      Text('Default (30px)', style: GoogleFonts.inter(fontSize: 11.5, color: JiraTheme.primaryBlue)),
-                      Text('Larger (44px)', style: GoogleFonts.inter(fontSize: 11.5, color: const Color(0xFF8B949E))),
+                      Text(
+                        'Smaller (20px)',
+                        style: GoogleFonts.inter(
+                          fontSize: 11.5,
+                          color: context.textSecondary,
+                        ),
+                      ),
+                      Text(
+                        'Default (30px)',
+                        style: GoogleFonts.inter(
+                          fontSize: 11.5,
+                          color: context.accent,
+                        ),
+                      ),
+                      Text(
+                        'Larger (44px)',
+                        style: GoogleFonts.inter(
+                          fontSize: 11.5,
+                          color: context.textSecondary,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -125,7 +142,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _showAsrCalculationInfo(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF161B22),
+      backgroundColor: context.cardTop,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -141,7 +158,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF30363D),
+                    color: context.cardBorder,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -152,7 +169,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 17,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFFF0F6FC),
+                  color: context.textPrimary,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -160,13 +177,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1F242C),
+                  color: context.cardBottom,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: JiraTheme.primaryBlue),
+                  border: Border.all(color: context.accent),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.check_circle_rounded, color: JiraTheme.primaryBlue, size: 22),
+                    Icon(
+                      Icons.check_circle_rounded,
+                      color: context.accent,
+                      size: 22,
+                    ),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(
@@ -177,7 +198,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: const Color(0xFFF0F6FC),
+                              color: context.textPrimary,
                             ),
                           ),
                           const SizedBox(height: 2),
@@ -185,7 +206,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             'Shadow length equals object height (1x ratio)',
                             style: GoogleFonts.inter(
                               fontSize: 12,
-                              color: const Color(0xFF8B949E),
+                              color: context.textSecondary,
                             ),
                           ),
                         ],
@@ -204,6 +225,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    context.watchTheme();
     final themeProvider = context.watch<ThemeProvider>();
     final prayerProvider = context.watch<PrayerProvider>();
     final quranProvider = context.watch<QuranProvider>();
@@ -217,22 +239,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final qariShortName = qariFullName.split(' ').take(2).join(' ');
 
     final preAzanMin = prayerProvider.preAzanReminderMinutes;
-    final notificationLabel = preAzanMin == 0 ? 'Exact Time (0 min)' : '$preAzanMin min before';
+    final notificationLabel = preAzanMin == 0
+        ? 'Exact Time (0 min)'
+        : '$preAzanMin min before';
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0E14),
+      backgroundColor: context.pageTop,
       body: Stack(
         children: [
           // Background Gradient
           Container(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Color(0xFF0B0E14),
-                  Color(0xFF0D121D),
-                  Color(0xFF070A10),
+                  context.pageTop,
+                  context.cardBottom,
+                  context.pageBottom,
                 ],
               ),
             ),
@@ -243,7 +267,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
               children: [
                 // 1. Top Navigation Bar
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -256,15 +283,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: const Color(0xFF161B22),
+                            color: context.cardTop,
                             shape: BoxShape.circle,
-                            border: Border.all(color: const Color(0xFF30363D)),
+                            border: Border.all(color: context.cardBorder),
                           ),
-                          child: const Center(
+                          child: Center(
                             child: Icon(
                               Icons.arrow_back_rounded,
                               size: 20,
-                              color: Color(0xFFF0F6FC),
+                              color: context.textPrimary,
                             ),
                           ),
                         ),
@@ -277,7 +304,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             style: GoogleFonts.outfit(
                               fontSize: 13.5,
                               fontWeight: FontWeight.w800,
-                              color: const Color(0xFFF0F6FC),
+                              color: context.textPrimary,
                               letterSpacing: 1.2,
                             ),
                           ),
@@ -286,11 +313,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             width: 6,
                             height: 6,
                             decoration: BoxDecoration(
-                              color: JiraTheme.primaryBlue,
+                              color: context.accent,
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: JiraTheme.primaryBlue.withValues(alpha: 0.8),
+                                  color: context.accent.withValues(alpha: 0.8),
                                   blurRadius: 6,
                                 ),
                               ],
@@ -306,27 +333,55 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 // 2. Settings Group Lists
                 Expanded(
                   child: ListView(
-                    padding: EdgeInsets.fromLTRB(20, 12, 20, 30 + MediaQuery.paddingOf(context).bottom),
+                    padding: EdgeInsets.fromLTRB(
+                      20,
+                      12,
+                      20,
+                      30 + MediaQuery.paddingOf(context).bottom,
+                    ),
                     physics: const BouncingScrollPhysics(),
                     children: [
                       // Hero App Language Card
-                      _buildLanguageHeroCard(context, themeProvider, isMalayalam),
+                      _buildLanguageHeroCard(
+                        context,
+                        themeProvider,
+                        isMalayalam,
+                      ),
 
                       const SizedBox(height: 24),
 
-                      // Section: APPEARANCE & THEMES
-                      _buildSectionHeader('APPEARANCE & THEMES'),
+                      // Section: APPEARANCE
+                      _buildSectionHeader('APPEARANCE'),
                       const SizedBox(height: 10),
                       _buildGroupContainer([
                         _buildSettingsTile(
-                          icon: Icons.palette_outlined,
+                          icon: themeProvider.isDarkMode
+                              ? Icons.dark_mode_outlined
+                              : Icons.light_mode_outlined,
                           iconColor: themeProvider.primaryAccent,
-                          title: 'App Theme & Accent Color',
-                          trailingValue: '${themeProvider.accent.title} (${themeProvider.isDarkMode ? 'Dark' : 'Light'})',
+                          title: 'Dark Mode',
+                          trailingValue: themeProvider.isDarkMode
+                              ? 'On'
+                              : 'Off',
                           trailingColor: themeProvider.primaryAccent,
+                          showChevron: false,
                           onTap: () {
                             HapticFeedback.selectionClick();
-                            ThemePaletteSheet.show(context);
+                            themeProvider.toggleDarkMode();
+                          },
+                        ),
+                        _buildSettingsTile(
+                          icon: Icons.calendar_month_outlined,
+                          iconColor: themeProvider.primaryAccent,
+                          title: 'Hijri Date Adjustment',
+                          trailingValue: _hijriOffsetLabel(
+                            themeProvider.hijriOffsetDays,
+                          ),
+                          trailingColor: themeProvider.primaryAccent,
+                          showChevron: false,
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            themeProvider.cycleHijriOffsetDays();
                           },
                         ),
                       ]),
@@ -341,30 +396,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           icon: Icons.location_on_outlined,
                           title: 'Selected Location',
                           trailingValue: locationName,
-                          trailingColor: const Color(0xFF93C5FD),
+                          trailingColor: context.accent,
                           onTap: () {
                             HapticFeedback.selectionClick();
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => const LocationSelectionScreen()),
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const LocationSelectionScreen(),
+                              ),
                             );
                           },
                         ),
-                        const Divider(height: 1, color: Color(0xFF30363D)),
+                        Divider(height: 1, color: context.cardBorder),
                         _buildSettingsTile(
                           icon: Icons.notifications_active_outlined,
-                          iconColor: JiraTheme.secondaryGreen,
+                          iconColor: context.accent,
                           title: 'Azan Notifications',
                           trailingValue: notificationLabel,
                           onTap: () {
                             HapticFeedback.selectionClick();
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => const NotificationSettingsScreen()),
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const NotificationSettingsScreen(),
+                              ),
                             );
                           },
                         ),
-                        const Divider(height: 1, color: Color(0xFF30363D)),
+                        Divider(height: 1, color: context.cardBorder),
                         _buildSettingsTile(
                           icon: Icons.access_time_rounded,
                           title: 'Asr Calculation',
@@ -374,12 +435,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             _showAsrCalculationInfo(context);
                           },
                         ),
-                        const Divider(height: 1, color: Color(0xFF30363D)),
+                        Divider(height: 1, color: context.cardBorder),
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
                           child: Row(
                             children: [
-                              Icon(Icons.pin_drop_outlined, color: themeProvider.primaryAccent, size: 20),
+                              Icon(
+                                Icons.pin_drop_outlined,
+                                color: themeProvider.primaryAccent,
+                                size: 20,
+                              ),
                               const SizedBox(width: 14),
                               Expanded(
                                 child: Column(
@@ -390,7 +458,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                       style: GoogleFonts.plusJakartaSans(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600,
-                                        color: const Color(0xFFF0F6FC),
+                                        color: context.textPrimary,
                                       ),
                                     ),
                                     const SizedBox(height: 2),
@@ -398,7 +466,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                       'Live ongoing countdown on lock screen',
                                       style: GoogleFonts.inter(
                                         fontSize: 11.5,
-                                        color: const Color(0xFF8B949E),
+                                        color: context.textSecondary,
                                       ),
                                     ),
                                   ],
@@ -408,10 +476,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 value: prayerProvider.stickyNotificationEnabled,
                                 onChanged: (val) {
                                   HapticFeedback.selectionClick();
-                                  prayerProvider.setStickyNotificationEnabled(val);
+                                  prayerProvider.setStickyNotificationEnabled(
+                                    val,
+                                  );
                                 },
                                 activeThumbColor: themeProvider.primaryAccent,
-                                activeTrackColor: themeProvider.primaryAccent.withValues(alpha: 0.4),
+                                activeTrackColor: themeProvider.primaryAccent
+                                    .withValues(alpha: 0.4),
                               ),
                             ],
                           ),
@@ -433,22 +504,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             _showReciterPicker(context, quranProvider);
                           },
                         ),
-                        const Divider(height: 1, color: Color(0xFF30363D)),
+                        Divider(height: 1, color: context.cardBorder),
                         _buildSettingsTile(
                           icon: Icons.text_fields_rounded,
                           title: 'Arabic Font Size',
-                          trailingValue: '${quranProvider.fontSize.toInt()} px (Default)',
+                          trailingValue:
+                              '${quranProvider.fontSize.toInt()} px (Default)',
                           onTap: () {
                             HapticFeedback.selectionClick();
                             _showFontSizePicker(context, quranProvider);
                           },
                         ),
-                        const Divider(height: 1, color: Color(0xFF30363D)),
+                        Divider(height: 1, color: context.cardBorder),
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
                           child: Row(
                             children: [
-                              const Icon(Icons.menu_book_rounded, color: Color(0xFF8B949E), size: 20),
+                              Icon(
+                                Icons.menu_book_rounded,
+                                color: context.textSecondary,
+                                size: 20,
+                              ),
                               const SizedBox(width: 14),
                               Expanded(
                                 child: Text(
@@ -456,7 +535,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   style: GoogleFonts.outfit(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
-                                    color: const Color(0xFFF0F6FC),
+                                    color: context.textPrimary,
                                   ),
                                 ),
                               ),
@@ -466,8 +545,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   HapticFeedback.selectionClick();
                                   setState(() => _continuousReadingMode = val);
                                 },
-                                activeThumbColor: JiraTheme.primaryBlue,
-                                activeTrackColor: JiraTheme.primaryBlue.withValues(alpha: 0.4),
+                                activeThumbColor: context.accent,
+                                activeTrackColor: context.accent.withValues(
+                                  alpha: 0.4,
+                                ),
                               ),
                             ],
                           ),
@@ -482,55 +563,58 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       _buildGroupContainer([
                         _buildSettingsTile(
                           icon: Icons.share_rounded,
-                          iconColor: const Color(0xFF34D399),
+                          iconColor: context.accent,
                           title: 'Share with Family & Friends',
                           trailingValue: 'Sadaqah Jariyah',
-                          trailingColor: const Color(0xFF34D399),
+                          trailingColor: context.accent,
                           onTap: () {
                             HapticFeedback.selectionClick();
                             AppShareService.shareApp(context);
                           },
                         ),
-                        const Divider(height: 1, color: Color(0xFF30363D)),
+                        Divider(height: 1, color: context.cardBorder),
                         _buildSettingsTile(
                           icon: Icons.star_rounded,
-                          iconColor: const Color(0xFFFBBF24),
+                          iconColor: context.gold,
                           title: 'Rate & Review on Play Store',
                           trailingValue: '5 Stars',
-                          trailingColor: const Color(0xFFFBBF24),
+                          trailingColor: context.gold,
                           onTap: () {
                             HapticFeedback.selectionClick();
                             AppShareService.openPlayStoreRating();
                           },
                         ),
-                        const Divider(height: 1, color: Color(0xFF30363D)),
+                        Divider(height: 1, color: context.cardBorder),
                         _buildSettingsTile(
                           icon: Icons.feedback_outlined,
-                          iconColor: const Color(0xFF38BDF8),
+                          iconColor: context.accent,
                           title: 'Feedback & Bug Reports',
                           trailingValue: 'Email Support',
-                          trailingColor: const Color(0xFF93C5FD),
+                          trailingColor: context.accent,
                           onTap: () {
                             HapticFeedback.selectionClick();
                             AppShareService.sendFeedbackReport();
                           },
                         ),
-                        const Divider(height: 1, color: Color(0xFF30363D)),
+                        Divider(height: 1, color: context.cardBorder),
                         _buildSettingsTile(
                           icon: Icons.person_outline_rounded,
-                          iconColor: JiraTheme.primaryBlue,
+                          iconColor: context.accent,
                           title: 'About Developer',
                           trailingValue: 'Muhammed Nishmal',
-                          trailingColor: const Color(0xFF93C5FD),
+                          trailingColor: context.accent,
                           onTap: () {
                             HapticFeedback.selectionClick();
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => const DeveloperProfileScreen()),
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const DeveloperProfileScreen(),
+                              ),
                             );
                           },
                         ),
-                        const Divider(height: 1, color: Color(0xFF30363D)),
+                        Divider(height: 1, color: context.cardBorder),
                         _buildSettingsTile(
                           icon: Icons.info_outline_rounded,
                           title: 'App Updates & Version',
@@ -540,7 +624,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             HapticFeedback.selectionClick();
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => const AppUpdateScreen()),
+                              MaterialPageRoute(
+                                builder: (context) => const AppUpdateScreen(),
+                              ),
                             );
                           },
                         ),
@@ -552,12 +638,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Center(
                         child: Column(
                           children: [
-                            const Text(
+                            Text(
                               'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
                               style: TextStyle(
                                 fontFamily: 'HafsFont',
                                 fontSize: 18,
-                                color: Color(0xFF8B949E),
+                                color: context.textSecondary,
                               ),
                             ),
                             const SizedBox(height: 6),
@@ -566,7 +652,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               style: GoogleFonts.inter(
                                 fontSize: 11.5,
                                 fontWeight: FontWeight.w500,
-                                color: const Color(0xFF64748B),
+                                color: context.textMuted,
                               ),
                             ),
                           ],
@@ -585,13 +671,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   // Language Hero Card with Segmented Switcher
-  Widget _buildLanguageHeroCard(BuildContext context, ThemeProvider themeProvider, bool isMalayalam) {
+  Widget _buildLanguageHeroCard(
+    BuildContext context,
+    ThemeProvider themeProvider,
+    bool isMalayalam,
+  ) {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFF161B22),
+        color: context.cardTop,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFF30363D)),
+        border: Border.all(color: context.cardBorder),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.35),
@@ -609,15 +699,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: JiraTheme.primaryBlue.withValues(alpha: 0.15),
+                  color: context.accent.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: JiraTheme.primaryBlue.withValues(alpha: 0.4),
+                    color: context.accent.withValues(alpha: 0.4),
                   ),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.language_rounded,
-                  color: Color(0xFF93C5FD),
+                  color: context.accent,
                   size: 22,
                 ),
               ),
@@ -631,7 +721,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFFF0F6FC),
+                        color: context.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -639,7 +729,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       'Select primary language for Adhkaar & Surahs',
                       style: GoogleFonts.inter(
                         fontSize: 12,
-                        color: const Color(0xFF8B949E),
+                        color: context.textSecondary,
                       ),
                     ),
                   ],
@@ -653,9 +743,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Container(
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: const Color(0xFF0D121D),
+              color: context.cardBottom,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: JiraTheme.darkBorderSubtle),
+              border: Border.all(color: context.cardBorder),
             ),
             child: Row(
               children: [
@@ -669,7 +759,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 9),
                       decoration: BoxDecoration(
-                        color: !isMalayalam ? JiraTheme.primaryBlue : Colors.transparent,
+                        color: !isMalayalam
+                            ? context.accent
+                            : Colors.transparent,
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Center(
@@ -677,8 +769,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           'ENGLISH',
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 12,
-                            fontWeight: !isMalayalam ? FontWeight.w600 : FontWeight.w500,
-                            color: !isMalayalam ? Colors.white : const Color(0xFF8B949E),
+                            fontWeight: !isMalayalam
+                                ? FontWeight.w600
+                                : FontWeight.w500,
+                            color: !isMalayalam
+                                ? Colors.white
+                                : context.textSecondary,
                             letterSpacing: 0.3,
                           ),
                         ),
@@ -697,7 +793,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 9),
                       decoration: BoxDecoration(
-                        color: isMalayalam ? JiraTheme.primaryBlue : Colors.transparent,
+                        color: isMalayalam
+                            ? context.accent
+                            : Colors.transparent,
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Center(
@@ -705,8 +803,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           'MALAYALAM',
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 12,
-                            fontWeight: isMalayalam ? FontWeight.w600 : FontWeight.w500,
-                            color: isMalayalam ? Colors.white : const Color(0xFF8B949E),
+                            fontWeight: isMalayalam
+                                ? FontWeight.w600
+                                : FontWeight.w500,
+                            color: isMalayalam
+                                ? Colors.white
+                                : context.textSecondary,
                             letterSpacing: 0.3,
                           ),
                         ),
@@ -731,7 +833,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           fontSize: 11,
           fontWeight: FontWeight.w600,
           letterSpacing: 1.2,
-          color: const Color(0xFF8B949E),
+          color: context.textSecondary,
         ),
       ),
     );
@@ -740,15 +842,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildGroupContainer(List<Widget> children) {
     return Container(
       decoration: BoxDecoration(
-        color: JiraTheme.darkSurface,
+        color: context.cardTop,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: JiraTheme.darkBorderSubtle),
+        border: Border.all(color: context.cardBorder),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: children,
-      ),
+      child: Column(mainAxisSize: MainAxisSize.min, children: children),
     );
+  }
+
+  /// The arithmetic Hijri calendar can sit a day either side of the local
+  /// sighting; this label shows the user's chosen nudge.
+  String _hijriOffsetLabel(int days) {
+    if (days == 0) return 'Default';
+    final unit = days.abs() == 1 ? 'day' : 'days';
+    return '${days > 0 ? '+' : '-'}${days.abs()} $unit';
   }
 
   Widget _buildSettingsTile({
@@ -760,44 +867,54 @@ class _SettingsScreenState extends State<SettingsScreen> {
     bool showChevron = true,
     required VoidCallback onTap,
   }) {
+    final themeProvider = context.read<ThemeProvider>();
     return HeartbeatTap(
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
           children: [
-            Icon(
-              icon,
-              size: 20,
-              color: iconColor ?? const Color(0xFF8B949E),
-            ),
+            Icon(icon, size: 20, color: iconColor ?? context.textSecondary),
             const SizedBox(width: 14),
+            // Title gets the larger share; the value takes only what it
+            // needs (loose fit) and ellipsises rather than overflowing.
             Expanded(
+              flex: 5,
               child: Text(
                 title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
-                  color: const Color(0xFFF0F6FC),
+                  color: themeProvider.textPrimary,
                 ),
               ),
             ),
             if (trailingValue != null) ...[
-              Text(
-                trailingValue,
-                style: GoogleFonts.inter(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w400,
-                  color: trailingColor ?? const Color(0xFF8B949E),
+              const SizedBox(width: 8),
+              Flexible(
+                flex: 4,
+                fit: FlexFit.loose,
+                child: Text(
+                  trailingValue,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.end,
+                  style: GoogleFonts.inter(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w400,
+                    color: trailingColor ?? themeProvider.textSecondary,
+                  ),
                 ),
               ),
               const SizedBox(width: 6),
             ],
             if (showChevron)
-              const Icon(
+              Icon(
                 Icons.chevron_right_rounded,
                 size: 18,
-                color: Color(0xFF64748B),
+                color: themeProvider.textMuted,
               ),
           ],
         ),

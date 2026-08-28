@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../theme/jira_theme.dart';
 import '../../widgets/heartbeat_tap.dart';
+import '../../theme/app_colors.dart';
 
 class ObPage1Welcome extends StatelessWidget {
   final VoidCallback onNext;
@@ -11,8 +11,9 @@ class ObPage1Welcome extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    context.watchTheme();
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0E14),
+      backgroundColor: context.pageTop,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -32,21 +33,24 @@ class ObPage1Welcome extends StatelessWidget {
                           width: 80,
                           height: 80,
                           decoration: BoxDecoration(
-                            color: const Color(0xFF161B22),
+                            color: context.cardTop,
                             shape: BoxShape.circle,
-                            border: Border.all(color: const Color(0xFF30363D), width: 1.2),
+                            border: Border.all(
+                              color: context.cardBorder,
+                              width: 1.2,
+                            ),
                             boxShadow: [
                               BoxShadow(
-                                color: JiraTheme.primaryBlue.withValues(alpha: 0.35),
+                                color: context.accent.withValues(alpha: 0.35),
                                 blurRadius: 24,
                                 spreadRadius: 4,
                               ),
                             ],
                           ),
-                          child: const Center(
+                          child: Center(
                             child: Icon(
                               Icons.mosque_rounded,
-                              color: Color(0xFF93C5FD),
+                              color: context.accent,
                               size: 38,
                             ),
                           ),
@@ -75,7 +79,7 @@ class ObPage1Welcome extends StatelessWidget {
                             fontSize: 16,
                             fontWeight: FontWeight.w900,
                             letterSpacing: 3.5,
-                            color: const Color(0xFFF0F6FC),
+                            color: context.textPrimary,
                           ),
                         ),
 
@@ -87,7 +91,7 @@ class ObPage1Welcome extends StatelessWidget {
                           textAlign: TextAlign.center,
                           style: GoogleFonts.inter(
                             fontSize: 13,
-                            color: const Color(0xFF8B949E),
+                            color: context.textSecondary,
                             height: 1.45,
                           ),
                         ),
@@ -96,22 +100,25 @@ class ObPage1Welcome extends StatelessWidget {
 
                         // 5. 3 High-Craft Feature Cards
                         _buildFeatureCard(
+                          context: context,
                           icon: Icons.access_time_rounded,
-                          iconColor: JiraTheme.secondaryGreen,
+                          iconColor: context.accent,
                           title: 'Precise Prayer Timings',
                           subtitle: 'Verified Adhan & Silent Mosque Timings',
                         ),
                         const SizedBox(height: 10),
                         _buildFeatureCard(
+                          context: context,
                           icon: Icons.menu_book_rounded,
-                          iconColor: JiraTheme.primaryBlue,
+                          iconColor: context.accent,
                           title: 'Complete Holy Quran',
                           subtitle: 'Full 114 Surahs, Word-by-Word & Tajweed',
                         ),
                         const SizedBox(height: 10),
                         _buildFeatureCard(
+                          context: context,
                           icon: Icons.shield_outlined,
-                          iconColor: const Color(0xFFFB923C),
+                          iconColor: context.gold,
                           title: 'Authentic Awraad & Duas',
                           subtitle: '500+ Verified Supplications & Daily Wird',
                         ),
@@ -128,11 +135,11 @@ class ObPage1Welcome extends StatelessWidget {
                             width: double.infinity,
                             height: 54,
                             decoration: BoxDecoration(
-                              color: JiraTheme.primaryBlue,
+                              color: context.accent,
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: [
                                 BoxShadow(
-                                  color: JiraTheme.primaryBlue.withValues(alpha: 0.4),
+                                  color: context.accent.withValues(alpha: 0.4),
                                   blurRadius: 16,
                                   offset: const Offset(0, 4),
                                 ),
@@ -168,7 +175,7 @@ class ObPage1Welcome extends StatelessWidget {
                           'Takes less than 1 minute to setup',
                           style: GoogleFonts.inter(
                             fontSize: 11.5,
-                            color: const Color(0xFF64748B),
+                            color: context.textMuted,
                           ),
                         ),
 
@@ -186,6 +193,7 @@ class ObPage1Welcome extends StatelessWidget {
   }
 
   Widget _buildFeatureCard({
+    required BuildContext context,
     required IconData icon,
     required Color iconColor,
     required String title,
@@ -195,9 +203,9 @@ class ObPage1Welcome extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: const Color(0xFF161B22),
+        color: context.cardTop,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF30363D)),
+        border: Border.all(color: context.cardBorder),
       ),
       child: Row(
         children: [
@@ -205,7 +213,7 @@ class ObPage1Welcome extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: const Color(0xFF1F242C),
+              color: context.cardBottom,
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(icon, color: iconColor, size: 20),
@@ -220,7 +228,7 @@ class ObPage1Welcome extends StatelessWidget {
                   style: GoogleFonts.outfit(
                     fontSize: 14.5,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFFF0F6FC),
+                    color: context.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -228,7 +236,7 @@ class ObPage1Welcome extends StatelessWidget {
                   subtitle,
                   style: GoogleFonts.inter(
                     fontSize: 11.5,
-                    color: const Color(0xFF8B949E),
+                    color: context.textSecondary,
                   ),
                 ),
               ],

@@ -10,22 +10,22 @@ import '../providers/quran_provider.dart';
 import '../providers/theme_provider.dart';
 import '../widgets/heartbeat_tap.dart';
 import '../widgets/quran/reciter_picker_sheet.dart';
+import '../theme/app_colors.dart';
+import '../theme/home_design.dart';
 
 enum AudioPlayerViewMode { lyrics, disc }
 
 class AudioQuranScreen extends StatefulWidget {
   final int? initialSurahNumber;
 
-  const AudioQuranScreen({
-    super.key,
-    this.initialSurahNumber,
-  });
+  const AudioQuranScreen({super.key, this.initialSurahNumber});
 
   @override
   State<AudioQuranScreen> createState() => _AudioQuranScreenState();
 }
 
-class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerProviderStateMixin {
+class _AudioQuranScreenState extends State<AudioQuranScreen>
+    with SingleTickerProviderStateMixin {
   final ScrollController _lyricsScrollController = ScrollController();
   final Map<int, GlobalKey> _ayahKeys = {};
   AudioPlayerViewMode _viewMode = AudioPlayerViewMode.lyrics;
@@ -48,8 +48,10 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
       if (provider.surahs.isEmpty) {
         await provider.fetchSurahs();
       }
-      final targetSurah = widget.initialSurahNumber ?? provider.currentViewingSurahNumber ?? 1;
-      if (provider.currentViewingSurahNumber != targetSurah || provider.ayahs.isEmpty) {
+      final targetSurah =
+          widget.initialSurahNumber ?? provider.currentViewingSurahNumber ?? 1;
+      if (provider.currentViewingSurahNumber != targetSurah ||
+          provider.ayahs.isEmpty) {
         await provider.fetchSurahDetails(targetSurah);
       }
       if (provider.playerState?.playing != true && provider.ayahs.isNotEmpty) {
@@ -152,7 +154,11 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                 padding: const EdgeInsets.all(18),
                 child: Row(
                   children: [
-                    Icon(Icons.bedtime_outlined, color: tp.primaryAccent, size: 20),
+                    Icon(
+                      Icons.bedtime_outlined,
+                      color: tp.primaryAccent,
+                      size: 20,
+                    ),
                     const SizedBox(width: 10),
                     Text(
                       'Sleep Timer',
@@ -166,7 +172,9 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                 ),
               ),
               ...durations.map((mins) {
-                final isSelected = mins == _sleepTimerMinutes || (mins == 0 && _sleepTimerMinutes == null);
+                final isSelected =
+                    mins == _sleepTimerMinutes ||
+                    (mins == 0 && _sleepTimerMinutes == null);
                 final label = mins == 0 ? 'Turn Off Timer' : '$mins Minutes';
 
                 return ListTile(
@@ -183,7 +191,9 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                     label,
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 14,
-                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                      fontWeight: isSelected
+                          ? FontWeight.w700
+                          : FontWeight.w500,
                       color: isSelected ? tp.primaryAccent : tp.textPrimary,
                     ),
                   ),
@@ -200,7 +210,11 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
     );
   }
 
-  void _showSurahPlaylistDrawer(BuildContext context, QuranProvider provider, ThemeProvider tp) {
+  void _showSurahPlaylistDrawer(
+    BuildContext context,
+    QuranProvider provider,
+    ThemeProvider tp,
+  ) {
     final isDark = tp.isDarkMode;
 
     showModalBottomSheet(
@@ -259,7 +273,8 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                     itemCount: provider.surahs.length,
                     itemBuilder: (context, index) {
                       final surah = provider.surahs[index];
-                      final isCurrent = provider.currentViewingSurahNumber == surah.number;
+                      final isCurrent =
+                          provider.currentViewingSurahNumber == surah.number;
 
                       return ListTile(
                         onTap: () async {
@@ -273,11 +288,15 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                           height: 36,
                           decoration: BoxDecoration(
                             color: isCurrent
-                                ? tp.primaryAccent.withValues(alpha: isDark ? 0.15 : 0.12)
+                                ? tp.primaryAccent.withValues(
+                                    alpha: isDark ? 0.15 : 0.12,
+                                  )
                                 : tp.containerColor,
                             borderRadius: BorderRadius.circular(10),
                             border: Border.all(
-                              color: isCurrent ? tp.primaryAccent : tp.borderColor,
+                              color: isCurrent
+                                  ? tp.primaryAccent
+                                  : tp.borderColor,
                               width: 0.8,
                             ),
                           ),
@@ -287,7 +306,9 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                               style: GoogleFonts.plusJakartaSans(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w800,
-                                color: isCurrent ? tp.primaryAccent : tp.textPrimary,
+                                color: isCurrent
+                                    ? tp.primaryAccent
+                                    : tp.textPrimary,
                               ),
                             ),
                           ),
@@ -296,20 +317,29 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                           surah.englishName,
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 14.5,
-                            fontWeight: isCurrent ? FontWeight.w800 : FontWeight.w600,
-                            color: isCurrent ? tp.primaryAccent : tp.textPrimary,
+                            fontWeight: isCurrent
+                                ? FontWeight.w800
+                                : FontWeight.w600,
+                            color: isCurrent
+                                ? tp.primaryAccent
+                                : tp.textPrimary,
                           ),
                         ),
                         subtitle: Text(
                           '${surah.revelationType} • ${surah.numberOfAyahs} Verses',
-                          style: GoogleFonts.inter(fontSize: 11, color: tp.textSecondary),
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            color: tp.textSecondary,
+                          ),
                         ),
                         trailing: Text(
                           surah.name,
                           style: TextStyle(
                             fontFamily: 'HafsFont',
                             fontSize: 17,
-                            color: isCurrent ? tp.primaryAccent : tp.textPrimary,
+                            color: isCurrent
+                                ? tp.primaryAccent
+                                : tp.textPrimary,
                           ),
                         ),
                       );
@@ -330,6 +360,7 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
 
   @override
   Widget build(BuildContext context) {
+    context.watchTheme();
     final tp = context.watch<ThemeProvider>();
     final isDark = tp.isDarkMode;
     final quranProvider = context.watch<QuranProvider>();
@@ -353,7 +384,8 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
     final qariFullName = quranProvider.selectedQariObj.name;
     final qariShortName = qariFullName.split(' ').take(2).join(' ');
 
-    if (quranProvider.currentPlayingIndex != null && quranProvider.currentPlayingIndex != _lastScrolledIndex) {
+    if (quranProvider.currentPlayingIndex != null &&
+        quranProvider.currentPlayingIndex != _lastScrolledIndex) {
       _lastScrolledIndex = quranProvider.currentPlayingIndex;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _scrollToCenterIndex(quranProvider.currentPlayingIndex!);
@@ -510,7 +542,9 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                         fontFamily: 'HafsFont',
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: isDark ? const Color(0xFFE2E8F0) : tp.primaryAccent,
+                        color: isDark
+                            ? HomeDesign.goldText(isDark)
+                            : tp.primaryAccent,
                       ),
                     ),
                   ],
@@ -521,14 +555,14 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                 HeartbeatTap(
                   onTap: () => _showQariPickerSheet(context),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2.5),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 2.5,
+                    ),
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF151D24) : const Color(0xFFF1F5F9),
+                      color: isDark ? context.cardTop : context.cardBottom,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: tp.borderColor,
-                        width: 0.8,
-                      ),
+                      border: Border.all(color: tp.borderColor, width: 0.8),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -576,7 +610,9 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                     height: 32,
                     decoration: BoxDecoration(
                       color: _viewMode == AudioPlayerViewMode.lyrics
-                          ? tp.primaryAccent.withValues(alpha: isDark ? 0.15 : 0.12)
+                          ? tp.primaryAccent.withValues(
+                              alpha: isDark ? 0.15 : 0.12,
+                            )
                           : Colors.transparent,
                       shape: BoxShape.circle,
                     ),
@@ -584,7 +620,9 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                       child: Icon(
                         Icons.chat_bubble_outline_rounded,
                         size: 15,
-                        color: _viewMode == AudioPlayerViewMode.lyrics ? tp.primaryAccent : tp.textSecondary,
+                        color: _viewMode == AudioPlayerViewMode.lyrics
+                            ? tp.primaryAccent
+                            : tp.textSecondary,
                       ),
                     ),
                   ),
@@ -599,7 +637,9 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                     height: 32,
                     decoration: BoxDecoration(
                       color: _viewMode == AudioPlayerViewMode.disc
-                          ? tp.primaryAccent.withValues(alpha: isDark ? 0.15 : 0.12)
+                          ? tp.primaryAccent.withValues(
+                              alpha: isDark ? 0.15 : 0.12,
+                            )
                           : Colors.transparent,
                       shape: BoxShape.circle,
                     ),
@@ -607,7 +647,9 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                       child: Icon(
                         Icons.album_outlined,
                         size: 16,
-                        color: _viewMode == AudioPlayerViewMode.disc ? tp.primaryAccent : tp.textSecondary,
+                        color: _viewMode == AudioPlayerViewMode.disc
+                            ? tp.primaryAccent
+                            : tp.textSecondary,
                       ),
                     ),
                   ),
@@ -628,9 +670,7 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
     required bool isDark,
   }) {
     if (quranProvider.isLoadingAyahs) {
-      return Center(
-        child: CircularProgressIndicator(color: tp.primaryAccent),
-      );
+      return Center(child: CircularProgressIndicator(color: tp.primaryAccent));
     }
 
     if (quranProvider.ayahs.isEmpty) {
@@ -673,9 +713,15 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                       height: 28,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: isActive ? tp.primaryAccent.withValues(alpha: isDark ? 0.15 : 0.12) : Colors.transparent,
+                        color: isActive
+                            ? tp.primaryAccent.withValues(
+                                alpha: isDark ? 0.15 : 0.12,
+                              )
+                            : Colors.transparent,
                         border: Border.all(
-                          color: isActive ? tp.primaryAccent : tp.borderColor.withValues(alpha: 0.5),
+                          color: isActive
+                              ? tp.primaryAccent
+                              : tp.borderColor.withValues(alpha: 0.5),
                           width: 1.0,
                         ),
                       ),
@@ -686,7 +732,9 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                             fontFamily: 'HafsFont',
                             fontSize: 12,
                             fontWeight: FontWeight.normal,
-                            color: isActive ? tp.primaryAccent : tp.textSecondary,
+                            color: isActive
+                                ? tp.primaryAccent
+                                : tp.textSecondary,
                           ),
                         ),
                       ),
@@ -704,12 +752,14 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                           fontWeight: FontWeight.normal,
                           height: 1.9,
                           color: isActive
-                              ? (isDark ? const Color(0xFFF0F6FC) : const Color(0xFF0F172A))
+                              ? (context.textPrimary)
                               : tp.textSecondary.withValues(alpha: 0.45),
                           shadows: isActive
                               ? [
                                   BoxShadow(
-                                    color: tp.primaryAccent.withValues(alpha: 0.35),
+                                    color: tp.primaryAccent.withValues(
+                                      alpha: 0.35,
+                                    ),
                                     blurRadius: 18,
                                   ),
                                 ]
@@ -760,20 +810,21 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                 animation: _waveformController,
                 builder: (context, child) {
                   return Transform.rotate(
-                    angle: isPlaying ? _waveformController.value * 2 * math.pi : 0.0,
+                    angle: isPlaying
+                        ? _waveformController.value * 2 * math.pi
+                        : 0.0,
                     child: Container(
                       width: 230,
                       height: 230,
                       decoration: BoxDecoration(
                         color: tp.surfaceColor,
                         shape: BoxShape.circle,
-                        border: Border.all(
-                          color: tp.borderColor,
-                          width: 1.5,
-                        ),
+                        border: Border.all(color: tp.borderColor, width: 1.5),
                         boxShadow: [
                           BoxShadow(
-                            color: tp.primaryAccent.withValues(alpha: isPlaying ? 0.25 : 0.05),
+                            color: tp.primaryAccent.withValues(
+                              alpha: isPlaying ? 0.25 : 0.05,
+                            ),
                             blurRadius: 36,
                             spreadRadius: 4,
                           ),
@@ -817,10 +868,7 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                 decoration: BoxDecoration(
                   color: tp.backgroundTop,
                   shape: BoxShape.circle,
-                  border: Border.all(
-                    color: tp.borderColor,
-                    width: 1.5,
-                  ),
+                  border: Border.all(color: tp.borderColor, width: 1.5),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.4),
@@ -835,7 +883,9 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                       fontFamily: 'HafsFont',
                       fontSize: 18,
                       fontWeight: FontWeight.normal,
-                      color: isDark ? const Color(0xFFE2E8F0) : tp.primaryAccent,
+                      color: isDark
+                          ? HomeDesign.goldText(isDark)
+                          : tp.primaryAccent,
                     ),
                   ),
                 ),
@@ -887,10 +937,7 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
             decoration: BoxDecoration(
               color: tp.surfaceColor.withValues(alpha: isDark ? 0.94 : 0.96),
               borderRadius: BorderRadius.circular(28),
-              border: Border.all(
-                color: tp.borderColor,
-                width: 0.8,
-              ),
+              border: Border.all(color: tp.borderColor, width: 0.8),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: isDark ? 0.45 : 0.08),
@@ -906,7 +953,9 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                   stream: quranProvider.audioPlayer.positionStream,
                   builder: (context, snapshot) {
                     final position = snapshot.data ?? Duration.zero;
-                    final total = quranProvider.currentAudioDuration ?? const Duration(minutes: 3, seconds: 12);
+                    final total =
+                        quranProvider.currentAudioDuration ??
+                        const Duration(minutes: 3, seconds: 12);
                     final remaining = total - position;
 
                     return Row(
@@ -944,15 +993,24 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                       onTap: () {
                         HapticFeedback.selectionClick();
                         final currentLoop = quranProvider.hifzLoopCount;
-                        final next = currentLoop == 1 ? 3 : (currentLoop == 3 ? 5 : 1);
-                        quranProvider.updateHifzSettings(next, quranProvider.hifzDelaySeconds);
+                        final next = currentLoop == 1
+                            ? 3
+                            : (currentLoop == 3 ? 5 : 1);
+                        quranProvider.updateHifzSettings(
+                          next,
+                          quranProvider.hifzDelaySeconds,
+                        );
                       },
                       child: Container(
                         padding: const EdgeInsets.all(8),
                         child: Icon(
-                          quranProvider.hifzLoopCount > 1 ? Icons.repeat_one_rounded : Icons.repeat_rounded,
+                          quranProvider.hifzLoopCount > 1
+                              ? Icons.repeat_one_rounded
+                              : Icons.repeat_rounded,
                           size: 22,
-                          color: quranProvider.hifzLoopCount > 1 ? tp.primaryAccent : tp.textSecondary,
+                          color: quranProvider.hifzLoopCount > 1
+                              ? tp.primaryAccent
+                              : tp.textSecondary,
                         ),
                       ),
                     ),
@@ -1006,7 +1064,9 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                                   ),
                                 )
                               : Icon(
-                                  isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                                  isPlaying
+                                      ? Icons.pause_rounded
+                                      : Icons.play_arrow_rounded,
                                   size: 34,
                                   color: Colors.white,
                                 ),
@@ -1065,9 +1125,12 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                         quranProvider.updatePlaybackSpeed(next);
                       },
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF151D24) : const Color(0xFFF1F5F9),
+                          color: isDark ? context.cardTop : context.cardBottom,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(color: tp.borderColor, width: 0.8),
                         ),
@@ -1086,14 +1149,21 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                     HeartbeatTap(
                       onTap: () => _showSleepTimerPicker(context, tp),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: _sleepTimerMinutes != null
-                              ? tp.primaryAccent.withValues(alpha: isDark ? 0.15 : 0.12)
-                              : (isDark ? const Color(0xFF151D24) : const Color(0xFFF1F5F9)),
+                              ? tp.primaryAccent.withValues(
+                                  alpha: isDark ? 0.15 : 0.12,
+                                )
+                              : (isDark ? context.cardTop : context.cardBottom),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: _sleepTimerMinutes != null ? tp.primaryAccent : tp.borderColor,
+                            color: _sleepTimerMinutes != null
+                                ? tp.primaryAccent
+                                : tp.borderColor,
                             width: 0.8,
                           ),
                         ),
@@ -1103,15 +1173,21 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
                             Icon(
                               Icons.bedtime_outlined,
                               size: 14,
-                              color: _sleepTimerMinutes != null ? tp.primaryAccent : tp.textSecondary,
+                              color: _sleepTimerMinutes != null
+                                  ? tp.primaryAccent
+                                  : tp.textSecondary,
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              _sleepTimerMinutes != null ? '${_sleepTimerMinutes}m' : 'Sleep',
+                              _sleepTimerMinutes != null
+                                  ? '${_sleepTimerMinutes}m'
+                                  : 'Sleep',
                               style: GoogleFonts.plusJakartaSans(
                                 fontSize: 11.5,
                                 fontWeight: FontWeight.w700,
-                                color: _sleepTimerMinutes != null ? tp.primaryAccent : tp.textPrimary,
+                                color: _sleepTimerMinutes != null
+                                    ? tp.primaryAccent
+                                    : tp.textPrimary,
                               ),
                             ),
                           ],
@@ -1135,8 +1211,11 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: List.generate(14, (index) {
-            final waveSeed = (index * 0.22) + (_waveformController.value * math.pi);
-            final barHeight = isPlaying ? 6.0 + (math.sin(waveSeed).abs() * 16.0) : 4.0;
+            final waveSeed =
+                (index * 0.22) + (_waveformController.value * math.pi);
+            final barHeight = isPlaying
+                ? 6.0 + (math.sin(waveSeed).abs() * 16.0)
+                : 4.0;
 
             return Container(
               margin: const EdgeInsets.symmetric(horizontal: 1.5),
@@ -1144,7 +1223,9 @@ class _AudioQuranScreenState extends State<AudioQuranScreen> with SingleTickerPr
               height: barHeight,
               decoration: BoxDecoration(
                 color: isPlaying
-                    ? tp.primaryAccent.withValues(alpha: 0.5 + (math.sin(waveSeed).abs() * 0.5))
+                    ? tp.primaryAccent.withValues(
+                        alpha: 0.5 + (math.sin(waveSeed).abs() * 0.5),
+                      )
                     : tp.textSecondary.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(2),
               ),

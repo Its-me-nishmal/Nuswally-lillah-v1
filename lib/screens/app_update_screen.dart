@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/app_update_service.dart';
-import '../theme/jira_theme.dart';
+import '../theme/app_colors.dart';
 
 class AppUpdateScreen extends StatefulWidget {
   const AppUpdateScreen({super.key});
@@ -48,7 +48,7 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
     final hasUpdate = AppUpdateService.isUpdateAvailable(info);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        backgroundColor: const Color(0xFF161B22),
+        backgroundColor: context.cardTop,
         content: Text(
           hasUpdate
               ? 'New version ${info?.versionName} is available!'
@@ -62,13 +62,14 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
   Future<void> _downloadUpdate() async {
     if (_updateInfo == null || _updateInfo!.downloadUrl.isEmpty) return;
     HapticFeedback.selectionClick();
-    final success =
-        await AppUpdateService.launchDownload(_updateInfo!.downloadUrl);
+    final success = await AppUpdateService.launchDownload(
+      _updateInfo!.downloadUrl,
+    );
     if (!success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text('Could not open download link'),
-          backgroundColor: Color(0xFF161B22),
+          backgroundColor: context.cardTop,
         ),
       );
     }
@@ -76,12 +77,13 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
 
   @override
   Widget build(BuildContext context) {
+    context.watchTheme();
     final isUpdateAvailable = AppUpdateService.isUpdateAvailable(_updateInfo);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0E14),
+      backgroundColor: context.pageTop,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0B0E14),
+        backgroundColor: context.pageTop,
         foregroundColor: Colors.white,
         elevation: 0,
         scrolledUnderElevation: 0,
@@ -90,22 +92,26 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
           style: GoogleFonts.outfit(
             fontSize: 18,
             fontWeight: FontWeight.w700,
-            color: const Color(0xFFF0F6FC),
+            color: context.textPrimary,
           ),
         ),
       ),
       body: SafeArea(
         child: _loading
-            ? const Center(
+            ? Center(
                 child: CircularProgressIndicator(
                   strokeWidth: 2.5,
-                  color: JiraTheme.secondaryGreen,
+                  color: context.accent,
                 ),
               )
             : ListView(
                 physics: const BouncingScrollPhysics(),
-                padding:
-                    EdgeInsets.fromLTRB(16, 10, 16, 24 + MediaQuery.paddingOf(context).bottom),
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  10,
+                  16,
+                  24 + MediaQuery.paddingOf(context).bottom,
+                ),
                 children: [
                   // 1. Version Hero Card
                   _buildVersionHeroCard(isUpdateAvailable),
@@ -120,7 +126,7 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
                     ElevatedButton.icon(
                       onPressed: _downloadUpdate,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: JiraTheme.secondaryGreen,
+                        backgroundColor: context.accent,
                         foregroundColor: Colors.black,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
@@ -144,20 +150,20 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
                   OutlinedButton.icon(
                     onPressed: _checkingOnline ? null : _checkLiveUpdates,
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFFF0F6FC),
-                      side: const BorderSide(color: Color(0xFF30363D)),
+                      foregroundColor: context.textPrimary,
+                      side: BorderSide(color: context.cardBorder),
                       padding: const EdgeInsets.symmetric(vertical: 13),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                     icon: _checkingOnline
-                        ? const SizedBox(
+                        ? SizedBox(
                             width: 16,
                             height: 16,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: JiraTheme.secondaryGreen,
+                              color: context.accent,
                             ),
                           )
                         : const Icon(Icons.sync_rounded, size: 18),
@@ -182,12 +188,12 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFF161B22),
+        color: context.cardTop,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isUpdateAvailable
-              ? JiraTheme.secondaryGreen.withValues(alpha: 0.5)
-              : const Color(0xFF30363D),
+              ? context.accent.withValues(alpha: 0.5)
+              : context.cardBorder,
           width: isUpdateAvailable ? 1.3 : 1,
         ),
       ),
@@ -199,17 +205,14 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
             height: 54,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFF30363D)),
+              border: Border.all(color: context.cardBorder),
             ),
             clipBehavior: Clip.antiAlias,
             child: Image.asset(
               'assets/images/app_icon.png',
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => const Icon(
-                Icons.mosque_rounded,
-                color: JiraTheme.secondaryGreen,
-                size: 28,
-              ),
+              errorBuilder: (_, __, ___) =>
+                  Icon(Icons.mosque_rounded, color: context.accent, size: 28),
             ),
           ),
           const SizedBox(width: 16),
@@ -220,7 +223,7 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
                 Text(
                   'Nuswally Lillah',
                   style: GoogleFonts.outfit(
-                    color: const Color(0xFFF0F6FC),
+                    color: context.textPrimary,
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                   ),
@@ -229,23 +232,25 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
                 Text(
                   'Installed: v${AppUpdateService.currentVersionName}',
                   style: GoogleFonts.inter(
-                    color: const Color(0xFF8B949E),
+                    color: context.textSecondary,
                     fontSize: 12.5,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: isUpdateAvailable
-                        ? JiraTheme.secondaryGreen.withValues(alpha: 0.15)
-                        : const Color(0xFF1F242C),
+                        ? context.accent.withValues(alpha: 0.15)
+                        : context.cardBottom,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: isUpdateAvailable
-                          ? JiraTheme.secondaryGreen.withValues(alpha: 0.4)
-                          : const Color(0xFF30363D),
+                          ? context.accent.withValues(alpha: 0.4)
+                          : context.cardBorder,
                     ),
                   ),
                   child: Row(
@@ -257,20 +262,24 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
                             : Icons.check_circle_rounded,
                         size: 13,
                         color: isUpdateAvailable
-                            ? const Color(0xFF34D399)
-                            : const Color(0xFF8B949E),
+                            ? context.accent
+                            : context.textSecondary,
                       ),
                       const SizedBox(width: 5),
-                      Text(
-                        isUpdateAvailable
-                            ? 'Update Available: v${_updateInfo?.versionName}'
-                            : 'Latest version installed',
-                        style: TextStyle(
-                          color: isUpdateAvailable
-                              ? const Color(0xFF34D399)
-                              : const Color(0xFF8B949E),
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w600,
+                      Flexible(
+                        child: Text(
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          isUpdateAvailable
+                              ? 'Update Available: v${_updateInfo?.versionName}'
+                              : 'Latest version installed',
+                          style: TextStyle(
+                            color: isUpdateAvailable
+                                ? context.accent
+                                : context.textSecondary,
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ],
@@ -290,9 +299,9 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFF161B22),
+        color: context.cardTop,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFF30363D)),
+        border: Border.all(color: context.cardBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -303,7 +312,7 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
               Text(
                 "Release Highlights",
                 style: GoogleFonts.outfit(
-                  color: const Color(0xFFF0F6FC),
+                  color: context.textPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
                 ),
@@ -312,7 +321,7 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
                 Text(
                   info.releaseDate,
                   style: GoogleFonts.inter(
-                    color: const Color(0xFF8B949E),
+                    color: context.textSecondary,
                     fontSize: 12,
                   ),
                 ),
@@ -323,7 +332,7 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
             Text(
               info.title,
               style: GoogleFonts.outfit(
-                color: const Color(0xFF34D399),
+                color: context.accent,
                 fontSize: 13.5,
                 fontWeight: FontWeight.w600,
               ),
@@ -334,7 +343,7 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
             Text(
               info.description,
               style: GoogleFonts.inter(
-                color: const Color(0xFF8B949E),
+                color: context.textSecondary,
                 fontSize: 12.5,
                 height: 1.4,
               ),
@@ -346,12 +355,12 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
             const SizedBox(height: 16),
             _buildSectionHeader(
               icon: Icons.auto_awesome_rounded,
-              iconColor: JiraTheme.secondaryGreen,
+              iconColor: context.accent,
               title: "What's New",
             ),
             const SizedBox(height: 8),
             for (final item in info.features)
-              _buildBulletItem(item, JiraTheme.secondaryGreen),
+              _buildBulletItem(item, context.accent),
           ],
 
           // 2. Improvements
@@ -359,12 +368,12 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
             const SizedBox(height: 14),
             _buildSectionHeader(
               icon: Icons.bolt_rounded,
-              iconColor: const Color(0xFF60A5FA),
+              iconColor: context.accent,
               title: "Improvements & Performance",
             ),
             const SizedBox(height: 8),
             for (final item in info.improvements)
-              _buildBulletItem(item, const Color(0xFF60A5FA)),
+              _buildBulletItem(item, context.accent),
           ],
 
           // 3. Bug Fixes
@@ -372,12 +381,12 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
             const SizedBox(height: 14),
             _buildSectionHeader(
               icon: Icons.build_circle_outlined,
-              iconColor: const Color(0xFFFBBF24),
+              iconColor: context.gold,
               title: "Bug Fixes",
             ),
             const SizedBox(height: 8),
             for (final item in info.bugFixes)
-              _buildBulletItem(item, const Color(0xFFFBBF24)),
+              _buildBulletItem(item, context.gold),
           ],
         ],
       ),
@@ -393,12 +402,16 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
       children: [
         Icon(icon, size: 16, color: iconColor),
         const SizedBox(width: 6),
-        Text(
-          title,
-          style: GoogleFonts.outfit(
-            color: const Color(0xFFF0F6FC),
-            fontSize: 13.5,
-            fontWeight: FontWeight.w600,
+        Flexible(
+          child: Text(
+            title,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.outfit(
+              color: context.textPrimary,
+              fontSize: 13.5,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ],
@@ -427,7 +440,7 @@ class _AppUpdateScreenState extends State<AppUpdateScreen> {
             child: Text(
               text,
               style: GoogleFonts.inter(
-                color: const Color(0xFFE6EDF3),
+                color: context.textPrimary,
                 fontSize: 12.5,
                 height: 1.4,
               ),

@@ -2,17 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../theme/jira_theme.dart';
 import '../widgets/heartbeat_tap.dart';
+import '../theme/app_colors.dart';
 
 class DeveloperProfileScreen extends StatelessWidget {
   const DeveloperProfileScreen({super.key});
 
-  Future<void> _launchExternalUrl(BuildContext context, String urlString) async {
+  Future<void> _launchExternalUrl(
+    BuildContext context,
+    String urlString,
+  ) async {
     HapticFeedback.selectionClick();
     final uri = Uri.parse(urlString);
     try {
-      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      final launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
       if (!launched && context.mounted) {
         _copyToClipboard(context, urlString, 'URL');
       }
@@ -31,7 +37,10 @@ class DeveloperProfileScreen extends StatelessWidget {
       queryParameters: {'subject': 'Nuswally Lillah App Support'},
     );
     try {
-      final launched = await launchUrl(emailUri, mode: LaunchMode.externalApplication);
+      final launched = await launchUrl(
+        emailUri,
+        mode: LaunchMode.externalApplication,
+      );
       if (!launched && context.mounted) {
         _copyToClipboard(context, email, 'Email');
       }
@@ -56,8 +65,9 @@ class DeveloperProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    context.watchTheme();
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0E14),
+      backgroundColor: context.pageTop,
       body: SafeArea(
         child: Column(
           children: [
@@ -73,13 +83,13 @@ class DeveloperProfileScreen extends StatelessWidget {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF161B22),
+                        color: context.cardTop,
                         shape: BoxShape.circle,
-                        border: Border.all(color: const Color(0xFF30363D)),
+                        border: Border.all(color: context.cardBorder),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.arrow_back_rounded,
-                        color: Color(0xFFF0F6FC),
+                        color: context.textPrimary,
                         size: 20,
                       ),
                     ),
@@ -90,7 +100,7 @@ class DeveloperProfileScreen extends StatelessWidget {
                       fontSize: 14,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 2.0,
-                      color: const Color(0xFFF0F6FC),
+                      color: context.textPrimary,
                     ),
                   ),
                   const SizedBox(width: 40), // Balance
@@ -102,19 +112,24 @@ class DeveloperProfileScreen extends StatelessWidget {
             Expanded(
               child: ListView(
                 physics: const BouncingScrollPhysics(),
-                padding: EdgeInsets.fromLTRB(20, 12, 20, 24 + MediaQuery.paddingOf(context).bottom),
+                padding: EdgeInsets.fromLTRB(
+                  20,
+                  12,
+                  20,
+                  24 + MediaQuery.paddingOf(context).bottom,
+                ),
                 children: [
                   // Hero Profile Card
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(22),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF161B22),
+                      color: context.cardTop,
                       borderRadius: BorderRadius.circular(22),
-                      border: Border.all(color: const Color(0xFF30363D)),
+                      border: Border.all(color: context.cardBorder),
                       boxShadow: [
                         BoxShadow(
-                          color: JiraTheme.primaryBlue.withValues(alpha: 0.15),
+                          color: context.accent.withValues(alpha: 0.15),
                           blurRadius: 20,
                           offset: const Offset(0, 4),
                         ),
@@ -129,12 +144,12 @@ class DeveloperProfileScreen extends StatelessWidget {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: JiraTheme.primaryBlue,
+                              color: context.accent,
                               width: 2.5,
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: JiraTheme.primaryBlue.withValues(alpha: 0.4),
+                                color: context.accent.withValues(alpha: 0.4),
                                 blurRadius: 18,
                                 spreadRadius: 2,
                               ),
@@ -145,12 +160,12 @@ class DeveloperProfileScreen extends StatelessWidget {
                               'assets/images/developer.jpg',
                               fit: BoxFit.cover,
                               errorBuilder: (_, __, ___) => Container(
-                                color: const Color(0xFF1F242C),
-                                child: const Center(
+                                color: context.cardBottom,
+                                child: Center(
                                   child: Icon(
                                     Icons.person_rounded,
                                     size: 48,
-                                    color: Color(0xFF93C5FD),
+                                    color: context.accent,
                                   ),
                                 ),
                               ),
@@ -166,7 +181,7 @@ class DeveloperProfileScreen extends StatelessWidget {
                           style: GoogleFonts.outfit(
                             fontSize: 22,
                             fontWeight: FontWeight.w800,
-                            color: const Color(0xFFF0F6FC),
+                            color: context.textPrimary,
                           ),
                         ),
 
@@ -174,18 +189,23 @@ class DeveloperProfileScreen extends StatelessWidget {
 
                         // Alias / Handle Badge
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
-                            color: JiraTheme.primaryBlue.withValues(alpha: 0.12),
+                            color: context.accent.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: JiraTheme.primaryBlue.withValues(alpha: 0.3)),
+                            border: Border.all(
+                              color: context.accent.withValues(alpha: 0.3),
+                            ),
                           ),
                           child: Text(
                             'Cipher Nichu • @Its-me-nishmal',
                             style: GoogleFonts.outfit(
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
-                              color: const Color(0xFF93C5FD),
+                              color: context.accent,
                               letterSpacing: 0.3,
                             ),
                           ),
@@ -197,10 +217,10 @@ class DeveloperProfileScreen extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.location_on_rounded,
                               size: 15,
-                              color: JiraTheme.secondaryGreen,
+                              color: context.accent,
                             ),
                             const SizedBox(width: 5),
                             Text(
@@ -208,7 +228,7 @@ class DeveloperProfileScreen extends StatelessWidget {
                               style: GoogleFonts.inter(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
-                                color: const Color(0xFF8B949E),
+                                color: context.textSecondary,
                               ),
                             ),
                           ],
@@ -222,7 +242,7 @@ class DeveloperProfileScreen extends StatelessWidget {
                           textAlign: TextAlign.center,
                           style: GoogleFonts.inter(
                             fontSize: 12.5,
-                            color: const Color(0xFF8B949E),
+                            color: context.textSecondary,
                             height: 1.5,
                           ),
                         ),
@@ -241,7 +261,7 @@ class DeveloperProfileScreen extends StatelessWidget {
                         fontSize: 10.5,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 2.0,
-                        color: const Color(0xFF8B949E),
+                        color: context.textSecondary,
                       ),
                     ),
                   ),
@@ -252,11 +272,14 @@ class DeveloperProfileScreen extends StatelessWidget {
                   _buildLinkTile(
                     context: context,
                     icon: Icons.code_rounded,
-                    iconColor: const Color(0xFF93C5FD),
+                    iconColor: context.accent,
                     title: 'GitHub Profile',
                     subtitle: 'github.com/Its-me-nishmal',
                     badge: 'OPEN GITHUB',
-                    onTap: () => _launchExternalUrl(context, 'https://github.com/Its-me-nishmal'),
+                    onTap: () => _launchExternalUrl(
+                      context,
+                      'https://github.com/Its-me-nishmal',
+                    ),
                   ),
 
                   const SizedBox(height: 10),
@@ -265,7 +288,7 @@ class DeveloperProfileScreen extends StatelessWidget {
                   _buildLinkTile(
                     context: context,
                     icon: Icons.mail_outline_rounded,
-                    iconColor: const Color(0xFF38BDF8),
+                    iconColor: context.accent,
                     title: 'Developer Support Email',
                     subtitle: 'dev.nishmal@gmail.com',
                     badge: 'SEND EMAIL',
@@ -278,7 +301,7 @@ class DeveloperProfileScreen extends StatelessWidget {
                   _buildLinkTile(
                     context: context,
                     icon: Icons.place_outlined,
-                    iconColor: const Color(0xFFFB923C),
+                    iconColor: context.gold,
                     title: 'Origin / Hometown',
                     subtitle: 'Vadakara, North Malabar, Kerala',
                     badge: 'VADAKARA',
@@ -296,7 +319,7 @@ class DeveloperProfileScreen extends StatelessWidget {
                         fontSize: 10.5,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 2.0,
-                        color: const Color(0xFF8B949E),
+                        color: context.textSecondary,
                       ),
                     ),
                   ),
@@ -307,33 +330,37 @@ class DeveloperProfileScreen extends StatelessWidget {
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: [
-                      'Flutter / Dart',
-                      'Next.js',
-                      'Node.js',
-                      'TypeScript',
-                      'Python',
-                      'AWS & Cloud',
-                      'AI & LLMs',
-                      'Automation Systems',
-                    ].map((tech) {
-                      return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF161B22),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: const Color(0xFF30363D)),
-                        ),
-                        child: Text(
-                          tech,
-                          style: GoogleFonts.outfit(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF93C5FD),
-                          ),
-                        ),
-                      );
-                    }).toList(),
+                    children:
+                        [
+                          'Flutter / Dart',
+                          'Next.js',
+                          'Node.js',
+                          'TypeScript',
+                          'Python',
+                          'AWS & Cloud',
+                          'AI & LLMs',
+                          'Automation Systems',
+                        ].map((tech) {
+                          return Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: context.cardTop,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: context.cardBorder),
+                            ),
+                            child: Text(
+                              tech,
+                              style: GoogleFonts.outfit(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w600,
+                                color: context.accent,
+                              ),
+                            ),
+                          );
+                        }).toList(),
                   ),
 
                   const SizedBox(height: 36),
@@ -342,12 +369,12 @@ class DeveloperProfileScreen extends StatelessWidget {
                   Center(
                     child: Column(
                       children: [
-                        const Text(
+                        Text(
                           'جَزَاكَ ٱللَّٰهُ خَيْرًا',
                           style: TextStyle(
                             fontFamily: 'HafsFont',
                             fontSize: 20,
-                            color: Color(0xFF93C5FD),
+                            color: context.accent,
                           ),
                         ),
                         const SizedBox(height: 6),
@@ -355,7 +382,7 @@ class DeveloperProfileScreen extends StatelessWidget {
                           'Nuswally Lillah • Crafted with Ihsan in Vadakara',
                           style: GoogleFonts.inter(
                             fontSize: 11,
-                            color: const Color(0xFF64748B),
+                            color: context.textMuted,
                           ),
                         ),
                       ],
@@ -386,9 +413,9 @@ class DeveloperProfileScreen extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF161B22),
+          color: context.cardTop,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFF30363D)),
+          border: Border.all(color: context.cardBorder),
         ),
         child: Row(
           children: [
@@ -396,7 +423,7 @@ class DeveloperProfileScreen extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: const Color(0xFF1F242C),
+                color: context.cardBottom,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(icon, color: iconColor, size: 20),
@@ -411,7 +438,7 @@ class DeveloperProfileScreen extends StatelessWidget {
                     style: GoogleFonts.outfit(
                       fontSize: 14.5,
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFFF0F6FC),
+                      color: context.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -419,7 +446,7 @@ class DeveloperProfileScreen extends StatelessWidget {
                     subtitle,
                     style: GoogleFonts.inter(
                       fontSize: 11.5,
-                      color: const Color(0xFF8B949E),
+                      color: context.textSecondary,
                     ),
                   ),
                 ],

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
-import '../theme/jira_theme.dart';
+import '../theme/app_colors.dart';
 
 class YoutubePlayerScreen extends StatefulWidget {
   final String videoUrl;
@@ -66,9 +66,7 @@ class _YoutubePlayerScreenState extends State<YoutubePlayerScreen> {
   @override
   void dispose() {
     // Restore portrait-only lock and system UI when leaving player
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-    ]);
+    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
     _subscription?.cancel();
@@ -85,14 +83,15 @@ class _YoutubePlayerScreenState extends State<YoutubePlayerScreen> {
       mode: LaunchMode.externalApplication,
     );
     if (!launched && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not open YouTube')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Could not open YouTube')));
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    context.watchTheme();
     final controller = _controller;
     final displayTitle = widget.title?.trim().isNotEmpty == true
         ? widget.title!
@@ -125,16 +124,16 @@ class _YoutubePlayerScreenState extends State<YoutubePlayerScreen> {
         SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
         return Scaffold(
-          backgroundColor: const Color(0xFF0B0E14),
+          backgroundColor: context.pageTop,
           appBar: AppBar(
-            backgroundColor: const Color(0xFF0B0E14),
+            backgroundColor: context.pageTop,
             foregroundColor: Colors.white,
             elevation: 0,
             scrolledUnderElevation: 0,
             title: Text(
               category,
-              style: const TextStyle(
-                color: Color(0xFFF0F6FC),
+              style: TextStyle(
+                color: context.textPrimary,
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
               ),
@@ -143,7 +142,7 @@ class _YoutubePlayerScreenState extends State<YoutubePlayerScreen> {
               IconButton(
                 onPressed: _openExternally,
                 icon: const Icon(Icons.open_in_new_rounded, size: 20),
-                color: const Color(0xFF8B949E),
+                color: context.textSecondary,
                 tooltip: 'Open in YouTube',
               ),
             ],
@@ -169,12 +168,17 @@ class _YoutubePlayerScreenState extends State<YoutubePlayerScreen> {
                 // Video Title & Details
                 Expanded(
                   child: ListView(
-                    padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + MediaQuery.paddingOf(context).bottom),
+                    padding: EdgeInsets.fromLTRB(
+                      16,
+                      16,
+                      16,
+                      16 + MediaQuery.paddingOf(context).bottom,
+                    ),
                     children: [
                       Text(
                         displayTitle,
-                        style: const TextStyle(
-                          color: Color(0xFFF0F6FC),
+                        style: TextStyle(
+                          color: context.textPrimary,
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                           height: 1.35,
@@ -183,8 +187,8 @@ class _YoutubePlayerScreenState extends State<YoutubePlayerScreen> {
                       const SizedBox(height: 6),
                       Text(
                         speaker,
-                        style: const TextStyle(
-                          color: Color(0xFF8B949E),
+                        style: TextStyle(
+                          color: context.textSecondary,
                           fontSize: 13,
                         ),
                       ),
@@ -193,7 +197,7 @@ class _YoutubePlayerScreenState extends State<YoutubePlayerScreen> {
                         onPressed: _openExternally,
                         style: OutlinedButton.styleFrom(
                           foregroundColor: Colors.white,
-                          side: const BorderSide(color: Color(0xFF30363D)),
+                          side: BorderSide(color: context.cardBorder),
                           padding: const EdgeInsets.symmetric(
                             horizontal: 18,
                             vertical: 12,
@@ -202,9 +206,9 @@ class _YoutubePlayerScreenState extends State<YoutubePlayerScreen> {
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.play_circle_fill_rounded,
-                          color: Color(0xFFFF0033),
+                          color: context.danger,
                           size: 20,
                         ),
                         label: const Text(
@@ -233,21 +237,21 @@ class _YoutubePlayerScreenState extends State<YoutubePlayerScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               Icons.play_circle_outline_rounded,
-              color: Color(0xFF8B949E),
+              color: context.textSecondary,
               size: 44,
             ),
             const SizedBox(height: 10),
-            const Text(
+            Text(
               'Tap below to watch on YouTube',
-              style: TextStyle(color: Color(0xFF8B949E), fontSize: 13),
+              style: TextStyle(color: context.textSecondary, fontSize: 13),
             ),
             const SizedBox(height: 14),
             ElevatedButton.icon(
               onPressed: _openExternally,
               style: ElevatedButton.styleFrom(
-                backgroundColor: JiraTheme.secondaryGreen,
+                backgroundColor: context.accent,
                 foregroundColor: Colors.black,
               ),
               icon: const Icon(Icons.open_in_new, size: 16),

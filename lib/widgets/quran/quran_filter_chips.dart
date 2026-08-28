@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../providers/theme_provider.dart';
 import '../heartbeat_tap.dart';
+import '../../theme/app_colors.dart';
 
 enum QuranFilterType { all, juz, bookmarks, meccan, medinan }
 
@@ -23,13 +24,17 @@ class QuranFilterChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    context.watchTheme();
     final themeProvider = context.watch<ThemeProvider>();
     final isDark = themeProvider.isDarkMode;
 
     final filters = [
       (QuranFilterType.all, 'Surah'),
       (QuranFilterType.juz, 'Juz'),
-      (QuranFilterType.bookmarks, bookmarksCount > 0 ? 'Bookmarks ($bookmarksCount)' : 'Bookmarks'),
+      (
+        QuranFilterType.bookmarks,
+        bookmarksCount > 0 ? 'Bookmarks ($bookmarksCount)' : 'Bookmarks',
+      ),
       (QuranFilterType.meccan, 'Meccan'),
       (QuranFilterType.medinan, 'Medinan'),
     ];
@@ -53,15 +58,20 @@ class QuranFilterChips extends StatelessWidget {
               },
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 180),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6.5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 6.5,
+                ),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? (isDark ? const Color(0xFF1E2833) : const Color(0xFFE2E8F0))
+                      ? (isDark ? const Color(0xFF1E2833) : context.cardBorder)
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                     color: isSelected
-                        ? themeProvider.primaryAccent.withValues(alpha: isDark ? 0.35 : 0.45)
+                        ? themeProvider.primaryAccent.withValues(
+                            alpha: isDark ? 0.35 : 0.45,
+                          )
                         : Colors.transparent,
                     width: 0.8,
                   ),

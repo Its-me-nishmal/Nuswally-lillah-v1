@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../models/adhkaar.dart';
 import '../providers/theme_provider.dart';
 import '../widgets/heartbeat_tap.dart';
+import '../theme/app_colors.dart';
 
 class DuaDetailScreen extends StatefulWidget {
   final Dua dua;
@@ -16,7 +17,8 @@ class DuaDetailScreen extends StatefulWidget {
   State<DuaDetailScreen> createState() => _DuaDetailScreenState();
 }
 
-class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProviderStateMixin {
+class _DuaDetailScreenState extends State<DuaDetailScreen>
+    with SingleTickerProviderStateMixin {
   late int _count;
   late int _targetCount;
   bool _isPlaying = false;
@@ -27,7 +29,11 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
   void initState() {
     super.initState();
     _count = 0;
-    _targetCount = int.tryParse(RegExp(r'\d+').firstMatch(widget.dua.hint)?.group(0) ?? '') ?? 1;
+    _targetCount =
+        int.tryParse(
+          RegExp(r'\d+').firstMatch(widget.dua.hint)?.group(0) ?? '',
+        ) ??
+        1;
     if (_targetCount <= 0) _targetCount = 1;
 
     _waveformController = AnimationController(
@@ -60,7 +66,9 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
     });
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(_isPlaying ? 'Playing recitation audio...' : 'Audio paused'),
+        content: Text(
+          _isPlaying ? 'Playing recitation audio...' : 'Audio paused',
+        ),
         behavior: SnackBarBehavior.floating,
         duration: const Duration(milliseconds: 900),
       ),
@@ -69,6 +77,7 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
 
   @override
   Widget build(BuildContext context) {
+    context.watchTheme();
     final tp = context.watch<ThemeProvider>();
     final isDark = tp.isDarkMode;
     final dua = widget.dua;
@@ -108,7 +117,12 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
           Positioned.fill(
             child: ListView(
               physics: const BouncingScrollPhysics(),
-              padding: EdgeInsets.fromLTRB(16, topInset + kTopBarHeight + 12, 16, bottomInset + 100),
+              padding: EdgeInsets.fromLTRB(
+                16,
+                topInset + kTopBarHeight + 12,
+                16,
+                bottomInset + 100,
+              ),
               children: [
                 // Centerpiece Hero Arabic Recitation & Audio Card
                 _buildHeroArabicCard(dua, tp, isDark),
@@ -146,7 +160,9 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
                 child: Container(
                   padding: EdgeInsets.only(top: topInset),
                   decoration: BoxDecoration(
-                    color: tp.backgroundTop.withValues(alpha: isDark ? 0.85 : 0.90),
+                    color: tp.backgroundTop.withValues(
+                      alpha: isDark ? 0.85 : 0.90,
+                    ),
                     border: Border(
                       bottom: BorderSide(
                         color: tp.borderColor.withValues(alpha: 0.35),
@@ -174,10 +190,17 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
                             decoration: BoxDecoration(
                               color: tp.surfaceColor,
                               shape: BoxShape.circle,
-                              border: Border.all(color: tp.borderColor, width: 0.8),
+                              border: Border.all(
+                                color: tp.borderColor,
+                                width: 0.8,
+                              ),
                             ),
                             child: Center(
-                              child: Icon(Icons.arrow_back_ios_new_rounded, color: tp.textPrimary, size: 16),
+                              child: Icon(
+                                Icons.arrow_back_ios_new_rounded,
+                                color: tp.textPrimary,
+                                size: 16,
+                              ),
                             ),
                           ),
                         ),
@@ -204,7 +227,9 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: tp.primaryAccent.withValues(alpha: 0.8),
+                                    color: tp.primaryAccent.withValues(
+                                      alpha: 0.8,
+                                    ),
                                     blurRadius: 6,
                                     spreadRadius: 1,
                                   ),
@@ -229,12 +254,19 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
                                 decoration: BoxDecoration(
                                   color: tp.surfaceColor,
                                   shape: BoxShape.circle,
-                                  border: Border.all(color: tp.borderColor, width: 0.8),
+                                  border: Border.all(
+                                    color: tp.borderColor,
+                                    width: 0.8,
+                                  ),
                                 ),
                                 child: Center(
                                   child: Icon(
-                                    _isBookmarked ? Icons.bookmark_rounded : Icons.bookmark_outline_rounded,
-                                    color: _isBookmarked ? tp.primaryAccent : tp.textSecondary,
+                                    _isBookmarked
+                                        ? Icons.bookmark_rounded
+                                        : Icons.bookmark_outline_rounded,
+                                    color: _isBookmarked
+                                        ? tp.primaryAccent
+                                        : tp.textSecondary,
                                     size: 17,
                                   ),
                                 ),
@@ -244,7 +276,12 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
                             HeartbeatTap(
                               onTap: () {
                                 HapticFeedback.selectionClick();
-                                Clipboard.setData(ClipboardData(text: '${widget.dua.dua}\n\n${widget.dua.transli}'));
+                                Clipboard.setData(
+                                  ClipboardData(
+                                    text:
+                                        '${widget.dua.dua}\n\n${widget.dua.transli}',
+                                  ),
+                                );
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
                                     content: Text('Dua copied to clipboard'),
@@ -259,7 +296,10 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
                                 decoration: BoxDecoration(
                                   color: tp.surfaceColor,
                                   shape: BoxShape.circle,
-                                  border: Border.all(color: tp.borderColor, width: 0.8),
+                                  border: Border.all(
+                                    color: tp.borderColor,
+                                    width: 0.8,
+                                  ),
                                 ),
                                 child: Center(
                                   child: Icon(
@@ -285,9 +325,7 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
             left: 0,
             right: 0,
             bottom: bottomInset > 0 ? bottomInset + 10 : 18,
-            child: Center(
-              child: _buildFloatingCounterDock(tp, isDark),
-            ),
+            child: Center(child: _buildFloatingCounterDock(tp, isDark)),
           ),
         ],
       ),
@@ -319,19 +357,30 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
             children: [
               // Repetition Pill Badge
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
-                  color: tp.primaryAccent.withValues(alpha: isDark ? 0.12 : 0.14),
+                  color: tp.primaryAccent.withValues(
+                    alpha: isDark ? 0.12 : 0.14,
+                  ),
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: tp.primaryAccent.withValues(alpha: isDark ? 0.25 : 0.35),
+                    color: tp.primaryAccent.withValues(
+                      alpha: isDark ? 0.25 : 0.35,
+                    ),
                     width: 0.8,
                   ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.repeat_rounded, size: 13, color: tp.primaryAccent),
+                    Icon(
+                      Icons.repeat_rounded,
+                      size: 13,
+                      color: tp.primaryAccent,
+                    ),
                     const SizedBox(width: 5),
                     Text(
                       'REPEAT $_targetCount TIMES',
@@ -367,7 +416,7 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
               fontFamily: 'HafsFont',
               fontSize: 24,
               fontWeight: FontWeight.w600,
-              color: isDark ? const Color(0xFFF0F6FC) : const Color(0xFF0F172A),
+              color: context.textPrimary,
               height: 1.85,
               letterSpacing: 0.2,
             ),
@@ -378,10 +427,10 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF151D24) : const Color(0xFFF1F5F9),
+              color: isDark ? context.cardTop : context.cardBottom,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: isDark ? const Color(0xFF222D38) : const Color(0xFFE2E8F0),
+                color: isDark ? context.hairline : context.cardBorder,
                 width: 0.8,
               ),
             ),
@@ -405,7 +454,9 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
                     ),
                     child: Center(
                       child: Icon(
-                        _isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                        _isPlaying
+                            ? Icons.pause_rounded
+                            : Icons.play_arrow_rounded,
                         color: Colors.white,
                         size: 20,
                       ),
@@ -418,7 +469,9 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _isPlaying ? 'Playing Audio Recitation' : 'Listen Recitation',
+                        _isPlaying
+                            ? 'Playing Audio Recitation'
+                            : 'Listen Recitation',
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 12.5,
                           fontWeight: FontWeight.w700,
@@ -444,7 +497,11 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
     );
   }
 
-  Widget _buildTransliterationCard(String transli, ThemeProvider tp, bool isDark) {
+  Widget _buildTransliterationCard(
+    String transli,
+    ThemeProvider tp,
+    bool isDark,
+  ) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
@@ -458,7 +515,11 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
         children: [
           Row(
             children: [
-              Icon(Icons.record_voice_over_outlined, color: tp.primaryAccent, size: 16),
+              Icon(
+                Icons.record_voice_over_outlined,
+                color: tp.primaryAccent,
+                size: 16,
+              ),
               const SizedBox(width: 8),
               Text(
                 'TRANSLITERATION',
@@ -579,7 +640,7 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
           height: 52,
           padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            color: (isDark ? const Color(0xFF0E1418) : Colors.white).withValues(
+            color: (isDark ? context.pageTop : Colors.white).withValues(
               alpha: isDark ? 0.92 : 0.95,
             ),
             borderRadius: BorderRadius.circular(30),
@@ -604,12 +665,23 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
               HeartbeatTap(
                 onTap: _incrementCount,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
-                    color: isDone ? tp.primaryAccent : tp.primaryAccent.withValues(alpha: isDark ? 0.15 : 0.12),
+                    color: isDone
+                        ? tp.primaryAccent
+                        : tp.primaryAccent.withValues(
+                            alpha: isDark ? 0.15 : 0.12,
+                          ),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: isDone ? tp.primaryAccent : tp.primaryAccent.withValues(alpha: isDark ? 0.3 : 0.4),
+                      color: isDone
+                          ? tp.primaryAccent
+                          : tp.primaryAccent.withValues(
+                              alpha: isDark ? 0.3 : 0.4,
+                            ),
                       width: 0.8,
                     ),
                   ),
@@ -617,7 +689,9 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        isDone ? Icons.check_circle_rounded : Icons.touch_app_rounded,
+                        isDone
+                            ? Icons.check_circle_rounded
+                            : Icons.touch_app_rounded,
                         size: 17,
                         color: isDone ? Colors.white : tp.primaryAccent,
                       ),
@@ -644,7 +718,11 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> with SingleTickerProv
                 },
                 child: Padding(
                   padding: const EdgeInsets.all(6),
-                  child: Icon(Icons.refresh_rounded, size: 18, color: tp.textSecondary),
+                  child: Icon(
+                    Icons.refresh_rounded,
+                    size: 18,
+                    color: tp.textSecondary,
+                  ),
                 ),
               ),
             ],

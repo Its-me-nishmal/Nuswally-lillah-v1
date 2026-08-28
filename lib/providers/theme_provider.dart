@@ -1,38 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-enum AppAccentPalette {
-  teal('Islamic Teal', Color(0xFF14B8A6)),
-  emerald('Emerald Green', Color(0xFF10B981)),
-  blue('Celestial Blue', Color(0xFF0C66E4)),
-  amber('Royal Amber', Color(0xFFF59E0B)),
-  purple('Amethyst', Color(0xFF8B5CF6));
-
-  final String title;
-  final Color color;
-
-  const AppAccentPalette(this.title, this.color);
-}
-
-enum AppThemeStyle { teal, minimal, emerald, purple, crimson, ocean, dark, light }
+import '../theme/home_design.dart';
 
 class ThemeProvider with ChangeNotifier {
-  static const String _spAccentKey = 'app_accent_palette_name';
   static const String _spDarkModeKey = 'is_app_dark_mode';
   static const String _spLangKey = 'app_language';
+  static const String _spHijriOffsetKey = 'hijri_offset_days';
 
-  AppAccentPalette _accent = AppAccentPalette.teal;
   bool _isDarkMode = true;
   String _appLanguage = 'en';
+  int _hijriOffsetDays = 0;
 
-  AppAccentPalette get accent => _accent;
-  AppThemeStyle get themeStyle => AppThemeStyle.values.firstWhere(
-        (s) => s.name == _accent.name,
-        orElse: () => AppThemeStyle.teal,
-      );
   bool get isDarkMode => _isDarkMode;
   String get appLanguage => _appLanguage;
   bool get isMalayalam => _appLanguage == 'ml';
+
+  /// Days to shift the arithmetic Hijri date by, so it can be lined up with
+  /// the local moon sighting. Clamped to -2..+2.
+  int get hijriOffsetDays => _hijriOffsetDays;
 
   ThemeProvider() {
     _loadTheme();
@@ -42,35 +27,23 @@ class ThemeProvider with ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     _appLanguage = prefs.getString(_spLangKey) ?? 'en';
     _isDarkMode = prefs.getBool(_spDarkModeKey) ?? true;
-
-    final savedAccent = prefs.getString(_spAccentKey);
-    if (savedAccent != null) {
-      try {
-        _accent = AppAccentPalette.values.firstWhere(
-          (a) => a.name == savedAccent,
-          orElse: () => AppAccentPalette.teal,
-        );
-      } catch (_) {}
-    }
+    _hijriOffsetDays = (prefs.getInt(_spHijriOffsetKey) ?? 0).clamp(-2, 2);
     notifyListeners();
   }
 
-  Future<void> setAccent(AppAccentPalette newAccent) async {
-    if (_accent == newAccent) return;
-    _accent = newAccent;
+  Future<void> setHijriOffsetDays(int days) async {
+    final clamped = days.clamp(-2, 2);
+    if (_hijriOffsetDays == clamped) return;
+    _hijriOffsetDays = clamped;
     notifyListeners();
 
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_spAccentKey, newAccent.name);
+    await prefs.setInt(_spHijriOffsetKey, clamped);
   }
 
-  Future<void> setThemeStyle(AppThemeStyle style) async {
-    final matching = AppAccentPalette.values.firstWhere(
-      (a) => a.name == style.name,
-      orElse: () => AppAccentPalette.teal,
-    );
-    await setAccent(matching);
-  }
+  /// Steps the offset through -2 → +2 and wraps back to -2.
+  Future<void> cycleHijriOffsetDays() =>
+      setHijriOffsetDays(_hijriOffsetDays >= 2 ? -2 : _hijriOffsetDays + 1);
 
   Future<void> toggleDarkMode() async {
     await setDarkMode(!_isDarkMode);
@@ -94,33 +67,37 @@ class ThemeProvider with ChangeNotifier {
     await prefs.setString(_spLangKey, lang);
   }
 
-  // --- Dynamic Color Tokens ---
-  Color get primaryAccent => _accent.color;
+  // --- Colour Tokens ---
+  /// The app's single accent. Only dark/light is user-selectable.
+  Color get primaryAccent => const Color(0xFF14B8A6);
   Color get secondaryAccent => const Color(0xFF10B981);
   Color get tertiaryAccent => const Color(0xFFF59E0B);
 
-  Color get backgroundTop =>
-      _isDarkMode ? const Color(0xFF0B0E14) : const Color(0xFFF8FAFC);
-  Color get backgroundBottom =>
-      _isDarkMode ? const Color(0xFF080B10) : const Color(0xFFF1F5F9);
+  /// Darkened accent for accent-coloured *text* on light backgrounds, where
+  /// the bright accent would fail WCAG AA contrast.
+  Color get primaryAccentOnLight => const Color(0xFF0F766E);
+
+  /// Accent tuned for text in whichever mode is active.
+  Color get accentText => _isDarkMode ? primaryAccent : primaryAccentOnLight;
+
+  // These delegate to HomeDesign so the ~277 existing call sites across the
+  // app pick up the emerald-and-gold palette without being rewritten.
+  Color get backgroundTop => HomeDesign.pageTop(_isDarkMode);
+  Color get backgroundBottom => HomeDesign.pageBottom(_isDarkMode);
   Color get backgroundColor => backgroundTop;
 
-  Color get surfaceColor =>
-      _isDarkMode ? const Color(0xFF161B22) : const Color(0xFFFFFFFF);
-  Color get containerColor =>
-      _isDarkMode ? const Color(0xFF1F2633) : const Color(0xFFF1F5F9);
+  Color get surfaceColor => HomeDesign.cardTop(_isDarkMode);
+  Color get containerColor => HomeDesign.inset(_isDarkMode);
 
-  Color get borderColor =>
-      _isDarkMode ? const Color(0xFF30363D) : const Color(0xFFE2E8F0);
-  Color get borderSubtle =>
-      _isDarkMode ? const Color(0xFF21262D) : const Color(0xFFF1F5F9);
+  Color get borderColor => HomeDesign.goldLine(_isDarkMode);
+  Color get borderSubtle => HomeDesign.divider(_isDarkMode);
 
   Color get textPrimary =>
       _isDarkMode ? const Color(0xFFF0F6FC) : const Color(0xFF0F172A);
   Color get textSecondary =>
-      _isDarkMode ? const Color(0xFF8B949E) : const Color(0xFF64748B);
+      _isDarkMode ? const Color(0xFF8FA0AF) : const Color(0xFF64748B);
   Color get textMuted =>
-      _isDarkMode ? const Color(0xFF64748B) : const Color(0xFF94A3B8);
+      _isDarkMode ? const Color(0xFF627280) : const Color(0xFF94A3B8);
 
   Color get neutralColor => backgroundTop;
   Color get continueReadingBg => containerColor;

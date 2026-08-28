@@ -14,6 +14,8 @@ import '../providers/quran_provider.dart';
 import '../providers/theme_provider.dart';
 import '../widgets/heartbeat_tap.dart';
 import 'surah_detail_screen.dart';
+import '../theme/app_colors.dart';
+import '../theme/home_design.dart';
 
 class NamesScreen extends StatefulWidget {
   const NamesScreen({super.key});
@@ -71,9 +73,11 @@ class _NamesScreenState extends State<NamesScreen> {
     _playerStateSub = _audioPlayer.playerStateStream.listen((state) {
       if (mounted) {
         setState(() {
-          _isPlaying = state.playing &&
+          _isPlaying =
+              state.playing &&
               state.processingState != ProcessingState.completed;
-          _isAudioLoading = state.processingState == ProcessingState.loading ||
+          _isAudioLoading =
+              state.processingState == ProcessingState.loading ||
               state.processingState == ProcessingState.buffering;
         });
       }
@@ -121,8 +125,9 @@ class _NamesScreenState extends State<NamesScreen> {
           .whereType<int>()
           .toSet();
 
-      final jsonString =
-          await rootBundle.loadString('assets/data/99_names_of_allah.json');
+      final jsonString = await rootBundle.loadString(
+        'assets/data/99_names_of_allah.json',
+      );
       final Map<String, dynamic> jsonMap = json.decode(jsonString);
       final List<dynamic> list = jsonMap['data'] as List<dynamic>? ?? [];
 
@@ -180,8 +185,7 @@ class _NamesScreenState extends State<NamesScreen> {
 
   List<String> _extractReferences(String foundStr) {
     if (foundStr.isEmpty) return [];
-    final matches =
-        RegExp(r'\(?\s*(\d+\s*:\s*\d+)\s*\)?').allMatches(foundStr);
+    final matches = RegExp(r'\(?\s*(\d+\s*:\s*\d+)\s*\)?').allMatches(foundStr);
     if (matches.isNotEmpty) {
       return matches.map((m) => m.group(1)!.replaceAll(' ', '')).toList();
     }
@@ -201,8 +205,9 @@ class _NamesScreenState extends State<NamesScreen> {
         Surah? targetSurah;
 
         try {
-          targetSurah =
-              quranProvider.surahs.firstWhere((s) => s.number == surahNum);
+          targetSurah = quranProvider.surahs.firstWhere(
+            (s) => s.number == surahNum,
+          );
         } catch (_) {
           targetSurah = Surah(
             number: surahNum,
@@ -229,8 +234,10 @@ class _NamesScreenState extends State<NamesScreen> {
     }
   }
 
-  void _showMemorizationTipDialog(BuildContext context,
-      {bool autoOpened = false}) {
+  void _showMemorizationTipDialog(
+    BuildContext context, {
+    bool autoOpened = false,
+  }) {
     HapticFeedback.selectionClick();
     final tp = context.read<ThemeProvider>();
     final isDark = tp.isDarkMode;
@@ -270,16 +277,16 @@ class _NamesScreenState extends State<NamesScreen> {
                 width: 52,
                 height: 52,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
+                  color: context.gold.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: const Color(0xFFF59E0B).withValues(alpha: 0.4),
+                    color: context.gold.withValues(alpha: 0.4),
                   ),
                 ),
-                child: const Center(
+                child: Center(
                   child: Icon(
                     Icons.lightbulb_rounded,
-                    color: Color(0xFFF59E0B),
+                    color: context.gold,
                     size: 26,
                   ),
                 ),
@@ -299,7 +306,7 @@ class _NamesScreenState extends State<NamesScreen> {
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF151D24) : const Color(0xFFF1F5F9),
+                  color: isDark ? context.cardTop : context.cardBottom,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: tp.borderColor, width: 0.8),
                 ),
@@ -311,7 +318,9 @@ class _NamesScreenState extends State<NamesScreen> {
                       style: TextStyle(
                         fontFamily: 'HafsFont',
                         fontSize: 15.5,
-                        color: isDark ? const Color(0xFFE2E8F0) : tp.primaryAccent,
+                        color: isDark
+                            ? HomeDesign.goldText(isDark)
+                            : tp.primaryAccent,
                         height: 1.5,
                       ),
                     ),
@@ -352,7 +361,7 @@ class _NamesScreenState extends State<NamesScreen> {
 
               _buildTipStepRow(
                 icon: Icons.favorite_rounded,
-                iconColor: const Color(0xFFEF4444),
+                iconColor: context.danger,
                 title: 'Mark as Memorized with ❤️',
                 subtitle:
                     'Tap the heart icon on each card as you memorize and internalize each Attribute.',
@@ -482,7 +491,9 @@ class _NamesScreenState extends State<NamesScreen> {
               ),
               decoration: BoxDecoration(
                 color: tp.surfaceColor,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(28),
+                ),
                 border: Border.all(color: tp.borderColor, width: 0.8),
               ),
               child: Column(
@@ -510,12 +521,12 @@ class _NamesScreenState extends State<NamesScreen> {
                           height: 36,
                           decoration: BoxDecoration(
                             color: isFav
-                                ? const Color(0xFFEF4444).withValues(alpha: 0.15)
+                                ? context.danger.withValues(alpha: 0.15)
                                 : tp.containerColor,
                             shape: BoxShape.circle,
                             border: Border.all(
                               color: isFav
-                                  ? const Color(0xFFEF4444).withValues(alpha: 0.5)
+                                  ? context.danger.withValues(alpha: 0.5)
                                   : tp.borderColor,
                               width: 0.8,
                             ),
@@ -525,9 +536,7 @@ class _NamesScreenState extends State<NamesScreen> {
                                 ? Icons.favorite_rounded
                                 : Icons.favorite_border_rounded,
                             size: 18,
-                            color: isFav
-                                ? const Color(0xFFEF4444)
-                                : tp.textSecondary,
+                            color: isFav ? context.danger : tp.textSecondary,
                           ),
                         ),
                       ),
@@ -542,7 +551,7 @@ class _NamesScreenState extends State<NamesScreen> {
                       fontFamily: 'HafsFont',
                       fontSize: 44,
                       fontWeight: FontWeight.normal,
-                      color: isDark ? const Color(0xFFF0F6FC) : const Color(0xFF0F172A),
+                      color: context.textPrimary,
                       height: 1.25,
                       shadows: [
                         Shadow(
@@ -582,7 +591,7 @@ class _NamesScreenState extends State<NamesScreen> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF151D24) : const Color(0xFFF1F5F9),
+                        color: isDark ? context.cardTop : context.cardBottom,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: tp.borderColor, width: 0.8),
                       ),
@@ -619,17 +628,25 @@ class _NamesScreenState extends State<NamesScreen> {
                           onTap: () => _navigateToAyah(context, ref),
                           child: Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 6),
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
                               color: tp.containerColor,
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: tp.borderColor, width: 0.8),
+                              border: Border.all(
+                                color: tp.borderColor,
+                                width: 0.8,
+                              ),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.menu_book_rounded,
-                                    size: 13, color: tp.primaryAccent),
+                                Icon(
+                                  Icons.menu_book_rounded,
+                                  size: 13,
+                                  color: tp.primaryAccent,
+                                ),
                                 const SizedBox(width: 6),
                                 Text(
                                   ref,
@@ -695,6 +712,7 @@ class _NamesScreenState extends State<NamesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    context.watchTheme();
     final tp = context.watch<ThemeProvider>();
     final isDark = tp.isDarkMode;
     final topInset = MediaQuery.paddingOf(context).top;
@@ -757,7 +775,10 @@ class _NamesScreenState extends State<NamesScreen> {
 
                 // Search Bar
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 4,
+                  ),
                   child: Container(
                     height: 42,
                     padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -768,7 +789,11 @@ class _NamesScreenState extends State<NamesScreen> {
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.search_rounded, size: 18, color: tp.textSecondary),
+                        Icon(
+                          Icons.search_rounded,
+                          size: 18,
+                          color: tp.textSecondary,
+                        ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: TextField(
@@ -788,7 +813,8 @@ class _NamesScreenState extends State<NamesScreen> {
                               isDense: true,
                               contentPadding: EdgeInsets.zero,
                             ),
-                            onChanged: (val) => setState(() => _searchQuery = val),
+                            onChanged: (val) =>
+                                setState(() => _searchQuery = val),
                           ),
                         ),
                         if (_searchQuery.isNotEmpty)
@@ -797,7 +823,11 @@ class _NamesScreenState extends State<NamesScreen> {
                               _searchController.clear();
                               setState(() => _searchQuery = '');
                             },
-                            child: Icon(Icons.close_rounded, size: 16, color: tp.textSecondary),
+                            child: Icon(
+                              Icons.close_rounded,
+                              size: 16,
+                              color: tp.textSecondary,
+                            ),
                           ),
                       ],
                     ),
@@ -808,9 +838,15 @@ class _NamesScreenState extends State<NamesScreen> {
 
                 // Audio Recitation Dock
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 4,
+                  ),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                     decoration: BoxDecoration(
                       color: tp.surfaceColor,
                       borderRadius: BorderRadius.circular(18),
@@ -851,7 +887,9 @@ class _NamesScreenState extends State<NamesScreen> {
                                   boxShadow: _isPlaying
                                       ? [
                                           BoxShadow(
-                                            color: tp.primaryAccent.withValues(alpha: 0.35),
+                                            color: tp.primaryAccent.withValues(
+                                              alpha: 0.35,
+                                            ),
                                             blurRadius: 10,
                                           ),
                                         ]
@@ -906,7 +944,9 @@ class _NamesScreenState extends State<NamesScreen> {
                               style: GoogleFonts.plusJakartaSans(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
-                                color: _isPlaying ? tp.primaryAccent : tp.textSecondary,
+                                color: _isPlaying
+                                    ? tp.primaryAccent
+                                    : tp.textSecondary,
                               ),
                             ),
                           ],
@@ -917,10 +957,16 @@ class _NamesScreenState extends State<NamesScreen> {
                           SliderTheme(
                             data: SliderThemeData(
                               trackHeight: 3,
-                              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
-                              overlayShape: const RoundSliderOverlayShape(overlayRadius: 10),
+                              thumbShape: const RoundSliderThumbShape(
+                                enabledThumbRadius: 5,
+                              ),
+                              overlayShape: const RoundSliderOverlayShape(
+                                overlayRadius: 10,
+                              ),
                               activeTrackColor: tp.primaryAccent,
-                              inactiveTrackColor: tp.borderColor.withValues(alpha: 0.4),
+                              inactiveTrackColor: tp.borderColor.withValues(
+                                alpha: 0.4,
+                              ),
                               thumbColor: tp.primaryAccent,
                             ),
                             child: Slider(
@@ -949,46 +995,46 @@ class _NamesScreenState extends State<NamesScreen> {
                           ),
                         )
                       : filteredNames.isEmpty
-                          ? Center(
-                              child: Text(
-                                _showFavoritesOnly
-                                    ? 'No memorized names marked yet'
-                                    : 'No names match "$_searchQuery"',
-                                style: GoogleFonts.inter(
-                                  fontSize: 13,
-                                  color: tp.textSecondary,
-                                ),
-                              ),
-                            )
-                          : GridView.builder(
-                              physics: const BouncingScrollPhysics(),
-                              padding: EdgeInsets.fromLTRB(
-                                16,
-                                6,
-                                16,
-                                math.max(bottomInset + 16.0, 32.0),
-                              ),
-                              itemCount: filteredNames.length,
-                              gridDelegate:
-                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                      ? Center(
+                          child: Text(
+                            _showFavoritesOnly
+                                ? 'No memorized names marked yet'
+                                : 'No names match "$_searchQuery"',
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              color: tp.textSecondary,
+                            ),
+                          ),
+                        )
+                      : GridView.builder(
+                          physics: const BouncingScrollPhysics(),
+                          padding: EdgeInsets.fromLTRB(
+                            16,
+                            6,
+                            16,
+                            math.max(bottomInset + 16.0, 32.0),
+                          ),
+                          itemCount: filteredNames.length,
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: 2,
                                 mainAxisSpacing: 12,
                                 crossAxisSpacing: 12,
                                 childAspectRatio: 0.90,
                               ),
-                              itemBuilder: (context, index) {
-                                final row = index ~/ 2;
-                                final isLeftCol = (index % 2 == 0);
-                                final rtlIndex = isLeftCol
-                                    ? (row * 2 + 1 < filteredNames.length
-                                        ? row * 2 + 1
-                                        : row * 2)
-                                    : (row * 2);
+                          itemBuilder: (context, index) {
+                            final row = index ~/ 2;
+                            final isLeftCol = (index % 2 == 0);
+                            final rtlIndex = isLeftCol
+                                ? (row * 2 + 1 < filteredNames.length
+                                      ? row * 2 + 1
+                                      : row * 2)
+                                : (row * 2);
 
-                                final name = filteredNames[rtlIndex];
-                                return _buildNameCard(context, name, tp, isDark);
-                              },
-                            ),
+                            final name = filteredNames[rtlIndex];
+                            return _buildNameCard(context, name, tp, isDark);
+                          },
+                        ),
                 ),
               ],
             ),
@@ -1006,7 +1052,9 @@ class _NamesScreenState extends State<NamesScreen> {
                 child: Container(
                   padding: EdgeInsets.only(top: topInset),
                   decoration: BoxDecoration(
-                    color: tp.backgroundTop.withValues(alpha: isDark ? 0.85 : 0.90),
+                    color: tp.backgroundTop.withValues(
+                      alpha: isDark ? 0.85 : 0.90,
+                    ),
                     border: Border(
                       bottom: BorderSide(
                         color: tp.borderColor.withValues(alpha: 0.35),
@@ -1034,7 +1082,10 @@ class _NamesScreenState extends State<NamesScreen> {
                             decoration: BoxDecoration(
                               color: tp.surfaceColor,
                               shape: BoxShape.circle,
-                              border: Border.all(color: tp.borderColor, width: 0.8),
+                              border: Border.all(
+                                color: tp.borderColor,
+                                width: 0.8,
+                              ),
                             ),
                             child: Center(
                               child: Icon(
@@ -1059,20 +1110,26 @@ class _NamesScreenState extends State<NamesScreen> {
                                   shape: BoxShape.circle,
                                   boxShadow: [
                                     BoxShadow(
-                                      color: tp.primaryAccent.withValues(alpha: 0.8),
+                                      color: tp.primaryAccent.withValues(
+                                        alpha: 0.8,
+                                      ),
                                       blurRadius: 6,
                                     ),
                                   ],
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              Text(
-                                '99 NAMES OF ALLAH',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w800,
-                                  color: tp.textPrimary,
-                                  letterSpacing: 1.2,
+                              Flexible(
+                                child: Text(
+                                  '99 NAMES OF ALLAH',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w800,
+                                    color: tp.textPrimary,
+                                    letterSpacing: 1.2,
+                                  ),
                                 ),
                               ),
                             ],
@@ -1091,13 +1148,16 @@ class _NamesScreenState extends State<NamesScreen> {
                                 decoration: BoxDecoration(
                                   color: tp.surfaceColor,
                                   shape: BoxShape.circle,
-                                  border: Border.all(color: tp.borderColor, width: 0.8),
+                                  border: Border.all(
+                                    color: tp.borderColor,
+                                    width: 0.8,
+                                  ),
                                 ),
-                                child: const Center(
+                                child: Center(
                                   child: Icon(
                                     Icons.lightbulb_outline_rounded,
                                     size: 16,
-                                    color: Color(0xFFF59E0B),
+                                    color: context.gold,
                                   ),
                                 ),
                               ),
@@ -1112,15 +1172,18 @@ class _NamesScreenState extends State<NamesScreen> {
                                 });
                               },
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 9,
+                                  vertical: 6,
+                                ),
                                 decoration: BoxDecoration(
                                   color: _showFavoritesOnly
-                                      ? const Color(0xFFEF4444).withValues(alpha: 0.15)
+                                      ? context.danger.withValues(alpha: 0.15)
                                       : tp.surfaceColor,
                                   borderRadius: BorderRadius.circular(16),
                                   border: Border.all(
                                     color: _showFavoritesOnly
-                                        ? const Color(0xFFEF4444).withValues(alpha: 0.6)
+                                        ? context.danger.withValues(alpha: 0.6)
                                         : tp.borderColor,
                                     width: 0.8,
                                   ),
@@ -1134,7 +1197,7 @@ class _NamesScreenState extends State<NamesScreen> {
                                           : Icons.favorite_border_rounded,
                                       size: 13,
                                       color: _showFavoritesOnly
-                                          ? const Color(0xFFEF4444)
+                                          ? context.danger
                                           : tp.textSecondary,
                                     ),
                                     const SizedBox(width: 4),
@@ -1144,7 +1207,7 @@ class _NamesScreenState extends State<NamesScreen> {
                                         fontSize: 11.5,
                                         fontWeight: FontWeight.w800,
                                         color: _showFavoritesOnly
-                                            ? const Color(0xFFEF4444)
+                                            ? context.danger
                                             : tp.textPrimary,
                                       ),
                                     ),
@@ -1166,7 +1229,12 @@ class _NamesScreenState extends State<NamesScreen> {
     );
   }
 
-  Widget _buildNameCard(BuildContext context, AllahName name, ThemeProvider tp, bool isDark) {
+  Widget _buildNameCard(
+    BuildContext context,
+    AllahName name,
+    ThemeProvider tp,
+    bool isDark,
+  ) {
     final isFav = _favoriteNames.contains(name.number);
 
     return Stack(
@@ -1181,7 +1249,7 @@ class _NamesScreenState extends State<NamesScreen> {
                 borderRadius: BorderRadius.circular(18),
                 border: Border.all(
                   color: isFav
-                      ? const Color(0xFFEF4444).withValues(alpha: 0.35)
+                      ? context.danger.withValues(alpha: 0.35)
                       : tp.borderColor,
                   width: 0.8,
                 ),
@@ -1198,9 +1266,14 @@ class _NamesScreenState extends State<NamesScreen> {
                   Align(
                     alignment: Alignment.topRight,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
-                        color: tp.primaryAccent.withValues(alpha: isDark ? 0.14 : 0.10),
+                        color: tp.primaryAccent.withValues(
+                          alpha: isDark ? 0.14 : 0.10,
+                        ),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -1225,7 +1298,7 @@ class _NamesScreenState extends State<NamesScreen> {
                         fontFamily: 'HafsFont',
                         fontSize: 26,
                         fontWeight: FontWeight.normal,
-                        color: isDark ? const Color(0xFFF0F6FC) : const Color(0xFF0F172A),
+                        color: context.textPrimary,
                         height: 1.2,
                       ),
                     ),
@@ -1275,7 +1348,7 @@ class _NamesScreenState extends State<NamesScreen> {
               height: 32,
               decoration: BoxDecoration(
                 color: isFav
-                    ? const Color(0xFFEF4444).withValues(alpha: 0.12)
+                    ? context.danger.withValues(alpha: 0.12)
                     : Colors.transparent,
                 shape: BoxShape.circle,
               ),
@@ -1285,9 +1358,7 @@ class _NamesScreenState extends State<NamesScreen> {
                       ? Icons.favorite_rounded
                       : Icons.favorite_border_rounded,
                   size: 17,
-                  color: isFav
-                      ? const Color(0xFFEF4444)
-                      : tp.textMuted,
+                  color: isFav ? context.danger : tp.textMuted,
                 ),
               ),
             ),

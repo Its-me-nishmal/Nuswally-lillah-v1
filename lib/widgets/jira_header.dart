@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
-import '../theme/jira_theme.dart';
 import 'heartbeat_tap.dart';
+import '../theme/app_colors.dart';
 
 /// Shared top app-bar style matching the Home screen header language.
 ///
@@ -30,15 +30,20 @@ class JiraHeader extends StatelessWidget {
     this.leading,
     this.actions = const [],
     this.centerTitle = false,
-    this.padding = const EdgeInsets.only(left: 16, right: 16, top: 12, bottom: 8),
+    this.padding = const EdgeInsets.only(
+      left: 16,
+      right: 16,
+      top: 12,
+      bottom: 8,
+    ),
   });
 
   @override
   Widget build(BuildContext context) {
+    context.watchTheme();
     final themeProvider = context.watch<ThemeProvider>();
-    final isDark = themeProvider.isDarkMode;
-    final surfaceColor = isDark ? JiraTheme.darkSurface : JiraTheme.lightSurface;
-    final borderColor = isDark ? JiraTheme.darkBorderSubtle : JiraTheme.lightBorderSubtle;
+    final surfaceColor = context.cardTop;
+    final borderColor = context.cardBorder;
 
     Widget backButton = Container(
       width: 36,
@@ -58,7 +63,9 @@ class JiraHeader extends StatelessWidget {
     );
 
     Widget titleColumn = Column(
-      crossAxisAlignment: centerTitle ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+      crossAxisAlignment: centerTitle
+          ? CrossAxisAlignment.center
+          : CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
@@ -115,10 +122,7 @@ class JiraHeader extends StatelessWidget {
           leadingWidget,
           const SizedBox(width: 12),
           Expanded(child: titleColumn),
-          if (actions.isNotEmpty) ...[
-            const SizedBox(width: 8),
-            ...actions,
-          ],
+          if (actions.isNotEmpty) ...[const SizedBox(width: 8), ...actions],
         ],
       ),
     );

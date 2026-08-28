@@ -6,8 +6,8 @@ import 'package:provider/provider.dart';
 import '../../models/quran_model.dart';
 import '../../providers/quran_provider.dart';
 import '../../providers/theme_provider.dart';
-import '../../theme/jira_theme.dart';
 import '../heartbeat_tap.dart';
+import '../../theme/app_colors.dart';
 
 class FloatingQuranAudioDock extends StatelessWidget {
   final Surah surah;
@@ -30,13 +30,16 @@ class FloatingQuranAudioDock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    context.watchTheme();
     final themeProvider = context.watch<ThemeProvider>();
     final quranProvider = context.watch<QuranProvider>();
     final isDark = themeProvider.isDarkMode;
 
     final isPlaying = quranProvider.playerState?.playing == true;
     final currentIndex = quranProvider.currentPlayingIndex ?? 0;
-    final currentAyahNumber = quranProvider.ayahs.isNotEmpty && currentIndex < quranProvider.ayahs.length
+    final currentAyahNumber =
+        quranProvider.ayahs.isNotEmpty &&
+            currentIndex < quranProvider.ayahs.length
         ? quranProvider.ayahs[currentIndex].numberInSurah
         : 1;
 
@@ -60,7 +63,10 @@ class FloatingQuranAudioDock extends StatelessWidget {
         return FadeTransition(
           opacity: animation,
           child: ScaleTransition(
-            scale: CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+            scale: CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeOutCubic,
+            ),
             alignment: Alignment.bottomRight,
             child: child,
           ),
@@ -112,18 +118,18 @@ class FloatingQuranAudioDock extends StatelessWidget {
           width: 56,
           height: 56,
           decoration: BoxDecoration(
-            color: (isDark ? JiraTheme.darkSurface : JiraTheme.lightSurface).withValues(alpha: 0.95),
+            color: (context.cardTop).withValues(alpha: 0.95),
             shape: BoxShape.circle,
             border: Border.all(
               color: isPlaying
-                  ? JiraTheme.secondaryGreen.withValues(alpha: 0.6)
-                  : (isDark ? JiraTheme.darkBorder : JiraTheme.lightBorder),
+                  ? context.accent.withValues(alpha: 0.6)
+                  : (context.cardBorder),
               width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
                 color: isPlaying
-                    ? JiraTheme.secondaryGreen.withValues(alpha: 0.3)
+                    ? context.accent.withValues(alpha: 0.3)
                     : Colors.black.withValues(alpha: isDark ? 0.4 : 0.1),
                 blurRadius: 16,
                 offset: const Offset(0, 4),
@@ -138,13 +144,15 @@ class FloatingQuranAudioDock extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: isPlaying ? JiraTheme.secondaryGreen : (isDark ? JiraTheme.darkContainer : JiraTheme.lightContainer),
+                  color: isPlaying ? context.accent : (context.cardBottom),
                   shape: BoxShape.circle,
                 ),
                 child: Center(
                   child: Icon(
                     isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                    color: isPlaying ? const Color(0xFF0B0E14) : themeProvider.textPrimary,
+                    color: isPlaying
+                        ? context.pageTop
+                        : themeProvider.textPrimary,
                     size: 22,
                   ),
                 ),
@@ -155,9 +163,12 @@ class FloatingQuranAudioDock extends StatelessWidget {
                 right: 2,
                 top: 2,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 1,
+                  ),
                   decoration: BoxDecoration(
-                    color: JiraTheme.primaryBlue,
+                    color: context.accent,
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -198,12 +209,9 @@ class FloatingQuranAudioDock extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
           decoration: BoxDecoration(
-            color: (isDark ? JiraTheme.darkSurface : JiraTheme.lightSurface).withValues(alpha: 0.92),
+            color: (context.cardTop).withValues(alpha: 0.92),
             borderRadius: BorderRadius.circular(28),
-            border: Border.all(
-              color: (isDark ? JiraTheme.darkBorderSubtle : JiraTheme.lightBorderSubtle),
-              width: 1.0,
-            ),
+            border: Border.all(color: (context.cardBorder), width: 1.0),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.05),
@@ -223,10 +231,10 @@ class FloatingQuranAudioDock extends StatelessWidget {
                     width: 38,
                     height: 38,
                     decoration: BoxDecoration(
-                      color: isDark ? JiraTheme.darkContainer : JiraTheme.lightContainer,
+                      color: context.cardBottom,
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: (isDark ? JiraTheme.darkBorderSubtle : JiraTheme.lightBorderSubtle),
+                        color: (context.cardBorder),
                         width: 1.0,
                       ),
                     ),
@@ -262,7 +270,9 @@ class FloatingQuranAudioDock extends StatelessWidget {
                           style: GoogleFonts.inter(
                             fontSize: 11.5,
                             fontWeight: FontWeight.w400,
-                            color: themeProvider.textSecondary.withValues(alpha: 0.85),
+                            color: themeProvider.textSecondary.withValues(
+                              alpha: 0.85,
+                            ),
                           ),
                         ),
                       ],
@@ -284,7 +294,9 @@ class FloatingQuranAudioDock extends StatelessWidget {
                           child: Icon(
                             Icons.skip_previous_rounded,
                             size: 22,
-                            color: themeProvider.textPrimary.withValues(alpha: 0.9),
+                            color: themeProvider.textPrimary.withValues(
+                              alpha: 0.9,
+                            ),
                           ),
                         ),
                       ),
@@ -308,11 +320,11 @@ class FloatingQuranAudioDock extends StatelessWidget {
                           width: 44,
                           height: 44,
                           decoration: BoxDecoration(
-                            color: JiraTheme.secondaryGreen,
+                            color: context.accent,
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: JiraTheme.secondaryGreen.withValues(alpha: 0.4),
+                                color: context.accent.withValues(alpha: 0.4),
                                 blurRadius: 12,
                                 offset: const Offset(0, 3),
                               ),
@@ -320,17 +332,19 @@ class FloatingQuranAudioDock extends StatelessWidget {
                           ),
                           child: Center(
                             child: quranProvider.isAudioLoading
-                                ? const SizedBox(
+                                ? SizedBox(
                                     width: 20,
                                     height: 20,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2.5,
-                                      color: Color(0xFF0B0E14),
+                                      color: context.pageTop,
                                     ),
                                   )
                                 : Icon(
-                                    isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                                    color: const Color(0xFF0B0E14),
+                                    isPlaying
+                                        ? Icons.pause_rounded
+                                        : Icons.play_arrow_rounded,
+                                    color: context.pageTop,
                                     size: 24,
                                   ),
                           ),
@@ -352,7 +366,10 @@ class FloatingQuranAudioDock extends StatelessWidget {
                             Icons.skip_next_rounded,
                             size: 22,
                             color: themeProvider.textPrimary.withValues(
-                              alpha: currentIndex < quranProvider.ayahs.length - 1 ? 0.9 : 0.3,
+                              alpha:
+                                  currentIndex < quranProvider.ayahs.length - 1
+                                  ? 0.9
+                                  : 0.3,
                             ),
                           ),
                         ),
@@ -371,7 +388,9 @@ class FloatingQuranAudioDock extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 10.5,
                       fontWeight: FontWeight.w600,
-                      color: themeProvider.textSecondary.withValues(alpha: 0.75),
+                      color: themeProvider.textSecondary.withValues(
+                        alpha: 0.75,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -381,17 +400,21 @@ class FloatingQuranAudioDock extends StatelessWidget {
                     child: Container(
                       height: 4,
                       decoration: BoxDecoration(
-                        color: isDark ? JiraTheme.darkContainer : JiraTheme.lightContainer,
+                        color: context.cardBottom,
                         borderRadius: BorderRadius.circular(2),
                       ),
                       child: LayoutBuilder(
                         builder: (context, constraints) {
                           final totalAyahs = quranProvider.ayahs.length;
-                          final progress = totalAyahs > 0 ? (currentIndex + 1) / totalAyahs : 0.0;
+                          final progress = totalAyahs > 0
+                              ? (currentIndex + 1) / totalAyahs
+                              : 0.0;
                           return Align(
                             alignment: Alignment.centerLeft,
                             child: Container(
-                              width: constraints.maxWidth * progress.clamp(0.0, 1.0),
+                              width:
+                                  constraints.maxWidth *
+                                  progress.clamp(0.0, 1.0),
                               height: 4,
                               decoration: BoxDecoration(
                                 color: const Color(0xFFA4C6FB),
@@ -406,11 +429,16 @@ class FloatingQuranAudioDock extends StatelessWidget {
                   const SizedBox(width: 8),
 
                   Text(
-                    _formatDuration(quranProvider.currentAudioDuration ?? const Duration(minutes: 3, seconds: 12)),
+                    _formatDuration(
+                      quranProvider.currentAudioDuration ??
+                          const Duration(minutes: 3, seconds: 12),
+                    ),
                     style: GoogleFonts.inter(
                       fontSize: 10.5,
                       fontWeight: FontWeight.w600,
-                      color: themeProvider.textSecondary.withValues(alpha: 0.75),
+                      color: themeProvider.textSecondary.withValues(
+                        alpha: 0.75,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -433,12 +461,15 @@ class FloatingQuranAudioDock extends StatelessWidget {
                       quranProvider.updatePlaybackSpeed(nextSpeed);
                     },
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
-                        color: isDark ? JiraTheme.darkContainer : JiraTheme.lightContainer,
+                        color: context.cardBottom,
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
-                          color: (isDark ? JiraTheme.darkBorder : JiraTheme.lightBorder).withValues(alpha: 0.7),
+                          color: (context.cardBorder).withValues(alpha: 0.7),
                           width: 1.0,
                         ),
                       ),

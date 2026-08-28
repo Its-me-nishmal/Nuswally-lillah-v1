@@ -6,6 +6,7 @@ import '../providers/theme_provider.dart';
 import '../services/social_links_service.dart';
 import '../widgets/heartbeat_tap.dart';
 import 'youtube_player_screen.dart';
+import '../theme/app_colors.dart';
 
 class MediaTabBody extends StatefulWidget {
   final String searchQuery;
@@ -44,7 +45,8 @@ class _MediaTabBodyState extends State<MediaTabBody> {
     if (_selectedCategoryId != 'all') {
       final cat = _categories.firstWhere(
         (c) => c.id == _selectedCategoryId,
-        orElse: () => const VideoCategory(id: '', name: '', icon: '', items: []),
+        orElse: () =>
+            const VideoCategory(id: '', name: '', icon: '', items: []),
       );
       if (cat.items.isNotEmpty) list = cat.items;
     }
@@ -78,6 +80,7 @@ class _MediaTabBodyState extends State<MediaTabBody> {
 
   @override
   Widget build(BuildContext context) {
+    context.watchTheme();
     final tp = context.watch<ThemeProvider>();
     final isDark = tp.isDarkMode;
 
@@ -99,7 +102,12 @@ class _MediaTabBodyState extends State<MediaTabBody> {
 
     return ListView(
       physics: const BouncingScrollPhysics(),
-      padding: EdgeInsets.fromLTRB(16, 12, 16, 100 + MediaQuery.paddingOf(context).bottom),
+      padding: EdgeInsets.fromLTRB(
+        16,
+        12,
+        16,
+        100 + MediaQuery.paddingOf(context).bottom,
+      ),
       children: [
         // 1. Sleek Filter Capsules Bar
         _buildFilterCapsules(tp, isDark),
@@ -148,20 +156,29 @@ class _MediaTabBodyState extends State<MediaTabBody> {
               borderRadius: BorderRadius.circular(18),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                children: (widget.searchQuery.trim().isNotEmpty ? videos : remainingVideos)
-                    .asMap()
-                    .entries
-                    .map((entry) {
-                  final video = entry.value;
-                  final isLast = entry.key == (widget.searchQuery.trim().isNotEmpty ? videos.length : remainingVideos.length) - 1;
+                children:
+                    (widget.searchQuery.trim().isNotEmpty
+                            ? videos
+                            : remainingVideos)
+                        .asMap()
+                        .entries
+                        .map((entry) {
+                          final video = entry.value;
+                          final isLast =
+                              entry.key ==
+                              (widget.searchQuery.trim().isNotEmpty
+                                      ? videos.length
+                                      : remainingVideos.length) -
+                                  1;
 
-                  return Column(
-                    children: [
-                      _buildVideoRowItem(context, video, tp, isDark),
-                      if (!isLast) _buildHairlineDivider(isDark),
-                    ],
-                  );
-                }).toList(),
+                          return Column(
+                            children: [
+                              _buildVideoRowItem(context, video, tp, isDark),
+                              if (!isLast) _buildHairlineDivider(isDark),
+                            ],
+                          );
+                        })
+                        .toList(),
               ),
             ),
           ),
@@ -188,7 +205,10 @@ class _MediaTabBodyState extends State<MediaTabBody> {
                 setState(() => _selectedCategoryId = cat.id);
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 7,
+                ),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? tp.primaryAccent.withValues(alpha: isDark ? 0.14 : 0.12)
@@ -196,7 +216,9 @@ class _MediaTabBodyState extends State<MediaTabBody> {
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
                     color: isSelected
-                        ? tp.primaryAccent.withValues(alpha: isDark ? 0.35 : 0.4)
+                        ? tp.primaryAccent.withValues(
+                            alpha: isDark ? 0.35 : 0.4,
+                          )
                         : tp.borderColor,
                     width: 0.8,
                   ),
@@ -206,7 +228,9 @@ class _MediaTabBodyState extends State<MediaTabBody> {
                     cat.name,
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 12,
-                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                      fontWeight: isSelected
+                          ? FontWeight.w700
+                          : FontWeight.w500,
                       color: isSelected ? tp.primaryAccent : tp.textSecondary,
                       letterSpacing: 0.1,
                     ),
@@ -255,7 +279,7 @@ class _MediaTabBodyState extends State<MediaTabBody> {
                       video.effectiveThumbnail,
                       fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) => Container(
-                        color: isDark ? const Color(0xFF151D24) : const Color(0xFFE2E8F0),
+                        color: isDark ? context.cardTop : context.cardBorder,
                         child: Center(
                           child: Icon(
                             Icons.mosque_rounded,
@@ -284,7 +308,10 @@ class _MediaTabBodyState extends State<MediaTabBody> {
                     top: 12,
                     left: 12,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: tp.primaryAccent,
                         borderRadius: BorderRadius.circular(8),
@@ -292,7 +319,11 @@ class _MediaTabBodyState extends State<MediaTabBody> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.fiber_manual_record_rounded, size: 10, color: Colors.white),
+                          const Icon(
+                            Icons.fiber_manual_record_rounded,
+                            size: 10,
+                            color: Colors.white,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             video.category.toUpperCase(),
@@ -311,7 +342,10 @@ class _MediaTabBodyState extends State<MediaTabBody> {
                     bottom: 12,
                     right: 12,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.black.withValues(alpha: 0.75),
                         borderRadius: BorderRadius.circular(6),
@@ -345,7 +379,11 @@ class _MediaTabBodyState extends State<MediaTabBody> {
                           ],
                         ),
                         child: const Center(
-                          child: Icon(Icons.play_arrow_rounded, color: Colors.white, size: 30),
+                          child: Icon(
+                            Icons.play_arrow_rounded,
+                            color: Colors.white,
+                            size: 30,
+                          ),
                         ),
                       ),
                     ),
@@ -373,7 +411,11 @@ class _MediaTabBodyState extends State<MediaTabBody> {
                     const SizedBox(height: 6),
                     Row(
                       children: [
-                        Icon(Icons.person_rounded, size: 14, color: tp.primaryAccent),
+                        Icon(
+                          Icons.person_rounded,
+                          size: 14,
+                          color: tp.primaryAccent,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           video.speaker,
@@ -421,8 +463,11 @@ class _MediaTabBodyState extends State<MediaTabBody> {
                         video.effectiveThumbnail,
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => Container(
-                          color: isDark ? const Color(0xFF151D24) : const Color(0xFFE2E8F0),
-                          child: Icon(Icons.play_arrow_rounded, color: tp.primaryAccent),
+                          color: isDark ? context.cardTop : context.cardBorder,
+                          child: Icon(
+                            Icons.play_arrow_rounded,
+                            color: tp.primaryAccent,
+                          ),
                         ),
                       ),
                     ),
@@ -437,7 +482,11 @@ class _MediaTabBodyState extends State<MediaTabBody> {
                               color: tp.primaryAccent.withValues(alpha: 0.9),
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 15),
+                            child: const Icon(
+                              Icons.play_arrow_rounded,
+                              color: Colors.white,
+                              size: 15,
+                            ),
                           ),
                         ),
                       ),
@@ -475,7 +524,10 @@ class _MediaTabBodyState extends State<MediaTabBody> {
                         ),
                       ),
                       const SizedBox(width: 6),
-                      Text('•', style: TextStyle(color: tp.textMuted, fontSize: 10)),
+                      Text(
+                        '•',
+                        style: TextStyle(color: tp.textMuted, fontSize: 10),
+                      ),
                       const SizedBox(width: 6),
                       Text(
                         video.episode.trim().toLowerCase().startsWith('ep')
@@ -493,11 +545,7 @@ class _MediaTabBodyState extends State<MediaTabBody> {
               ),
             ),
 
-            Icon(
-              Icons.chevron_right_rounded,
-              size: 20,
-              color: tp.textMuted,
-            ),
+            Icon(Icons.chevron_right_rounded, size: 20, color: tp.textMuted),
           ],
         ),
       ),
@@ -508,7 +556,7 @@ class _MediaTabBodyState extends State<MediaTabBody> {
     return Container(
       height: 1.0,
       margin: const EdgeInsets.only(left: 102),
-      color: isDark ? const Color(0xFF222D38) : const Color(0xFFE2E8F0),
+      color: isDark ? context.hairline : context.cardBorder,
     );
   }
 

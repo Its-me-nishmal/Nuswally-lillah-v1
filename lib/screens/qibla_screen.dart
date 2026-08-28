@@ -16,12 +16,13 @@ class QiblaScreen extends StatefulWidget {
   State<QiblaScreen> createState() => _QiblaScreenState();
 }
 
-class _QiblaScreenState extends State<QiblaScreen> with SingleTickerProviderStateMixin {
+class _QiblaScreenState extends State<QiblaScreen>
+    with SingleTickerProviderStateMixin {
   // Heading angle from North (0 to 360)
   // Initially we start at some arbitrary angle and animate/let user simulate it
   double _heading = 45.0;
   final double _qiblaBearing = 292.0; // Perfect Qibla bearing from Kerala (WNW)
-  
+
   late AnimationController _pulseController;
   bool _hasSignaledAlignment = false;
 
@@ -102,10 +103,17 @@ class _QiblaScreenState extends State<QiblaScreen> with SingleTickerProviderStat
                 return SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
                   child: ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
+                    ),
                     child: IntrinsicHeight(
                       child: Padding(
-                        padding: EdgeInsets.fromLTRB(24, 0, 24, 16 + MediaQuery.paddingOf(context).bottom),
+                        padding: EdgeInsets.fromLTRB(
+                          24,
+                          0,
+                          24,
+                          16 + MediaQuery.paddingOf(context).bottom,
+                        ),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -119,16 +127,28 @@ class _QiblaScreenState extends State<QiblaScreen> with SingleTickerProviderStat
                               child: isAligned
                                   ? Container(
                                       key: const ValueKey('aligned'),
-                                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 20,
+                                        vertical: 8,
+                                      ),
                                       decoration: BoxDecoration(
-                                        color: tp.primaryAccent.withValues(alpha: 0.15),
+                                        color: tp.primaryAccent.withValues(
+                                          alpha: 0.15,
+                                        ),
                                         borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(color: tp.primaryAccent, width: 1.0),
+                                        border: Border.all(
+                                          color: tp.primaryAccent,
+                                          width: 1.0,
+                                        ),
                                       ),
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Icon(Icons.gps_fixed_rounded, color: tp.primaryAccent, size: 16),
+                                          Icon(
+                                            Icons.gps_fixed_rounded,
+                                            color: tp.primaryAccent,
+                                            size: 16,
+                                          ),
                                           const SizedBox(width: 8),
                                           Text(
                                             'PERFECTLY ALIGNED',
@@ -144,24 +164,38 @@ class _QiblaScreenState extends State<QiblaScreen> with SingleTickerProviderStat
                                     )
                                   : Container(
                                       key: const ValueKey('aligning'),
-                                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 20,
+                                        vertical: 8,
+                                      ),
                                       decoration: BoxDecoration(
                                         color: tp.containerColor,
                                         borderRadius: BorderRadius.circular(30),
-                                        border: Border.all(color: tp.borderColor, width: 1),
+                                        border: Border.all(
+                                          color: tp.borderColor,
+                                          width: 1,
+                                        ),
                                       ),
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Icon(Icons.explore_outlined, color: tp.textMuted, size: 16),
+                                          Icon(
+                                            Icons.explore_outlined,
+                                            color: tp.textMuted,
+                                            size: 16,
+                                          ),
                                           const SizedBox(width: 8),
-                                          Text(
-                                            'ROTATE DEVICE TO ALIGN',
-                                            style: GoogleFonts.jetBrainsMono(
-                                              color: tp.textMuted,
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.bold,
-                                              letterSpacing: 1.5,
+                                          Flexible(
+                                            child: Text(
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              'ROTATE DEVICE TO ALIGN',
+                                              style: GoogleFonts.jetBrainsMono(
+                                                color: tp.textMuted,
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                                letterSpacing: 1.5,
+                                              ),
                                             ),
                                           ),
                                         ],
@@ -178,10 +212,7 @@ class _QiblaScreenState extends State<QiblaScreen> with SingleTickerProviderStat
                                 alignment: Alignment.center,
                                 children: [
                                   // Outer ambient aura
-                                  const SizedBox(
-                                    width: 290,
-                                    height: 290,
-                                  ),
+                                  const SizedBox(width: 290, height: 290),
 
                                   // Compass background ring
                                   Container(
@@ -192,7 +223,9 @@ class _QiblaScreenState extends State<QiblaScreen> with SingleTickerProviderStat
                                       color: tp.surfaceColor,
                                       border: Border.all(
                                         color: isAligned
-                                            ? tp.primaryAccent.withValues(alpha: 0.4)
+                                            ? tp.primaryAccent.withValues(
+                                                alpha: 0.4,
+                                              )
                                             : tp.borderColor,
                                         width: 2,
                                       ),
@@ -221,7 +254,9 @@ class _QiblaScreenState extends State<QiblaScreen> with SingleTickerProviderStat
                                       width: 280,
                                       height: 280,
                                       child: CustomPaint(
-                                        painter: NeedlePainter(accentColor: tp.primaryAccent),
+                                        painter: NeedlePainter(
+                                          accentColor: tp.primaryAccent,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -232,15 +267,23 @@ class _QiblaScreenState extends State<QiblaScreen> with SingleTickerProviderStat
                                     height: 54,
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      color: isAligned ? tp.primaryAccent : tp.containerColor,
+                                      color: isAligned
+                                          ? tp.primaryAccent
+                                          : tp.containerColor,
                                       border: Border.all(
-                                        color: isAligned ? Colors.transparent : tp.primaryAccent.withValues(alpha: 0.3),
+                                        color: isAligned
+                                            ? Colors.transparent
+                                            : tp.primaryAccent.withValues(
+                                                alpha: 0.3,
+                                              ),
                                         width: 1.5,
                                       ),
                                     ),
                                     child: Icon(
                                       Icons.mosque,
-                                      color: isAligned ? tp.backgroundBottom : tp.primaryAccent,
+                                      color: isAligned
+                                          ? tp.backgroundBottom
+                                          : tp.primaryAccent,
                                       size: 24,
                                     ),
                                   ),
@@ -314,7 +357,11 @@ class _QiblaScreenState extends State<QiblaScreen> with SingleTickerProviderStat
     );
   }
 
-  Widget _buildLocationCard(String location, String district, ThemeProvider themeProvider) {
+  Widget _buildLocationCard(
+    String location,
+    String district,
+    ThemeProvider themeProvider,
+  ) {
     return HeartbeatTap(
       onTap: () {},
       child: Container(
@@ -327,7 +374,11 @@ class _QiblaScreenState extends State<QiblaScreen> with SingleTickerProviderStat
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.location_on_rounded, color: themeProvider.primaryAccent, size: 18),
+            Icon(
+              Icons.location_on_rounded,
+              color: themeProvider.primaryAccent,
+              size: 18,
+            ),
             const SizedBox(width: 8),
             Text(
               '$location, $district',
@@ -404,7 +455,11 @@ class _QiblaScreenState extends State<QiblaScreen> with SingleTickerProviderStat
       ),
       child: Row(
         children: [
-          Icon(Icons.info_outline_rounded, color: themeProvider.primaryAccent.withValues(alpha: 0.7), size: 20),
+          Icon(
+            Icons.info_outline_rounded,
+            color: themeProvider.primaryAccent.withValues(alpha: 0.7),
+            size: 20,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -446,10 +501,12 @@ class CompassPainter extends CustomPainter {
       final angle = i * math.pi / 180;
       final isMajor = i % 30 == 0;
       final isCardinals = i % 90 == 0;
-      
+
       final tickLength = isCardinals ? 18.0 : (isMajor ? 12.0 : 6.0);
-      final currentPaint = (i == 0 || (i - qiblaAngle).abs() < 2.5) ? paintAccentTick : paintTick;
-      
+      final currentPaint = (i == 0 || (i - qiblaAngle).abs() < 2.5)
+          ? paintAccentTick
+          : paintTick;
+
       final start = Offset(
         center.dx + (radius - 12 - tickLength) * math.cos(angle),
         center.dy + (radius - 12 - tickLength) * math.sin(angle),
@@ -481,7 +538,9 @@ class CompassPainter extends CustomPainter {
             text: TextSpan(
               text: traditionalDir,
               style: GoogleFonts.jetBrainsMono(
-                color: traditionalDir == 'N' ? Colors.redAccent : Colors.white.withValues(alpha: 0.7),
+                color: traditionalDir == 'N'
+                    ? Colors.redAccent
+                    : Colors.white.withValues(alpha: 0.7),
                 fontSize: 13,
                 fontWeight: FontWeight.bold,
               ),
@@ -489,10 +548,12 @@ class CompassPainter extends CustomPainter {
             textDirection: TextDirection.ltr,
           );
           textPainter.layout();
-          
+
           final textOffset = Offset(
             center.dx + (radius - 40) * math.cos(angle) - textPainter.width / 2,
-            center.dy + (radius - 40) * math.sin(angle) - textPainter.height / 2,
+            center.dy +
+                (radius - 40) * math.sin(angle) -
+                textPainter.height / 2,
           );
           textPainter.paint(canvas, textOffset);
         }
@@ -531,7 +592,7 @@ class NeedlePainter extends CustomPainter {
       ..style = PaintingStyle.fill;
 
     final path = Path();
-    
+
     // Needle pointing upwards
     path.moveTo(center.dx, center.dy - radius + 24);
     path.lineTo(center.dx - 8, center.dy - radius + 55);

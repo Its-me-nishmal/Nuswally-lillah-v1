@@ -31,7 +31,9 @@ class _HaddadScreenState extends State<HaddadScreen> {
 
   Future<void> _loadData() async {
     try {
-      final String response = await rootBundle.loadString('assets/data/haddad.json');
+      final String response = await rootBundle.loadString(
+        'assets/data/haddad.json',
+      );
       final data = await json.decode(response) as List;
       setState(() {
         _items = data.map((json) => HaddadItem.fromJson(json)).toList();
@@ -129,7 +131,11 @@ class _HaddadScreenState extends State<HaddadScreen> {
               border: Border.all(color: tp.borderColor, width: 1.0),
             ),
             child: Center(
-              child: Icon(Icons.info_outline_rounded, size: 18, color: tp.textPrimary),
+              child: Icon(
+                Icons.info_outline_rounded,
+                size: 18,
+                color: tp.textPrimary,
+              ),
             ),
           ),
         ),
@@ -253,7 +259,9 @@ class _HaddadScreenState extends State<HaddadScreen> {
                 Text(
                   item.translation,
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.outfit(
+                  // Outfit ships no italic; Inter italic matches the other
+                  // translation lines in the app.
+                  style: GoogleFonts.inter(
                     fontSize: 15,
                     color: tp.textSecondary,
                     height: 1.5,
@@ -273,7 +281,10 @@ class _HaddadScreenState extends State<HaddadScreen> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: tp.surfaceColor,
-                  border: Border.all(color: tp.primaryAccent.withValues(alpha: 0.2), width: 1.5),
+                  border: Border.all(
+                    color: tp.primaryAccent.withValues(alpha: 0.2),
+                    width: 1.5,
+                  ),
                 ),
                 child: Stack(
                   alignment: Alignment.center,
@@ -285,7 +296,9 @@ class _HaddadScreenState extends State<HaddadScreen> {
                         value: _currentCount / item.count,
                         strokeWidth: 4,
                         backgroundColor: tp.borderColor.withValues(alpha: 0.4),
-                        valueColor: AlwaysStoppedAnimation<Color>(tp.primaryAccent),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          tp.primaryAccent,
+                        ),
                       ),
                     ),
                     Column(
@@ -346,7 +359,12 @@ class _HaddadScreenState extends State<HaddadScreen> {
     );
   }
 
-  Widget _buildNavButton({required IconData icon, required VoidCallback? onPressed, required bool enabled, required ThemeProvider tp}) {
+  Widget _buildNavButton({
+    required IconData icon,
+    required VoidCallback? onPressed,
+    required bool enabled,
+    required ThemeProvider tp,
+  }) {
     return HeartbeatTap(
       onTap: onPressed ?? () {},
       child: Container(
@@ -373,10 +391,15 @@ class _HaddadScreenState extends State<HaddadScreen> {
 
   Widget _buildMainActionButton(ThemeProvider tp) {
     bool isLast = _currentIndex == _items.length - 1;
-    bool needsCount = _items.isNotEmpty && _items[_currentIndex].count > 1 && _currentCount > 0;
+    bool needsCount =
+        _items.isNotEmpty &&
+        _items[_currentIndex].count > 1 &&
+        _currentCount > 0;
 
     return HeartbeatTap(
-      onTap: needsCount ? _decrementCount : (isLast ? () => Navigator.pop(context) : _next),
+      onTap: needsCount
+          ? _decrementCount
+          : (isLast ? () => Navigator.pop(context) : _next),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 14),
         decoration: BoxDecoration(

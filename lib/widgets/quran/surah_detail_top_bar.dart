@@ -7,6 +7,8 @@ import '../../providers/quran_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../services/quran_page_helper.dart';
 import '../heartbeat_tap.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/home_design.dart';
 
 enum QuranViewMode { mushaf, list }
 
@@ -28,6 +30,7 @@ class SurahDetailTopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    context.watchTheme();
     final themeProvider = context.watch<ThemeProvider>();
     final quranProvider = context.watch<QuranProvider>();
     final isDark = themeProvider.isDarkMode;
@@ -57,18 +60,24 @@ class SurahDetailTopBar extends StatelessWidget {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: (isCollapsed
-                    ? (isDark ? const Color(0xFF151D24) : Colors.white)
-                    : themeProvider.surfaceColor).withValues(alpha: isCollapsed ? 0.90 : 1.0),
+                color:
+                    (isCollapsed
+                            ? (isDark ? context.cardTop : Colors.white)
+                            : themeProvider.surfaceColor)
+                        .withValues(alpha: isCollapsed ? 0.90 : 1.0),
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: themeProvider.borderColor.withValues(alpha: isCollapsed ? 0.8 : 0.5),
+                  color: themeProvider.borderColor.withValues(
+                    alpha: isCollapsed ? 0.8 : 0.5,
+                  ),
                   width: 0.8,
                 ),
                 boxShadow: isCollapsed
                     ? [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
+                          color: Colors.black.withValues(
+                            alpha: isDark ? 0.35 : 0.08,
+                          ),
                           blurRadius: 10,
                           offset: const Offset(0, 2),
                         ),
@@ -121,7 +130,7 @@ class SurahDetailTopBar extends StatelessWidget {
                               fontFamily: 'HafsFont',
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
-                              color: isDark ? const Color(0xFFE2E8F0) : themeProvider.primaryAccent,
+                              color: HomeDesign.goldText(isDark),
                             ),
                           ),
                         ],
@@ -132,7 +141,9 @@ class SurahDetailTopBar extends StatelessWidget {
                         style: GoogleFonts.inter(
                           fontSize: 10,
                           fontWeight: FontWeight.w500,
-                          color: themeProvider.textSecondary.withValues(alpha: 0.85),
+                          color: themeProvider.textSecondary.withValues(
+                            alpha: 0.85,
+                          ),
                         ),
                       ),
                     ],
@@ -169,21 +180,29 @@ class SurahDetailTopBar extends StatelessWidget {
                         height: 36,
                         decoration: BoxDecoration(
                           color: isMushaf
-                              ? themeProvider.primaryAccent.withValues(alpha: isDark ? 0.15 : 0.12)
+                              ? themeProvider.primaryAccent.withValues(
+                                  alpha: isDark ? 0.15 : 0.12,
+                                )
                               : themeProvider.surfaceColor,
                           shape: BoxShape.circle,
                           border: Border.all(
                             color: isMushaf
-                                ? themeProvider.primaryAccent.withValues(alpha: 0.35)
+                                ? themeProvider.primaryAccent.withValues(
+                                    alpha: 0.35,
+                                  )
                                 : themeProvider.borderColor,
                             width: 0.8,
                           ),
                         ),
                         child: Center(
                           child: Icon(
-                            isMushaf ? Icons.format_list_bulleted_rounded : Icons.auto_stories_rounded,
+                            isMushaf
+                                ? Icons.format_list_bulleted_rounded
+                                : Icons.auto_stories_rounded,
                             size: 17,
-                            color: isMushaf ? themeProvider.primaryAccent : themeProvider.textPrimary,
+                            color: isMushaf
+                                ? themeProvider.primaryAccent
+                                : themeProvider.textPrimary,
                           ),
                         ),
                       ),
@@ -201,21 +220,29 @@ class SurahDetailTopBar extends StatelessWidget {
                         height: 36,
                         decoration: BoxDecoration(
                           color: isBookmarked
-                              ? themeProvider.primaryAccent.withValues(alpha: isDark ? 0.15 : 0.12)
+                              ? themeProvider.primaryAccent.withValues(
+                                  alpha: isDark ? 0.15 : 0.12,
+                                )
                               : themeProvider.surfaceColor,
                           shape: BoxShape.circle,
                           border: Border.all(
                             color: isBookmarked
-                                ? themeProvider.primaryAccent.withValues(alpha: 0.35)
+                                ? themeProvider.primaryAccent.withValues(
+                                    alpha: 0.35,
+                                  )
                                 : themeProvider.borderColor,
                             width: 0.8,
                           ),
                         ),
                         child: Center(
                           child: Icon(
-                            isBookmarked ? Icons.bookmark_rounded : Icons.bookmark_outline_rounded,
+                            isBookmarked
+                                ? Icons.bookmark_rounded
+                                : Icons.bookmark_outline_rounded,
                             size: 17,
-                            color: isBookmarked ? themeProvider.primaryAccent : themeProvider.textPrimary,
+                            color: isBookmarked
+                                ? themeProvider.primaryAccent
+                                : themeProvider.textPrimary,
                           ),
                         ),
                       ),

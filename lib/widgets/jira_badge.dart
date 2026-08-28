@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../theme/jira_theme.dart';
+import '../theme/app_colors.dart';
 
 enum JiraBadgeVariant { primary, success, warning, neutral }
 
@@ -17,27 +17,27 @@ class JiraBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    context.watchTheme();
 
     Color bgColor;
     Color textColor;
 
     switch (variant) {
       case JiraBadgeVariant.primary:
-        bgColor = isDark ? JiraTheme.infoBlueBgDark : JiraTheme.infoBlueBgLight;
-        textColor = JiraTheme.infoBlue;
+        bgColor = context.accentSoft;
+        textColor = context.accent;
         break;
       case JiraBadgeVariant.success:
-        bgColor = isDark ? JiraTheme.successGreenBgDark : JiraTheme.successGreenBgLight;
-        textColor = JiraTheme.successGreen;
+        bgColor = context.accentSoft;
+        textColor = context.accent;
         break;
       case JiraBadgeVariant.warning:
-        bgColor = isDark ? JiraTheme.warningOrangeBgDark : JiraTheme.warningOrangeBgLight;
-        textColor = JiraTheme.warningOrange;
+        bgColor = context.goldWash;
+        textColor = context.gold;
         break;
       case JiraBadgeVariant.neutral:
-        bgColor = isDark ? JiraTheme.darkContainer : JiraTheme.lightContainer;
-        textColor = isDark ? JiraTheme.darkTextSecondary : JiraTheme.lightTextSecondary;
+        bgColor = context.cardBottom;
+        textColor = context.textSecondary;
         break;
     }
 

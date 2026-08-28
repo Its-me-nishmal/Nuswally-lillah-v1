@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../theme/jira_theme.dart';
 import '../../widgets/heartbeat_tap.dart';
+import '../../theme/app_colors.dart';
 
 class _PresetHabit {
   final String id;
@@ -40,7 +40,7 @@ class _ObPage4HabitsState extends State<ObPage4Habits> {
       title: 'Morning Adhkaar',
       time: '🌅 06:00 AM',
       icon: Icons.wb_sunny_outlined,
-      iconColor: const Color(0xFF38BDF8),
+      iconColor: Color(0xFF14B8A6),
       subtitle: 'Start your day with divine remembrance',
       selected: true,
     ),
@@ -49,7 +49,7 @@ class _ObPage4HabitsState extends State<ObPage4Habits> {
       title: 'Evening Adhkaar',
       time: '🌇 06:00 PM',
       icon: Icons.nights_stay_outlined,
-      iconColor: const Color(0xFFFB923C),
+      iconColor: Color(0xFFD9A94E),
       subtitle: 'Evening protection before sunset',
       selected: true,
     ),
@@ -58,7 +58,7 @@ class _ObPage4HabitsState extends State<ObPage4Habits> {
       title: 'Surah Al-Mulk Before Sleep',
       time: '🌙 09:30 PM',
       icon: Icons.menu_book_rounded,
-      iconColor: JiraTheme.secondaryGreen,
+      iconColor: Color(0xFF14B8A6),
       subtitle: 'Protection of the grave',
       selected: false,
     ),
@@ -75,8 +75,9 @@ class _ObPage4HabitsState extends State<ObPage4Habits> {
 
   @override
   Widget build(BuildContext context) {
+    context.watchTheme();
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0E14),
+      backgroundColor: context.pageTop,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -91,7 +92,7 @@ class _ObPage4HabitsState extends State<ObPage4Habits> {
                 style: GoogleFonts.outfit(
                   fontSize: 22,
                   fontWeight: FontWeight.w800,
-                  color: const Color(0xFFF0F6FC),
+                  color: context.textPrimary,
                 ),
               ),
               const SizedBox(height: 4),
@@ -99,7 +100,7 @@ class _ObPage4HabitsState extends State<ObPage4Habits> {
                 'Choose the daily Islamic habits you want to track consistently.',
                 style: GoogleFonts.inter(
                   fontSize: 12.5,
-                  color: const Color(0xFF8B949E),
+                  color: context.textSecondary,
                   height: 1.4,
                 ),
               ),
@@ -124,16 +125,20 @@ class _ObPage4HabitsState extends State<ObPage4Habits> {
                       child: Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF161B22),
+                          color: context.cardTop,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: isSelected ? JiraTheme.primaryBlue : const Color(0xFF30363D),
+                            color: isSelected
+                                ? context.accent
+                                : context.cardBorder,
                             width: isSelected ? 1.2 : 1.0,
                           ),
                           boxShadow: isSelected
                               ? [
                                   BoxShadow(
-                                    color: JiraTheme.primaryBlue.withValues(alpha: 0.2),
+                                    color: context.accent.withValues(
+                                      alpha: 0.2,
+                                    ),
                                     blurRadius: 10,
                                     offset: const Offset(0, 2),
                                   ),
@@ -146,10 +151,14 @@ class _ObPage4HabitsState extends State<ObPage4Habits> {
                               width: 44,
                               height: 44,
                               decoration: BoxDecoration(
-                                color: const Color(0xFF1F242C),
+                                color: context.cardBottom,
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: Icon(habit.icon, color: habit.iconColor, size: 22),
+                              child: Icon(
+                                habit.icon,
+                                color: habit.iconColor,
+                                size: 22,
+                              ),
                             ),
                             const SizedBox(width: 14),
                             Expanded(
@@ -161,7 +170,7 @@ class _ObPage4HabitsState extends State<ObPage4Habits> {
                                     style: GoogleFonts.outfit(
                                       fontSize: 15,
                                       fontWeight: FontWeight.w700,
-                                      color: const Color(0xFFF0F6FC),
+                                      color: context.textPrimary,
                                     ),
                                   ),
                                   const SizedBox(height: 3),
@@ -170,7 +179,7 @@ class _ObPage4HabitsState extends State<ObPage4Habits> {
                                     style: GoogleFonts.inter(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
-                                      color: const Color(0xFF93C5FD),
+                                      color: context.accent,
                                     ),
                                   ),
                                 ],
@@ -181,15 +190,23 @@ class _ObPage4HabitsState extends State<ObPage4Habits> {
                               height: 24,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: isSelected ? JiraTheme.primaryBlue : Colors.transparent,
+                                color: isSelected
+                                    ? context.accent
+                                    : Colors.transparent,
                                 border: Border.all(
-                                  color: isSelected ? JiraTheme.primaryBlue : const Color(0xFF64748B),
+                                  color: isSelected
+                                      ? context.accent
+                                      : context.textMuted,
                                   width: 1.5,
                                 ),
                               ),
                               child: isSelected
                                   ? const Center(
-                                      child: Icon(Icons.check, size: 14, color: Colors.white),
+                                      child: Icon(
+                                        Icons.check,
+                                        size: 14,
+                                        color: Colors.white,
+                                      ),
                                     )
                                   : null,
                             ),
@@ -207,7 +224,7 @@ class _ObPage4HabitsState extends State<ObPage4Habits> {
                 textAlign: TextAlign.center,
                 style: GoogleFonts.inter(
                   fontSize: 11,
-                  color: const Color(0xFF64748B),
+                  color: context.textMuted,
                 ),
               ),
               const SizedBox(height: 12),
@@ -221,11 +238,11 @@ class _ObPage4HabitsState extends State<ObPage4Habits> {
                   width: double.infinity,
                   height: 52,
                   decoration: BoxDecoration(
-                    color: JiraTheme.primaryBlue,
+                    color: context.accent,
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: JiraTheme.primaryBlue.withValues(alpha: 0.35),
+                        color: context.accent.withValues(alpha: 0.35),
                         blurRadius: 12,
                         offset: const Offset(0, 3),
                       ),
@@ -244,7 +261,11 @@ class _ObPage4HabitsState extends State<ObPage4Habits> {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 18),
+                      const Icon(
+                        Icons.arrow_forward_rounded,
+                        color: Colors.white,
+                        size: 18,
+                      ),
                     ],
                   ),
                 ),

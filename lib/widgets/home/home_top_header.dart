@@ -4,9 +4,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../providers/prayer_provider.dart';
 import '../../providers/theme_provider.dart';
-import '../../theme/jira_theme.dart';
+import '../../theme/home_design.dart';
+import '../../utils/hijri_date.dart';
 import '../heartbeat_tap.dart';
-import '../theme_palette_sheet.dart';
 import '../../screens/location_selection_screen.dart';
 import '../../screens/notification_settings_screen.dart';
 import '../../screens/settings_screen.dart';
@@ -14,249 +14,228 @@ import '../../screens/settings_screen.dart';
 class HomeTopHeader extends StatelessWidget {
   const HomeTopHeader({super.key});
 
-  String _getHijriDateString() {
-    final now = DateTime.now();
-    final hijriMonths = [
-      'Muharram', 'Safar', 'Rabi al-Awwal', 'Rabi al-Thani',
-      'Jumada al-Awwal', 'Jumada al-Thani', 'Rajab', 'Sha\'ban',
-      'Ramadan', 'Shawwal', 'Dhu al-Qi\'dah', 'Dhu al-Hijjah'
-    ];
-    final refDate = DateTime(2026, 8, 2);
-    final diffDays = now.difference(refDate).inDays;
-    var day = 18 + diffDays;
-    var monthIdx = 1;
-    var year = 1448;
-
-    while (day > 29) {
-      day -= 29;
-      monthIdx++;
-      if (monthIdx >= 12) {
-        monthIdx = 0;
-        year++;
-      }
-    }
-
-    return '$day ${hijriMonths[monthIdx]} $year AH';
-  }
-
   @override
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
     final isDark = themeProvider.isDarkMode;
-    final surfaceColor = isDark ? JiraTheme.darkSurface : JiraTheme.lightSurface;
-    final borderColor = isDark ? JiraTheme.darkBorderSubtle : JiraTheme.lightBorderSubtle;
 
     return Selector<PrayerProvider, String>(
       selector: (_, provider) => provider.selectedLocation != null
           ? provider.selectedLocation!.name
           : 'Kozhikode, India',
       builder: (context, locationName, child) {
-        final displayLoc = locationName.contains(',') ? locationName : '$locationName, India';
+        final displayLoc = locationName.contains(',')
+            ? locationName
+            : '$locationName, India';
 
         return Container(
-          height: 56.0,
+          height: 68.0,
           padding: const EdgeInsets.symmetric(horizontal: 16),
           alignment: Alignment.center,
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Left Location Selector (Clean & Borderless)
-              HeartbeatTap(
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const LocationSelectionScreen()),
-                  );
-                },
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: themeProvider.primaryAccent.withValues(alpha: isDark ? 0.12 : 0.10),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: Icon(
-                          Icons.my_location_rounded,
-                          size: 15,
-                          color: themeProvider.primaryAccent,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 9),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              displayLoc,
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 13.5,
-                                fontWeight: FontWeight.w600,
-                                color: themeProvider.textPrimary,
-                                letterSpacing: 0.1,
-                              ),
-                            ),
-                            const SizedBox(width: 3),
-                            Icon(
-                              Icons.keyboard_arrow_down_rounded,
-                              size: 16,
-                              color: themeProvider.textSecondary,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 1),
-                        Text(
-                          _getHijriDateString(),
-                          style: GoogleFonts.inter(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w500,
-                            color: themeProvider.textSecondary.withValues(alpha: 0.85),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              // Right Action Buttons (Theme + Notifications + Settings)
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Theme Palette Switcher Button
-                  HeartbeatTap(
-                    onTap: () => ThemePaletteSheet.show(context),
-                    child: Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: surfaceColor,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: borderColor, width: 1.0),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: isDark ? 0.22 : 0.03),
-                            blurRadius: 10,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: Icon(
-                          Icons.palette_outlined,
-                          size: 18,
-                          color: themeProvider.textPrimary,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-
-                  // Notifications Button
-                  Consumer<PrayerProvider>(
-                  builder: (context, prayerProvider, _) {
-                    final isAzanOn = prayerProvider.azanNotificationsEnabled;
-
-                    return HeartbeatTap(
-                      onTap: () {
-                        HapticFeedback.selectionClick();
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const NotificationSettingsScreen()),
-                        );
-                      },
-                      child: Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: surfaceColor,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: borderColor, width: 1.0),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: isDark ? 0.22 : 0.03),
-                              blurRadius: 10,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            Icon(
-                              isAzanOn
-                                  ? Icons.notifications_rounded
-                                  : Icons.notifications_none_rounded,
-                              size: 18,
-                              color: themeProvider.textPrimary,
-                            ),
-                            if (isAzanOn)
-                              Positioned(
-                                top: 8,
-                                right: 8,
-                                child: Container(
-                                  width: 5.5,
-                                  height: 5.5,
-                                  decoration: BoxDecoration(
-                                    color: themeProvider.primaryAccent,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
+              // Location selector: gold-ringed pin + city + Hijri date.
+              Expanded(
+                child: HeartbeatTap(
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const LocationSelectionScreen(),
                       ),
                     );
                   },
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: themeProvider.primaryAccent.withValues(
+                            alpha: isDark ? 0.14 : 0.10,
+                          ),
+                          border: Border.all(
+                            color: HomeDesign.goldLine(isDark),
+                            width: 1.0,
+                          ),
+                        ),
+                        child: Center(
+                          child: Icon(
+                            Icons.location_on_rounded,
+                            size: 20,
+                            color: themeProvider.primaryAccent,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 11),
+                      Flexible(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    displayLoc,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 15.5,
+                                      fontWeight: FontWeight.w700,
+                                      color: themeProvider.textPrimary,
+                                      letterSpacing: 0.1,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 3),
+                                Icon(
+                                  Icons.keyboard_arrow_down_rounded,
+                                  size: 18,
+                                  color: HomeDesign.goldText(isDark),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              HijriDate.today(
+                                offsetDays: themeProvider.hijriOffsetDays,
+                              ).formatted,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.inter(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w500,
+                                color: themeProvider.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                  const SizedBox(width: 8),
-                  HeartbeatTap(
+              ),
+
+              const SizedBox(width: 8),
+
+              // Dark/light toggle, azan notifications, settings.
+              _HeaderIconButton(
+                icon: isDark ? Icons.nightlight_round : Icons.wb_sunny_rounded,
+                iconColor: HomeDesign.gold,
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  context.read<ThemeProvider>().toggleDarkMode();
+                },
+              ),
+              const SizedBox(width: 8),
+              Consumer<PrayerProvider>(
+                builder: (context, prayerProvider, _) {
+                  final isAzanOn = prayerProvider.azanNotificationsEnabled;
+                  return _HeaderIconButton(
+                    icon: isAzanOn
+                        ? Icons.notifications_rounded
+                        : Icons.notifications_none_rounded,
+                    iconColor: HomeDesign.gold,
+                    showDot: isAzanOn,
+                    dotColor: themeProvider.primaryAccent,
                     onTap: () {
                       HapticFeedback.selectionClick();
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const NotificationSettingsScreen(),
+                        ),
                       );
                     },
-                    child: Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: surfaceColor,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: borderColor, width: 1.0),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: isDark ? 0.22 : 0.03),
-                            blurRadius: 10,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: Icon(
-                          Icons.tune_rounded,
-                          size: 18,
-                          color: themeProvider.textPrimary,
-                        ),
-                      ),
+                  );
+                },
+              ),
+              const SizedBox(width: 8),
+              _HeaderIconButton(
+                icon: Icons.tune_rounded,
+                iconColor: themeProvider.textPrimary,
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SettingsScreen(),
                     ),
-                  ),
-                ],
+                  );
+                },
               ),
             ],
           ),
         );
       },
+    );
+  }
+}
+
+class _HeaderIconButton extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final VoidCallback onTap;
+  final bool showDot;
+  final Color? dotColor;
+
+  const _HeaderIconButton({
+    required this.icon,
+    required this.iconColor,
+    required this.onTap,
+    this.showDot = false,
+    this.dotColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = context.watch<ThemeProvider>().isDarkMode;
+
+    return HeartbeatTap(
+      onTap: onTap,
+      child: Container(
+        // 44dp keeps the button at the platform minimum touch target.
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: HomeDesign.iconButtonFill(isDark),
+          border: Border.all(color: HomeDesign.goldLine(isDark), width: 1.0),
+          boxShadow: [
+            BoxShadow(
+              color: HomeDesign.shadow(isDark),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Icon(icon, size: 19, color: iconColor),
+            if (showDot)
+              Positioned(
+                top: 9,
+                right: 9,
+                child: Container(
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: dotColor,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -3,8 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/prayer_provider.dart';
-import '../theme/jira_theme.dart';
 import '../widgets/heartbeat_tap.dart';
+import '../theme/app_colors.dart';
 
 class NotificationSettingsScreen extends StatelessWidget {
   const NotificationSettingsScreen({super.key});
@@ -44,24 +44,25 @@ class NotificationSettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    context.watchTheme();
     final provider = context.watch<PrayerProvider>();
     final isEnabled = provider.azanNotificationsEnabled;
     final selectedDelay = provider.preAzanReminderMinutes;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0E14),
+      backgroundColor: context.pageTop,
       body: Stack(
         children: [
           // Ambient Background Gradient
           Container(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Color(0xFF0B0E14),
-                  Color(0xFF0D121D),
-                  Color(0xFF070A10),
+                  context.pageTop,
+                  context.cardBottom,
+                  context.pageBottom,
                 ],
               ),
             ),
@@ -72,7 +73,10 @@ class NotificationSettingsScreen extends StatelessWidget {
               children: [
                 // Top Navigation Bar
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -85,15 +89,15 @@ class NotificationSettingsScreen extends StatelessWidget {
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: const Color(0xFF161B22),
+                            color: context.cardTop,
                             shape: BoxShape.circle,
-                            border: Border.all(color: const Color(0xFF30363D)),
+                            border: Border.all(color: context.cardBorder),
                           ),
-                          child: const Center(
+                          child: Center(
                             child: Icon(
                               Icons.arrow_back_rounded,
                               size: 20,
-                              color: Color(0xFFF0F6FC),
+                              color: context.textPrimary,
                             ),
                           ),
                         ),
@@ -105,12 +109,16 @@ class NotificationSettingsScreen extends StatelessWidget {
                             width: 7,
                             height: 7,
                             decoration: BoxDecoration(
-                              color: isEnabled ? JiraTheme.secondaryGreen : const Color(0xFF64748B),
+                              color: isEnabled
+                                  ? context.accent
+                                  : context.textMuted,
                               shape: BoxShape.circle,
                               boxShadow: isEnabled
                                   ? [
                                       BoxShadow(
-                                        color: JiraTheme.secondaryGreen.withValues(alpha: 0.8),
+                                        color: context.accent.withValues(
+                                          alpha: 0.8,
+                                        ),
                                         blurRadius: 6,
                                       ),
                                     ]
@@ -123,7 +131,7 @@ class NotificationSettingsScreen extends StatelessWidget {
                             style: GoogleFonts.outfit(
                               fontSize: 13,
                               fontWeight: FontWeight.w800,
-                              color: const Color(0xFFF0F6FC),
+                              color: context.textPrimary,
                               letterSpacing: 1.2,
                             ),
                           ),
@@ -136,25 +144,30 @@ class NotificationSettingsScreen extends StatelessWidget {
 
                 Expanded(
                   child: ListView(
-                    padding: EdgeInsets.fromLTRB(20, 12, 20, 30 + MediaQuery.paddingOf(context).bottom),
+                    padding: EdgeInsets.fromLTRB(
+                      20,
+                      12,
+                      20,
+                      30 + MediaQuery.paddingOf(context).bottom,
+                    ),
                     physics: const BouncingScrollPhysics(),
                     children: [
                       // 1. Hero Main Notification Toggle Card
                       Container(
                         padding: const EdgeInsets.all(18),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF161B22),
+                          color: context.cardTop,
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                             color: isEnabled
-                                ? JiraTheme.primaryBlue.withValues(alpha: 0.6)
-                                : const Color(0xFF30363D),
+                                ? context.accent.withValues(alpha: 0.6)
+                                : context.cardBorder,
                             width: 1.0,
                           ),
                           boxShadow: [
                             BoxShadow(
                               color: isEnabled
-                                  ? JiraTheme.primaryBlue.withValues(alpha: 0.12)
+                                  ? context.accent.withValues(alpha: 0.12)
                                   : Colors.black.withValues(alpha: 0.3),
                               blurRadius: 18,
                               offset: const Offset(0, 4),
@@ -168,20 +181,22 @@ class NotificationSettingsScreen extends StatelessWidget {
                               height: 48,
                               decoration: BoxDecoration(
                                 color: isEnabled
-                                    ? JiraTheme.secondaryGreen.withValues(alpha: 0.15)
-                                    : const Color(0xFF1F242C),
+                                    ? context.accent.withValues(alpha: 0.15)
+                                    : context.cardBottom,
                                 shape: BoxShape.circle,
                                 border: Border.all(
                                   color: isEnabled
-                                      ? JiraTheme.secondaryGreen.withValues(alpha: 0.5)
-                                      : const Color(0xFF30363D),
+                                      ? context.accent.withValues(alpha: 0.5)
+                                      : context.cardBorder,
                                 ),
                               ),
                               child: Icon(
                                 isEnabled
                                     ? Icons.notifications_active_rounded
                                     : Icons.notifications_off_outlined,
-                                color: isEnabled ? JiraTheme.secondaryGreen : const Color(0xFF8B949E),
+                                color: isEnabled
+                                    ? context.accent
+                                    : context.textSecondary,
                                 size: 24,
                               ),
                             ),
@@ -195,7 +210,7 @@ class NotificationSettingsScreen extends StatelessWidget {
                                     style: GoogleFonts.outfit(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w800,
-                                      color: const Color(0xFFF0F6FC),
+                                      color: context.textPrimary,
                                     ),
                                   ),
                                   const SizedBox(height: 2),
@@ -205,7 +220,7 @@ class NotificationSettingsScreen extends StatelessWidget {
                                         : 'Notifications are turned off',
                                     style: GoogleFonts.inter(
                                       fontSize: 12.5,
-                                      color: const Color(0xFF8B949E),
+                                      color: context.textSecondary,
                                     ),
                                   ),
                                 ],
@@ -217,10 +232,12 @@ class NotificationSettingsScreen extends StatelessWidget {
                                 HapticFeedback.selectionClick();
                                 provider.toggleAzanNotifications(val);
                               },
-                              activeThumbColor: JiraTheme.primaryBlue,
-                              activeTrackColor: JiraTheme.primaryBlue.withValues(alpha: 0.35),
-                              inactiveThumbColor: const Color(0xFF8B949E),
-                              inactiveTrackColor: const Color(0xFF1F242C),
+                              activeThumbColor: context.accent,
+                              activeTrackColor: context.accent.withValues(
+                                alpha: 0.35,
+                              ),
+                              inactiveThumbColor: context.textSecondary,
+                              inactiveTrackColor: context.cardBottom,
                             ),
                           ],
                         ),
@@ -232,18 +249,18 @@ class NotificationSettingsScreen extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(18),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF161B22),
+                          color: context.cardTop,
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                             color: provider.stickyNotificationEnabled
-                                ? JiraTheme.primaryBlue.withValues(alpha: 0.5)
-                                : const Color(0xFF30363D),
+                                ? context.accent.withValues(alpha: 0.5)
+                                : context.cardBorder,
                             width: 1.0,
                           ),
                           boxShadow: [
                             BoxShadow(
                               color: provider.stickyNotificationEnabled
-                                  ? JiraTheme.primaryBlue.withValues(alpha: 0.10)
+                                  ? context.accent.withValues(alpha: 0.10)
                                   : Colors.black.withValues(alpha: 0.3),
                               blurRadius: 18,
                               offset: const Offset(0, 4),
@@ -257,20 +274,20 @@ class NotificationSettingsScreen extends StatelessWidget {
                               height: 44,
                               decoration: BoxDecoration(
                                 color: provider.stickyNotificationEnabled
-                                    ? JiraTheme.primaryBlue.withValues(alpha: 0.15)
-                                    : const Color(0xFF1F242C),
+                                    ? context.accent.withValues(alpha: 0.15)
+                                    : context.cardBottom,
                                 shape: BoxShape.circle,
                                 border: Border.all(
                                   color: provider.stickyNotificationEnabled
-                                      ? JiraTheme.primaryBlue.withValues(alpha: 0.4)
-                                      : const Color(0xFF30363D),
+                                      ? context.accent.withValues(alpha: 0.4)
+                                      : context.cardBorder,
                                 ),
                               ),
                               child: Icon(
                                 Icons.pin_drop_rounded,
                                 color: provider.stickyNotificationEnabled
-                                    ? JiraTheme.primaryBlue
-                                    : const Color(0xFF8B949E),
+                                    ? context.accent
+                                    : context.textSecondary,
                                 size: 22,
                               ),
                             ),
@@ -284,7 +301,7 @@ class NotificationSettingsScreen extends StatelessWidget {
                                     style: GoogleFonts.outfit(
                                       fontSize: 15,
                                       fontWeight: FontWeight.w800,
-                                      color: const Color(0xFFF0F6FC),
+                                      color: context.textPrimary,
                                     ),
                                   ),
                                   const SizedBox(height: 2),
@@ -292,7 +309,7 @@ class NotificationSettingsScreen extends StatelessWidget {
                                     'Live ongoing countdown pinned to lock screen',
                                     style: GoogleFonts.inter(
                                       fontSize: 12,
-                                      color: const Color(0xFF8B949E),
+                                      color: context.textSecondary,
                                     ),
                                   ),
                                 ],
@@ -304,10 +321,12 @@ class NotificationSettingsScreen extends StatelessWidget {
                                 HapticFeedback.selectionClick();
                                 provider.setStickyNotificationEnabled(val);
                               },
-                              activeThumbColor: JiraTheme.primaryBlue,
-                              activeTrackColor: JiraTheme.primaryBlue.withValues(alpha: 0.35),
-                              inactiveThumbColor: const Color(0xFF8B949E),
-                              inactiveTrackColor: const Color(0xFF1F242C),
+                              activeThumbColor: context.accent,
+                              activeTrackColor: context.accent.withValues(
+                                alpha: 0.35,
+                              ),
+                              inactiveThumbColor: context.textSecondary,
+                              inactiveTrackColor: context.cardBottom,
                             ),
                           ],
                         ),
@@ -322,7 +341,7 @@ class NotificationSettingsScreen extends StatelessWidget {
                           fontSize: 10.5,
                           fontWeight: FontWeight.w800,
                           letterSpacing: 2.0,
-                          color: const Color(0xFF8B949E),
+                          color: context.textSecondary,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -330,7 +349,7 @@ class NotificationSettingsScreen extends StatelessWidget {
                         'Choose when the reminder should sound relative to Azan time:',
                         style: GoogleFonts.inter(
                           fontSize: 12,
-                          color: const Color(0xFF64748B),
+                          color: context.textMuted,
                         ),
                       ),
                       const SizedBox(height: 14),
@@ -341,7 +360,8 @@ class NotificationSettingsScreen extends StatelessWidget {
                         final String title = opt['title'];
                         final String subtitle = opt['subtitle'];
                         final IconData icon = opt['icon'];
-                        final bool isSelected = isEnabled && selectedDelay == mins;
+                        final bool isSelected =
+                            isEnabled && selectedDelay == mins;
 
                         return Container(
                           margin: const EdgeInsets.only(bottom: 10),
@@ -357,20 +377,24 @@ class NotificationSettingsScreen extends StatelessWidget {
                               duration: const Duration(milliseconds: 200),
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
+                                // Accent-tinted selection, so it reads as
+                                // "chosen" in light mode too.
                                 color: isSelected
-                                    ? const Color(0xFF1F2A38)
-                                    : const Color(0xFF161B22),
+                                    ? context.accentSoft
+                                    : context.cardTop,
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
                                   color: isSelected
-                                      ? JiraTheme.primaryBlue
-                                      : const Color(0xFF30363D),
+                                      ? context.accent
+                                      : context.cardBorder,
                                   width: isSelected ? 1.5 : 1.0,
                                 ),
                                 boxShadow: isSelected
                                     ? [
                                         BoxShadow(
-                                          color: JiraTheme.primaryBlue.withValues(alpha: 0.18),
+                                          color: context.accent.withValues(
+                                            alpha: 0.18,
+                                          ),
                                           blurRadius: 12,
                                           offset: const Offset(0, 3),
                                         ),
@@ -384,31 +408,36 @@ class NotificationSettingsScreen extends StatelessWidget {
                                     height: 38,
                                     decoration: BoxDecoration(
                                       color: isSelected
-                                          ? JiraTheme.primaryBlue.withValues(alpha: 0.2)
-                                          : const Color(0xFF1F242C),
+                                          ? context.accent.withValues(
+                                              alpha: 0.2,
+                                            )
+                                          : context.cardBottom,
                                       shape: BoxShape.circle,
                                     ),
                                     child: Icon(
                                       icon,
                                       color: isSelected
-                                          ? JiraTheme.primaryBlue
-                                          : const Color(0xFF8B949E),
+                                          ? context.accent
+                                          : context.textSecondary,
                                       size: 20,
                                     ),
                                   ),
                                   const SizedBox(width: 14),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           title,
                                           style: GoogleFonts.outfit(
                                             fontSize: 14.5,
-                                            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                                            fontWeight: isSelected
+                                                ? FontWeight.w800
+                                                : FontWeight.w600,
                                             color: isSelected
                                                 ? Colors.white
-                                                : const Color(0xFFF0F6FC),
+                                                : context.textPrimary,
                                           ),
                                         ),
                                         const SizedBox(height: 2),
@@ -417,17 +446,17 @@ class NotificationSettingsScreen extends StatelessWidget {
                                           style: GoogleFonts.inter(
                                             fontSize: 11.5,
                                             color: isSelected
-                                                ? const Color(0xFF93C5FD)
-                                                : const Color(0xFF8B949E),
+                                                ? context.accent
+                                                : context.textSecondary,
                                           ),
                                         ),
                                       ],
                                     ),
                                   ),
                                   if (isSelected)
-                                    const Icon(
+                                    Icon(
                                       Icons.check_circle_rounded,
-                                      color: JiraTheme.primaryBlue,
+                                      color: context.accent,
                                       size: 22,
                                     )
                                   else
@@ -437,7 +466,7 @@ class NotificationSettingsScreen extends StatelessWidget {
                                       decoration: BoxDecoration(
                                         shape: BoxShape.circle,
                                         border: Border.all(
-                                          color: const Color(0xFF30363D),
+                                          color: context.cardBorder,
                                           width: 1.5,
                                         ),
                                       ),
@@ -455,15 +484,15 @@ class NotificationSettingsScreen extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF161B22).withValues(alpha: 0.8),
+                          color: context.cardTop.withValues(alpha: 0.8),
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: const Color(0xFF30363D)),
+                          border: Border.all(color: context.cardBorder),
                         ),
                         child: Row(
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.info_outline_rounded,
-                              color: JiraTheme.secondaryGreen,
+                              color: context.accent,
                               size: 20,
                             ),
                             const SizedBox(width: 12),
@@ -471,12 +500,12 @@ class NotificationSettingsScreen extends StatelessWidget {
                               child: Text(
                                 isEnabled
                                     ? (selectedDelay == 0
-                                        ? 'Notifications are set to sound at exact Azan time for Fajr, Dhuhr, Asr, Maghrib, and Isha.'
-                                        : 'Notifications are set to sound $selectedDelay minutes before every Azan.')
+                                          ? 'Notifications are set to sound at exact Azan time for Fajr, Dhuhr, Asr, Maghrib, and Isha.'
+                                          : 'Notifications are set to sound $selectedDelay minutes before every Azan.')
                                     : 'Enable Azan notifications above to receive prayer reminders.',
                                 style: GoogleFonts.inter(
                                   fontSize: 11.5,
-                                  color: const Color(0xFF8B949E),
+                                  color: context.textSecondary,
                                   height: 1.4,
                                 ),
                               ),

@@ -4,14 +4,15 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../models/location_model.dart';
 import '../providers/prayer_provider.dart';
-import '../theme/jira_theme.dart';
 import '../widgets/heartbeat_tap.dart';
+import '../theme/app_colors.dart';
 
 class LocationSelectionScreen extends StatefulWidget {
   const LocationSelectionScreen({super.key});
 
   @override
-  State<LocationSelectionScreen> createState() => _LocationSelectionScreenState();
+  State<LocationSelectionScreen> createState() =>
+      _LocationSelectionScreenState();
 }
 
 class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
@@ -48,11 +49,12 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    context.watchTheme();
     final provider = context.watch<PrayerProvider>();
     final districts = provider.districts;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0E14),
+      backgroundColor: context.pageTop,
       body: SafeArea(
         child: Column(
           children: [
@@ -73,13 +75,13 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF161B22),
+                        color: context.cardTop,
                         shape: BoxShape.circle,
-                        border: Border.all(color: const Color(0xFF30363D)),
+                        border: Border.all(color: context.cardBorder),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.arrow_back_rounded,
-                        color: Color(0xFFF0F6FC),
+                        color: context.textPrimary,
                         size: 20,
                       ),
                     ),
@@ -90,11 +92,13 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          _step == 0 ? 'Select Your District' : 'Select Your Area',
+                          _step == 0
+                              ? 'Select Your District'
+                              : 'Select Your Area',
                           style: GoogleFonts.outfit(
                             fontSize: 18,
                             fontWeight: FontWeight.w800,
-                            color: const Color(0xFFF0F6FC),
+                            color: context.textPrimary,
                           ),
                         ),
                         Text(
@@ -103,7 +107,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                               : '${_selectedDistrict?.name ?? ''} District • ${_selectedDistrict?.locations.length ?? 0} Towns',
                           style: GoogleFonts.inter(
                             fontSize: 11.5,
-                            color: const Color(0xFF8B949E),
+                            color: context.textSecondary,
                           ),
                         ),
                       ],
@@ -118,7 +122,10 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
             // Step 0: 2-Column District Grid
             if (_step == 0) ...[
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 6,
+                ),
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
@@ -127,14 +134,19 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                       fontSize: 10.5,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 2.0,
-                      color: const Color(0xFF8B949E),
+                      color: context.textSecondary,
                     ),
                   ),
                 ),
               ),
               Expanded(
                 child: GridView.builder(
-                  padding: EdgeInsets.fromLTRB(16, 8, 16, 16 + MediaQuery.paddingOf(context).bottom),
+                  padding: EdgeInsets.fromLTRB(
+                    16,
+                    8,
+                    16,
+                    16 + MediaQuery.paddingOf(context).bottom,
+                  ),
                   physics: const BouncingScrollPhysics(),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
@@ -150,16 +162,16 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF161B22),
+                          color: context.cardTop,
                           borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: const Color(0xFF30363D)),
+                          border: Border.all(color: context.cardBorder),
                         ),
                         child: Row(
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.map_outlined,
                               size: 16,
-                              color: JiraTheme.primaryBlue,
+                              color: context.accent,
                             ),
                             const SizedBox(width: 8),
                             Expanded(
@@ -168,7 +180,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                                 style: GoogleFonts.outfit(
                                   fontSize: 13.5,
                                   fontWeight: FontWeight.w700,
-                                  color: const Color(0xFFF0F6FC),
+                                  color: context.textPrimary,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -186,26 +198,41 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
             else ...[
               // Live Area Search Box
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 4,
+                ),
                 child: Container(
                   height: 46,
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF161B22),
+                    color: context.cardTop,
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: const Color(0xFF30363D)),
+                    border: Border.all(color: context.cardBorder),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.search_rounded, color: Color(0xFF8B949E), size: 18),
+                      Icon(
+                        Icons.search_rounded,
+                        color: context.textSecondary,
+                        size: 18,
+                      ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: TextField(
-                          onChanged: (val) => setState(() => _areaSearchQuery = val),
-                          style: GoogleFonts.inter(fontSize: 13, color: Colors.white),
-                          decoration: const InputDecoration(
-                            hintText: 'Search town or village (e.g. Vadakara, Feroke)...',
-                            hintStyle: TextStyle(color: Color(0xFF64748B), fontSize: 12),
+                          onChanged: (val) =>
+                              setState(() => _areaSearchQuery = val),
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            color: context.textPrimary,
+                          ),
+                          decoration: InputDecoration(
+                            hintText:
+                                'Search town or village (e.g. Vadakara, Feroke)...',
+                            hintStyle: TextStyle(
+                              color: context.textMuted,
+                              fontSize: 12,
+                            ),
                             border: InputBorder.none,
                             isDense: true,
                           ),
@@ -218,18 +245,27 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
 
               // Solar Calculation Info Banner
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 6,
+                ),
                 child: Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF161B22),
+                    color: context.cardTop,
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: JiraTheme.primaryBlue.withValues(alpha: 0.5)),
+                    border: Border.all(
+                      color: context.accent.withValues(alpha: 0.5),
+                    ),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.location_on_rounded, color: JiraTheme.primaryBlue, size: 20),
+                      Icon(
+                        Icons.location_on_rounded,
+                        color: context.accent,
+                        size: 20,
+                      ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Column(
@@ -240,14 +276,14 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                               style: GoogleFonts.outfit(
                                 fontSize: 12.5,
                                 fontWeight: FontWeight.w700,
-                                color: const Color(0xFFF0F6FC),
+                                color: context.textPrimary,
                               ),
                             ),
                             Text(
                               'Solar calculation method: Kerala Samastha Standard (18°)',
                               style: GoogleFonts.inter(
                                 fontSize: 10.5,
-                                color: const Color(0xFF8B949E),
+                                color: context.textSecondary,
                               ),
                             ),
                           ],
@@ -270,7 +306,10 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                     }).toList();
 
                     return ListView.separated(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 6,
+                      ),
                       physics: const BouncingScrollPhysics(),
                       itemCount: filtered.length,
                       separatorBuilder: (_, __) => const SizedBox(height: 8),
@@ -286,10 +325,12 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                           child: Container(
                             padding: const EdgeInsets.all(14),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF161B22),
+                              color: context.cardTop,
                               borderRadius: BorderRadius.circular(14),
                               border: Border.all(
-                                color: isSelected ? JiraTheme.primaryBlue : const Color(0xFF30363D),
+                                color: isSelected
+                                    ? context.accent
+                                    : context.cardBorder,
                                 width: isSelected ? 1.2 : 1.0,
                               ),
                             ),
@@ -297,14 +338,15 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                               children: [
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         loc.name,
                                         style: GoogleFonts.outfit(
                                           fontSize: 14.5,
                                           fontWeight: FontWeight.w700,
-                                          color: const Color(0xFFF0F6FC),
+                                          color: context.textPrimary,
                                         ),
                                       ),
                                       const SizedBox(height: 2),
@@ -312,7 +354,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                                         '${loc.district} • Solar Calculation Zone',
                                         style: GoogleFonts.inter(
                                           fontSize: 11,
-                                          color: const Color(0xFF8B949E),
+                                          color: context.textSecondary,
                                         ),
                                       ),
                                     ],
@@ -323,15 +365,23 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                                   height: 22,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    color: isSelected ? JiraTheme.primaryBlue : Colors.transparent,
+                                    color: isSelected
+                                        ? context.accent
+                                        : Colors.transparent,
                                     border: Border.all(
-                                      color: isSelected ? JiraTheme.primaryBlue : const Color(0xFF64748B),
+                                      color: isSelected
+                                          ? context.accent
+                                          : context.textMuted,
                                       width: 1.5,
                                     ),
                                   ),
                                   child: isSelected
                                       ? const Center(
-                                          child: Icon(Icons.check, size: 13, color: Colors.white),
+                                          child: Icon(
+                                            Icons.check,
+                                            size: 13,
+                                            color: Colors.white,
+                                          ),
                                         )
                                       : null,
                                 ),
@@ -347,7 +397,12 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
 
               // Bottom Confirmation Button
               Padding(
-                padding: EdgeInsets.fromLTRB(16, 8, 16, 16 + MediaQuery.paddingOf(context).bottom),
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  8,
+                  16,
+                  16 + MediaQuery.paddingOf(context).bottom,
+                ),
                 child: Column(
                   children: [
                     HeartbeatTap(
@@ -356,11 +411,11 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                         width: double.infinity,
                         height: 52,
                         decoration: BoxDecoration(
-                          color: JiraTheme.primaryBlue,
+                          color: context.accent,
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: JiraTheme.primaryBlue.withValues(alpha: 0.35),
+                              color: context.accent.withValues(alpha: 0.35),
                               blurRadius: 12,
                               offset: const Offset(0, 3),
                             ),
@@ -369,7 +424,11 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.check_rounded, color: Colors.white, size: 18),
+                            const Icon(
+                              Icons.check_rounded,
+                              color: Colors.white,
+                              size: 18,
+                            ),
                             const SizedBox(width: 8),
                             Text(
                               'SET AS MY PRAYER LOCATION',
@@ -389,7 +448,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                       'Times will immediately calibrate across all widgets and Adhans',
                       style: GoogleFonts.inter(
                         fontSize: 11,
-                        color: const Color(0xFF64748B),
+                        color: context.textMuted,
                       ),
                     ),
                   ],

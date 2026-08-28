@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../theme/jira_theme.dart';
 import '../../widgets/heartbeat_tap.dart';
 import 'ob_page1_welcome.dart';
 import 'ob_page2_location.dart';
 import 'ob_page4_habits.dart';
 import 'ob_page5_notifications.dart';
 import 'ob_page6_summary.dart';
+import '../../theme/app_colors.dart';
 
 class OnboardingFlow extends StatefulWidget {
   const OnboardingFlow({super.key});
@@ -17,7 +17,8 @@ class OnboardingFlow extends StatefulWidget {
   State<OnboardingFlow> createState() => _OnboardingFlowState();
 }
 
-class _OnboardingFlowState extends State<OnboardingFlow> with SingleTickerProviderStateMixin {
+class _OnboardingFlowState extends State<OnboardingFlow>
+    with SingleTickerProviderStateMixin {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
@@ -49,10 +50,11 @@ class _OnboardingFlowState extends State<OnboardingFlow> with SingleTickerProvid
 
   @override
   Widget build(BuildContext context) {
+    context.watchTheme();
     final topPad = MediaQuery.of(context).padding.top;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0E14),
+      backgroundColor: context.pageTop,
       body: Column(
         children: [
           SizedBox(height: topPad > 0 ? topPad + 4 : 14),
@@ -117,6 +119,7 @@ class _OnboardingProgressBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    context.watchTheme();
     final stepIndex = (currentPage - 1).clamp(0, totalSteps - 1);
     final label = _stepLabels[stepIndex];
 
@@ -137,14 +140,14 @@ class _OnboardingProgressBar extends StatelessWidget {
                         width: 32,
                         height: 32,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF161B22),
+                          color: context.cardTop,
                           shape: BoxShape.circle,
-                          border: Border.all(color: const Color(0xFF30363D)),
+                          border: Border.all(color: context.cardBorder),
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.arrow_back_rounded,
                           size: 16,
-                          color: Color(0xFFF0F6FC),
+                          color: context.textPrimary,
                         ),
                       ),
                     ),
@@ -156,7 +159,7 @@ class _OnboardingProgressBar extends StatelessWidget {
                       fontSize: 10.5,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 1.5,
-                      color: JiraTheme.secondaryGreen,
+                      color: context.accent,
                     ),
                   ),
                 ],
@@ -174,12 +177,12 @@ class _OnboardingProgressBar extends StatelessWidget {
                   height: 4,
                   margin: EdgeInsets.only(right: i < totalSteps - 1 ? 6 : 0),
                   decoration: BoxDecoration(
-                    color: isFilled ? JiraTheme.primaryBlue : const Color(0xFF1F242C),
+                    color: isFilled ? context.accent : context.cardBottom,
                     borderRadius: BorderRadius.circular(2),
                     boxShadow: isFilled
                         ? [
                             BoxShadow(
-                              color: JiraTheme.primaryBlue.withValues(alpha: 0.5),
+                              color: context.accent.withValues(alpha: 0.5),
                               blurRadius: 6,
                             ),
                           ]

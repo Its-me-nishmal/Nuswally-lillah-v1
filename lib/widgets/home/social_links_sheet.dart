@@ -5,7 +5,7 @@ import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import '../../providers/theme_provider.dart';
 import '../../screens/youtube_player_screen.dart';
 import '../../services/social_links_service.dart';
-import '../../theme/jira_theme.dart';
+import '../../theme/app_colors.dart';
 
 class SocialLinksSheet extends StatefulWidget {
   static Future<void> show(BuildContext context) {
@@ -67,17 +67,13 @@ class _SocialLinksSheetState extends State<SocialLinksSheet> {
     }
 
     final uri = Uri.parse(link.url);
-    final launched = await launchUrl(
-      uri,
-      mode: LaunchMode.externalApplication,
-    );
+    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!launched && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not open link')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Could not open link')));
     }
   }
-
 
   List<SocialLink> get _filteredLinks {
     if (_allLinks == null) return [];
@@ -91,9 +87,10 @@ class _SocialLinksSheetState extends State<SocialLinksSheet> {
 
   @override
   Widget build(BuildContext context) {
+    context.watchTheme();
     final themeProvider = context.watch<ThemeProvider>();
     final isDark = themeProvider.isDarkMode;
-    final surface = isDark ? const Color(0xFF161B22) : Colors.white;
+    final surface = isDark ? context.cardTop : Colors.white;
 
     return Padding(
       padding: EdgeInsets.only(
@@ -108,9 +105,7 @@ class _SocialLinksSheetState extends State<SocialLinksSheet> {
           borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           border: Border(
             top: BorderSide(
-              color: isDark
-                  ? const Color(0xFF30363D)
-                  : const Color(0xFFD0D7DE),
+              color: isDark ? context.cardBorder : context.textSecondary,
             ),
           ),
           boxShadow: [
@@ -133,7 +128,7 @@ class _SocialLinksSheetState extends State<SocialLinksSheet> {
                   width: 44,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF30363D) : const Color(0xFFD0D7DE),
+                    color: isDark ? context.cardBorder : context.textSecondary,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -148,16 +143,21 @@ class _SocialLinksSheetState extends State<SocialLinksSheet> {
                       style: TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
-                        color: isDark ? const Color(0xFFE6EDF3) : const Color(0xFF1F2328),
+                        color: isDark
+                            ? context.textPrimary
+                            : const Color(0xFF1F2328),
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
-                        color: JiraTheme.secondaryGreen.withValues(alpha: 0.12),
+                        color: context.accent.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: JiraTheme.secondaryGreen.withValues(alpha: 0.3),
+                          color: context.accent.withValues(alpha: 0.3),
                         ),
                       ),
                       child: Text(
@@ -230,14 +230,14 @@ class _SocialLinksSheetState extends State<SocialLinksSheet> {
         decoration: BoxDecoration(
           color: isSelected
               ? (isDark
-                  ? JiraTheme.secondaryGreen.withValues(alpha: 0.15)
-                  : JiraTheme.primary50)
-              : (isDark ? const Color(0xFF1F242C) : const Color(0xFFF1F3F5)),
+                    ? context.accent.withValues(alpha: 0.15)
+                    : context.accentSoft)
+              : (isDark ? context.cardBottom : const Color(0xFFF1F3F5)),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected
-                ? JiraTheme.secondaryGreen
-                : (isDark ? const Color(0xFF30363D) : const Color(0xFFD0D7DE)),
+                ? context.accent
+                : (isDark ? context.cardBorder : context.textSecondary),
           ),
         ),
         child: Text(
@@ -246,8 +246,8 @@ class _SocialLinksSheetState extends State<SocialLinksSheet> {
             fontSize: 12.5,
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
             color: isSelected
-                ? (isDark ? const Color(0xFF34D399) : JiraTheme.primaryBlue)
-                : (isDark ? const Color(0xFF8B949E) : const Color(0xFF626F86)),
+                ? (isDark ? const Color(0xFF34D399) : context.accent)
+                : (isDark ? context.textSecondary : const Color(0xFF626F86)),
           ),
         ),
       ),
@@ -256,7 +256,7 @@ class _SocialLinksSheetState extends State<SocialLinksSheet> {
 
   Widget _buildBody(bool isDark) {
     if (_loading) {
-      return const Padding(
+      return Padding(
         padding: EdgeInsets.symmetric(vertical: 40),
         child: Center(
           child: SizedBox(
@@ -264,7 +264,7 @@ class _SocialLinksSheetState extends State<SocialLinksSheet> {
             height: 26,
             child: CircularProgressIndicator(
               strokeWidth: 2.5,
-              valueColor: AlwaysStoppedAnimation(JiraTheme.secondaryGreen),
+              valueColor: AlwaysStoppedAnimation(context.accent),
             ),
           ),
         ),
@@ -280,7 +280,7 @@ class _SocialLinksSheetState extends State<SocialLinksSheet> {
             'No content available in this category',
             style: TextStyle(
               fontSize: 14,
-              color: isDark ? const Color(0xFF8B949E) : const Color(0xFF626F86),
+              color: isDark ? context.textSecondary : const Color(0xFF626F86),
             ),
           ),
         ),
@@ -308,6 +308,7 @@ class _LinkTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    context.watchTheme();
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Material(
@@ -318,11 +319,9 @@ class _LinkTile extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1F242C) : const Color(0xFFF7F8FA),
+            color: isDark ? context.cardBottom : const Color(0xFFF7F8FA),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: isDark ? const Color(0xFF30363D) : const Color(0xFFE2E8F0),
-            ),
+            border: Border.all(color: context.cardBorder),
           ),
           child: Row(
             children: [
@@ -332,7 +331,7 @@ class _LinkTile extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: link.platform == 'youtube'
                       ? const Color(0xFFFF0033).withValues(alpha: 0.12)
-                      : JiraTheme.secondaryGreen.withValues(alpha: 0.12),
+                      : context.accent.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
@@ -341,7 +340,7 @@ class _LinkTile extends StatelessWidget {
                       : Icons.link_rounded,
                   color: link.platform == 'youtube'
                       ? const Color(0xFFFF0033)
-                      : JiraTheme.secondaryGreen,
+                      : context.accent,
                   size: 26,
                 ),
               ),
@@ -360,8 +359,10 @@ class _LinkTile extends StatelessWidget {
                             ),
                             decoration: BoxDecoration(
                               color: isDark
-                                  ? const Color(0xFF064E3B).withValues(alpha: 0.3)
-                                  : JiraTheme.successGreenBgLight,
+                                  ? const Color(
+                                      0xFF064E3B,
+                                    ).withValues(alpha: 0.3)
+                                  : context.accentSoft,
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
@@ -371,7 +372,7 @@ class _LinkTile extends StatelessWidget {
                                 fontWeight: FontWeight.w600,
                                 color: isDark
                                     ? const Color(0xFF34D399)
-                                    : JiraTheme.secondary700,
+                                    : context.accent,
                               ),
                             ),
                           ),
@@ -387,7 +388,9 @@ class _LinkTile extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: isDark ? const Color(0xFFE6EDF3) : const Color(0xFF1F2328),
+                        color: isDark
+                            ? context.textPrimary
+                            : const Color(0xFF1F2328),
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -396,7 +399,7 @@ class _LinkTile extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 11.5,
                         color: isDark
-                            ? const Color(0xFF8B949E)
+                            ? context.textSecondary
                             : const Color(0xFF626F86),
                       ),
                     ),
@@ -408,16 +411,16 @@ class _LinkTile extends StatelessWidget {
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF161B22) : Colors.white,
+                  color: isDark ? context.cardTop : Colors.white,
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: isDark ? const Color(0xFF30363D) : const Color(0xFFD0D7DE),
+                    color: isDark ? context.cardBorder : context.textSecondary,
                   ),
                 ),
                 child: Icon(
                   Icons.play_arrow_rounded,
                   size: 18,
-                  color: isDark ? const Color(0xFF34D399) : JiraTheme.primaryBlue,
+                  color: isDark ? const Color(0xFF34D399) : context.accent,
                 ),
               ),
             ],

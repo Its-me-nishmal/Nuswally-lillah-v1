@@ -3,11 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
+import '../../models/prayer_time_model.dart';
 import '../../providers/prayer_provider.dart';
 import '../../providers/theme_provider.dart';
-import '../../theme/jira_theme.dart';
+import '../../theme/home_design.dart';
+import '../../utils/prayer_time_format.dart';
+import 'home_glyphs.dart';
 
-/// Compact, modern Next Prayer Hero Card that avoids taking up excessive screen space.
+/// Next-prayer hero card: gold-framed, with a mosque arch motif, a live
+/// countdown pill and a contextual "how far away" line.
 class NextPrayerHeroCard extends StatefulWidget {
   const NextPrayerHeroCard({super.key});
 
@@ -18,194 +22,287 @@ class NextPrayerHeroCard extends StatefulWidget {
 class _NextPrayerHeroCardState extends State<NextPrayerHeroCard> {
   Timer? _localTimer;
 
+  /// Only the countdown pill and the proximity line listen to this, so the
+  /// second-by-second tick never rebuilds the whole card.
+  final ValueNotifier<Duration> _remaining = ValueNotifier(Duration.zero);
+
   @override
   void initState() {
     super.initState();
-    _localTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) setState(() {});
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _syncRemaining());
+    _localTimer = Timer.periodic(
+      const Duration(seconds: 1),
+      (_) => _syncRemaining(),
+    );
+  }
+
+  void _syncRemaining() {
+    if (!mounted) return;
+    _remaining.value = context.read<PrayerProvider>().timeToNextPrayer;
   }
 
   @override
   void dispose() {
     _localTimer?.cancel();
+    _remaining.dispose();
     super.dispose();
   }
 
-  String _formatTo12Hour(String prayerName, String timeStr) {
-    try {
-      final parts = timeStr.split(':');
-      if (parts.length < 2) return timeStr;
-      var hour = int.parse(parts[0]);
-      final minute = int.parse(parts[1]);
+  String? _rawTime(PrayerTime times, String prayerName) => switch (prayerName) {
+    'Fajr' => times.fajr,
+    'Sunrise' => times.sunrise,
+    'Dhuhr' => times.dhuhr,
+    'Asr' => times.asr,
+    'Maghrib' => times.maghrib,
+    'Isha' => times.isha,
+    _ => null,
+  };
 
-      var isPM = false;
-      if (prayerName == 'Sunrise' || prayerName == 'Fajr') {
-        isPM = false;
-      } else if (prayerName == 'Dhuhr') {
-        isPM = hour == 11 ? false : true;
-      } else {
-        // Asr, Maghrib, Isha
-        isPM = true;
-      }
-
-      var displayHour = hour;
-      if (displayHour > 12) {
-        displayHour -= 12;
-      } else if (displayHour == 0) {
-        displayHour = 12;
-      }
-
-      final minuteStr = minute.toString().padLeft(2, '0');
-      final period = isPM ? 'PM' : 'AM';
-      return '$displayHour:$minuteStr $period';
-    } catch (_) {
-      return timeStr;
-    }
-  }
-
-  String _getPrayerTime(PrayerProvider provider, String prayerName) {
-    final times = provider.todayPrayerTimes;
+  String _getPrayerTime(PrayerTime? times, String prayerName) {
     if (times == null) return '--:--';
-    switch (prayerName) {
-      case 'Fajr':
-        return _formatTo12Hour(prayerName, times.fajr);
-      case 'Sunrise':
-        return _formatTo12Hour(prayerName, times.sunrise);
-      case 'Dhuhr':
-        return _formatTo12Hour(prayerName, times.dhuhr);
-      case 'Asr':
-        return _formatTo12Hour(prayerName, times.asr);
-      case 'Maghrib':
-        return _formatTo12Hour(prayerName, times.maghrib);
-      case 'Isha':
-        return _formatTo12Hour(prayerName, times.isha);
-      default:
-        return '--:--';
-    }
+    final raw = _rawTime(times, prayerName);
+    return raw == null ? '--:--' : formatPrayerTime(prayerName, raw);
   }
 
-  String _getFormattedCountdown(Duration duration) {
-    if (duration.isNegative) return '00h 00m 00s';
+  String _countdownLabel(Duration duration) {
+    if (duration.isNegative) return 'in 00h 00m 00s';
     final hours = duration.inHours.toString().padLeft(2, '0');
     final minutes = (duration.inMinutes % 60).toString().padLeft(2, '0');
     final seconds = (duration.inSeconds % 60).toString().padLeft(2, '0');
     return 'in ${hours}h ${minutes}m ${seconds}s';
   }
 
+  /// Congregation time for the next prayer: its start plus the user's Iqamah
+  /// offset. Returns null when there is no Iqamah for it (Sunrise).
+  String? _iqamahLabel(
+    PrayerTime? times,
+    String prayerName,
+    int offsetMinutes,
+  ) {
+    if (times == null || prayerName == 'Sunrise') return null;
+    final raw = _rawTime(times, prayerName);
+    if (raw == null) return null;
+    final parsed = parsePrayerTime24(prayerName, raw);
+    if (parsed == null) return null;
+
+    final total = parsed.hour * 60 + parsed.minute + offsetMinutes;
+    final wrapped = ((total % 1440) + 1440) % 1440;
+    return format24(wrapped ~/ 60, wrapped % 60);
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
     final isDark = themeProvider.isDarkMode;
-    final surfaceColor = isDark ? JiraTheme.darkSurface : JiraTheme.lightSurface;
-    final containerColor = isDark ? JiraTheme.darkContainer : JiraTheme.lightContainer;
-    final borderColor = isDark ? JiraTheme.darkBorderSubtle : JiraTheme.lightBorderSubtle;
 
-    return Consumer<PrayerProvider>(
-      builder: (context, provider, child) {
-        final nextPrayer = provider.nextPrayerName.isNotEmpty ? provider.nextPrayerName : 'Asr';
-        final nextTimeStr = _getPrayerTime(provider, nextPrayer);
-        final duration = provider.timeToNextPrayer;
-        final countdownStr = _getFormattedCountdown(duration);
+    // PrayerProvider notifies once a second for its countdown; selecting only
+    // the fields that actually change here keeps the card off that path.
+    return Selector<PrayerProvider, (String, PrayerTime?, int)>(
+      selector: (_, provider) => (
+        provider.nextPrayerName,
+        provider.todayPrayerTimes,
+        provider.iqamahOffsets[provider.nextPrayerName] ?? 0,
+      ),
+      builder: (context, data, child) {
+        final nextPrayer = data.$1.isNotEmpty ? data.$1 : 'Fajr';
+        final nextTimeStr = _getPrayerTime(data.$2, nextPrayer);
+        final iqamahStr = _iqamahLabel(data.$2, nextPrayer, data.$3);
 
         return Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
           decoration: BoxDecoration(
-            color: surfaceColor,
-            borderRadius: BorderRadius.circular(18),
+            gradient: HomeDesign.cardGradient(isDark),
+            borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: borderColor,
+              color: HomeDesign.goldLineStrong(isDark),
               width: 1.0,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: isDark ? 0.22 : 0.03),
-                blurRadius: 16,
-                offset: const Offset(0, 4),
+                color: HomeDesign.shadow(isDark),
+                blurRadius: 18,
+                offset: const Offset(0, 5),
               ),
             ],
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Top Row: NEXT PRAYER Tag + Countdown Pill
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Stack(
+              children: [
+                // Decorative arch, clipped to the card's right edge. Kept
+                // narrow (72dp) so the text columns still fit on a 360dp phone.
+                Positioned(
+                  right: -4,
+                  top: 6,
+                  bottom: 0,
+                  child: MosqueArchGlyph(
+                    width: 72,
+                    height: 132,
+                    gold: HomeDesign.gold,
+                    domeColor: isDark
+                        ? const Color(0xFF12362B)
+                        : const Color(0xFFDCEDE5),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 13, 88, 13),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Container(
-                        width: 7,
-                        height: 7,
-                        decoration: BoxDecoration(
-                          color: themeProvider.primaryAccent,
-                          shape: BoxShape.circle,
-                        ),
+                      // Row 1: NEXT PRAYER label + live countdown pill.
+                      Row(
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: themeProvider.primaryAccent,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              'NEXT PRAYER',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.9,
+                                color: themeProvider.accentText,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 7),
-                      Text(
-                        'NEXT PRAYER',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.8,
-                          color: themeProvider.textSecondary.withValues(alpha: 0.9),
-                        ),
+                      const SizedBox(height: 8),
+
+                      // Row 2: prayer name (shrinks to fit) + start time.
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Expanded(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                nextPrayer.toUpperCase(),
+                                maxLines: 1,
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 30,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -0.6,
+                                  height: 1.05,
+                                  color: themeProvider.textPrimary,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            nextTimeStr,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 21,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.2,
+                              // Darkened in light mode so the most important
+                              // number on the screen stays legible.
+                              color: themeProvider.accentText,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+
+                      // Row 3: tagline + how far away it is.
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              HomeDesign.prayerTagline(nextPrayer),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: themeProvider.textSecondary,
+                              ),
+                            ),
+                          ),
+                          if (iqamahStr != null) ...[
+                            const SizedBox(width: 8),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.groups_rounded,
+                                  size: 13,
+                                  color: HomeDesign.gold,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Iqamah $iqamahStr',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: HomeDesign.goldText(isDark),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+
+                      // Live countdown pill + gold underscore accent.
+                      Row(
+                        children: [
+                          ValueListenableBuilder<Duration>(
+                            valueListenable: _remaining,
+                            builder: (context, remaining, _) => Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 11,
+                                vertical: 5,
+                              ),
+                              decoration: BoxDecoration(
+                                color: HomeDesign.goldWash(isDark),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: HomeDesign.goldLine(isDark),
+                                  width: 1.0,
+                                ),
+                              ),
+                              child: Text(
+                                _countdownLabel(remaining),
+                                style: GoogleFonts.inter(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: themeProvider.textPrimary,
+                                  letterSpacing: 0.2,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Container(
+                              height: 2.5,
+                              decoration: BoxDecoration(
+                                color: HomeDesign.gold.withValues(alpha: 0.5),
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: containerColor,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: borderColor,
-                        width: 1.0,
-                      ),
-                    ),
-                    child: Text(
-                      countdownStr,
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        color: themeProvider.textPrimary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 14),
-
-              // Bottom Row: Prayer Name + Large Time
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
-                children: [
-                  Text(
-                    nextPrayer.toUpperCase(),
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 26,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -0.3,
-                      color: themeProvider.textPrimary,
-                    ),
-                  ),
-                  Text(
-                    nextTimeStr,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: themeProvider.primaryAccent,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         );
       },

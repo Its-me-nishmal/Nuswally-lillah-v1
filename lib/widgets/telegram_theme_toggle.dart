@@ -2,8 +2,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
-import '../theme/jira_theme.dart';
 import 'heartbeat_tap.dart';
+import '../theme/app_colors.dart';
 
 class TelegramThemeToggle extends StatefulWidget {
   const TelegramThemeToggle({super.key});
@@ -47,6 +47,7 @@ class _TelegramThemeToggleState extends State<TelegramThemeToggle>
 
   @override
   Widget build(BuildContext context) {
+    context.watchTheme();
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDark = themeProvider.isDarkMode;
 
@@ -57,12 +58,9 @@ class _TelegramThemeToggleState extends State<TelegramThemeToggle>
         width: 36,
         height: 36,
         decoration: BoxDecoration(
-          color: isDark ? JiraTheme.darkSurface : JiraTheme.lightSurface,
+          color: context.cardTop,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: isDark ? JiraTheme.darkBorder : JiraTheme.lightBorder,
-            width: 1.0,
-          ),
+          border: Border.all(color: context.cardBorder, width: 1.0),
         ),
         child: Center(
           child: AnimatedBuilder(
@@ -73,7 +71,7 @@ class _TelegramThemeToggleState extends State<TelegramThemeToggle>
                 child: Icon(
                   isDark ? Icons.dark_mode_rounded : Icons.wb_sunny_rounded,
                   size: 18,
-                  color: isDark ? const Color(0xFFFBBF24) : JiraTheme.primaryBlue,
+                  color: isDark ? context.gold : context.accent,
                 ),
               );
             },

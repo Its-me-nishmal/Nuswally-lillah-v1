@@ -8,6 +8,8 @@ import '../providers/adhkaar_provider.dart';
 import '../providers/theme_provider.dart';
 import '../widgets/heartbeat_tap.dart';
 import 'adhkaar_duas_screen.dart';
+import '../theme/app_colors.dart';
+import '../theme/home_design.dart';
 
 class AdhkaarSubcategoriesScreen extends StatefulWidget {
   final AdhkaarCategory category;
@@ -15,10 +17,12 @@ class AdhkaarSubcategoriesScreen extends StatefulWidget {
   const AdhkaarSubcategoriesScreen({super.key, required this.category});
 
   @override
-  State<AdhkaarSubcategoriesScreen> createState() => _AdhkaarSubcategoriesScreenState();
+  State<AdhkaarSubcategoriesScreen> createState() =>
+      _AdhkaarSubcategoriesScreenState();
 }
 
-class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen> {
+class _AdhkaarSubcategoriesScreenState
+    extends State<AdhkaarSubcategoriesScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   bool _isSearching = false;
@@ -31,40 +35,85 @@ class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen>
 
   IconData _getCategoryIcon(String title) {
     final t = title.toLowerCase();
-    if (t.contains('morning') || t.contains('രാവിലെ')) return Icons.wb_sunny_rounded;
-    if (t.contains('evening') || t.contains('വൈകുന്നേരം')) return Icons.nights_stay_rounded;
-    if (t.contains('prayer') || t.contains('നമസ്കാര')) return Icons.access_time_filled_rounded;
-    if (t.contains('quran') || t.contains('ഖുർആൻ')) return Icons.menu_book_rounded;
-    if (t.contains('protection') || t.contains('സംരക്ഷണം')) return Icons.shield_rounded;
-    if (t.contains('illness') || t.contains('രോഗം')) return Icons.healing_rounded;
-    if (t.contains('sleep') || t.contains('ഉറക്കം')) return Icons.bedtime_rounded;
-    if (t.contains('travel') || t.contains('യാത്ര')) return Icons.explore_rounded;
+    if (t.contains('morning') || t.contains('രാവിലെ')) {
+      return Icons.wb_sunny_rounded;
+    }
+    if (t.contains('evening') || t.contains('വൈകുന്നേരം')) {
+      return Icons.nights_stay_rounded;
+    }
+    if (t.contains('prayer') || t.contains('നമസ്കാര')) {
+      return Icons.access_time_filled_rounded;
+    }
+    if (t.contains('quran') || t.contains('ഖുർആൻ')) {
+      return Icons.menu_book_rounded;
+    }
+    if (t.contains('protection') || t.contains('സംരക്ഷണം')) {
+      return Icons.shield_rounded;
+    }
+    if (t.contains('illness') || t.contains('രോഗം')) {
+      return Icons.healing_rounded;
+    }
+    if (t.contains('sleep') || t.contains('ഉറക്കം')) {
+      return Icons.bedtime_rounded;
+    }
+    if (t.contains('travel') || t.contains('യാത്ര')) {
+      return Icons.explore_rounded;
+    }
     if (t.contains('hajj') || t.contains('ഹജ്ജ്')) return Icons.mosque_rounded;
-    if (t.contains('food') || t.contains('ഭക്ഷണം')) return Icons.restaurant_rounded;
-    if (t.contains('nature') || t.contains('പ്രകൃതി')) return Icons.cloud_rounded;
-    if (t.contains('sorrow') || t.contains('വിഷമം')) return Icons.favorite_rounded;
+    if (t.contains('food') || t.contains('ഭക്ഷണം')) {
+      return Icons.restaurant_rounded;
+    }
+    if (t.contains('nature') || t.contains('പ്രകൃതി')) {
+      return Icons.cloud_rounded;
+    }
+    if (t.contains('sorrow') || t.contains('വിഷമം')) {
+      return Icons.favorite_rounded;
+    }
     return Icons.auto_awesome_rounded;
   }
 
   String _getCategoryArabicTitle(String title) {
     final t = title.toLowerCase();
-    if (t.contains('morning') || t.contains('രാവിലെ')) return 'أَذْكَارُ الصَّبَاحِ';
-    if (t.contains('evening') || t.contains('വൈകുന്നേരം')) return 'أَذْكَارُ الْمَسَاءِ';
-    if (t.contains('prayer') || t.contains('നമസ്കാര')) return 'أَدْعِيَةُ الصَّلَاةِ';
-    if (t.contains('quran') || t.contains('ഖുർആൻ')) return 'أَدْعِيَةُ الْقُرْآنِ';
-    if (t.contains('protection') || t.contains('സംരക്ഷണം')) return 'أَدْعِيَةُ الْحِفْظِ';
-    if (t.contains('illness') || t.contains('രോഗം')) return 'أَدْعِيَةُ الْمَرِيضِ';
-    if (t.contains('sleep') || t.contains('ഉറക്കം')) return 'أَذْكَارُ النَّوْمِ';
-    if (t.contains('travel') || t.contains('യാത്ര')) return 'أَدْعِيَةُ السَّفَرِ';
+    if (t.contains('morning') || t.contains('രാവിലെ')) {
+      return 'أَذْكَارُ الصَّبَاحِ';
+    }
+    if (t.contains('evening') || t.contains('വൈകുന്നേരം')) {
+      return 'أَذْكَارُ الْمَسَاءِ';
+    }
+    if (t.contains('prayer') || t.contains('നമസ്കാര')) {
+      return 'أَدْعِيَةُ الصَّلَاةِ';
+    }
+    if (t.contains('quran') || t.contains('ഖുർആൻ')) {
+      return 'أَدْعِيَةُ الْقُرْآنِ';
+    }
+    if (t.contains('protection') || t.contains('സംരക്ഷണം')) {
+      return 'أَدْعِيَةُ الْحِفْظِ';
+    }
+    if (t.contains('illness') || t.contains('രോഗം')) {
+      return 'أَدْعِيَةُ الْمَرِيضِ';
+    }
+    if (t.contains('sleep') || t.contains('ഉറക്കം')) {
+      return 'أَذْكَارُ النَّوْمِ';
+    }
+    if (t.contains('travel') || t.contains('യാത്ര')) {
+      return 'أَدْعِيَةُ السَّفَرِ';
+    }
     if (t.contains('hajj') || t.contains('ഹജ്ജ്')) return 'أَدْعِيَةُ الْحَجِّ';
-    if (t.contains('food') || t.contains('ഭക്ഷണം')) return 'أَدْعِيَةُ الطَّعَامِ';
-    if (t.contains('nature') || t.contains('പ്രകൃതി')) return 'أَدْعِيَةُ الطَّبِيعَةِ';
-    if (t.contains('sorrow') || t.contains('വിഷമം')) return 'أَدْعِيَةُ الْفَرَجِ';
+    if (t.contains('food') || t.contains('ഭക്ഷണം')) {
+      return 'أَدْعِيَةُ الطَّعَامِ';
+    }
+    if (t.contains('nature') || t.contains('പ്രകൃതി')) {
+      return 'أَدْعِيَةُ الطَّبِيعَةِ';
+    }
+    if (t.contains('sorrow') || t.contains('വിഷമം')) {
+      return 'أَدْعِيَةُ الْفَرَجِ';
+    }
     return 'أَذْكَارٌ وَأَدْعِيَةٌ';
   }
 
   @override
   Widget build(BuildContext context) {
+    context.watchTheme();
     final tp = context.watch<ThemeProvider>();
     final isDark = tp.isDarkMode;
     final isMl = tp.isMalayalam;
@@ -76,9 +125,7 @@ class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen>
     if (bundle == null) {
       return Scaffold(
         backgroundColor: tp.backgroundTop,
-        body: Center(
-          child: CircularProgressIndicator(color: tp.primaryAccent),
-        ),
+        body: Center(child: CircularProgressIndicator(color: tp.primaryAccent)),
       );
     }
 
@@ -87,7 +134,10 @@ class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen>
         .whereType<AdhkaarSubCategory>()
         .toList();
 
-    final totalInvocations = allSubs.fold<int>(0, (sum, sub) => sum + sub.duaIds.length);
+    final totalInvocations = allSubs.fold<int>(
+      0,
+      (sum, sub) => sum + sub.duaIds.length,
+    );
 
     final query = _searchQuery.trim().toLowerCase();
     final subs = query.isEmpty
@@ -100,7 +150,9 @@ class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen>
 
     final categoryTitle = isMl
         ? widget.category.title
-        : (widget.category.titleEn.isNotEmpty ? widget.category.titleEn : widget.category.title);
+        : (widget.category.titleEn.isNotEmpty
+              ? widget.category.titleEn
+              : widget.category.title);
 
     return Scaffold(
       backgroundColor: tp.backgroundTop,
@@ -134,11 +186,23 @@ class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen>
           Positioned.fill(
             child: ListView(
               physics: const BouncingScrollPhysics(),
-              padding: EdgeInsets.fromLTRB(16, topInset + kTopBarHeight + 12, 16, bottomInset + 24),
+              padding: EdgeInsets.fromLTRB(
+                16,
+                topInset + kTopBarHeight + 12,
+                16,
+                bottomInset + 24,
+              ),
               children: [
                 // Hero Category Summary Card
                 if (!_isSearching) ...[
-                  _buildHeroCategoryCard(context, tp, isDark, categoryTitle, allSubs.length, totalInvocations),
+                  _buildHeroCategoryCard(
+                    context,
+                    tp,
+                    isDark,
+                    categoryTitle,
+                    allSubs.length,
+                    totalInvocations,
+                  ),
                   const SizedBox(height: 18),
                 ],
 
@@ -157,7 +221,9 @@ class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen>
                       border: Border.all(color: tp.borderColor, width: 0.8),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.03),
+                          color: Colors.black.withValues(
+                            alpha: isDark ? 0.25 : 0.03,
+                          ),
                           blurRadius: 16,
                           offset: const Offset(0, 4),
                         ),
@@ -174,7 +240,14 @@ class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen>
 
                           return Column(
                             children: [
-                              _buildChapterRowItem(context, tp, sub, index, isMl, isDark),
+                              _buildChapterRowItem(
+                                context,
+                                tp,
+                                sub,
+                                index,
+                                isMl,
+                                isDark,
+                              ),
                               if (!isLast) _buildHairlineDivider(isDark),
                             ],
                           );
@@ -198,7 +271,9 @@ class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen>
                 child: Container(
                   padding: EdgeInsets.only(top: topInset),
                   decoration: BoxDecoration(
-                    color: tp.backgroundTop.withValues(alpha: isDark ? 0.85 : 0.90),
+                    color: tp.backgroundTop.withValues(
+                      alpha: isDark ? 0.85 : 0.90,
+                    ),
                     border: Border(
                       bottom: BorderSide(
                         color: tp.borderColor.withValues(alpha: 0.35),
@@ -216,7 +291,12 @@ class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen>
     );
   }
 
-  Widget _buildTopAppBar(BuildContext context, ThemeProvider tp, bool isDark, String categoryTitle) {
+  Widget _buildTopAppBar(
+    BuildContext context,
+    ThemeProvider tp,
+    bool isDark,
+    String categoryTitle,
+  ) {
     if (_isSearching) {
       return Container(
         height: 56.0,
@@ -242,7 +322,11 @@ class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen>
                   border: Border.all(color: tp.borderColor, width: 0.8),
                 ),
                 child: Center(
-                  child: Icon(Icons.arrow_back_ios_new_rounded, color: tp.textPrimary, size: 16),
+                  child: Icon(
+                    Icons.arrow_back_ios_new_rounded,
+                    color: tp.textPrimary,
+                    size: 16,
+                  ),
                 ),
               ),
             ),
@@ -251,24 +335,34 @@ class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen>
               child: Container(
                 height: 38,
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF151D24) : const Color(0xFFF1F5F9),
+                  color: isDark ? context.cardTop : context.cardBottom,
                   borderRadius: BorderRadius.circular(19),
                   border: Border.all(color: tp.borderColor, width: 0.8),
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: Row(
                   children: [
-                    Icon(Icons.search_rounded, color: tp.primaryAccent, size: 17),
+                    Icon(
+                      Icons.search_rounded,
+                      color: tp.primaryAccent,
+                      size: 17,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: TextField(
                         controller: _searchController,
                         autofocus: true,
-                        style: GoogleFonts.plusJakartaSans(fontSize: 13.5, color: tp.textPrimary),
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 13.5,
+                          color: tp.textPrimary,
+                        ),
                         onChanged: (val) => setState(() => _searchQuery = val),
                         decoration: InputDecoration(
                           hintText: 'Search chapters or duas...',
-                          hintStyle: GoogleFonts.plusJakartaSans(fontSize: 12.5, color: tp.textMuted),
+                          hintStyle: GoogleFonts.plusJakartaSans(
+                            fontSize: 12.5,
+                            color: tp.textMuted,
+                          ),
                           border: InputBorder.none,
                           isDense: true,
                         ),
@@ -280,7 +374,11 @@ class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen>
                           _searchController.clear();
                           setState(() => _searchQuery = '');
                         },
-                        child: Icon(Icons.close_rounded, color: tp.textMuted, size: 16),
+                        child: Icon(
+                          Icons.close_rounded,
+                          color: tp.textMuted,
+                          size: 16,
+                        ),
                       ),
                   ],
                 ),
@@ -314,7 +412,11 @@ class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen>
                 border: Border.all(color: tp.borderColor, width: 0.8),
               ),
               child: Center(
-                child: Icon(Icons.arrow_back_ios_new_rounded, color: tp.textPrimary, size: 16),
+                child: Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  color: tp.textPrimary,
+                  size: 16,
+                ),
               ),
             ),
           ),
@@ -366,7 +468,11 @@ class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen>
                 border: Border.all(color: tp.borderColor, width: 0.8),
               ),
               child: Center(
-                child: Icon(Icons.search_rounded, color: tp.textPrimary, size: 17),
+                child: Icon(
+                  Icons.search_rounded,
+                  color: tp.textPrimary,
+                  size: 17,
+                ),
               ),
             ),
           ),
@@ -408,10 +514,14 @@ class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen>
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: tp.primaryAccent.withValues(alpha: isDark ? 0.12 : 0.15),
+                  color: tp.primaryAccent.withValues(
+                    alpha: isDark ? 0.12 : 0.15,
+                  ),
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                    color: tp.primaryAccent.withValues(alpha: isDark ? 0.3 : 0.4),
+                    color: tp.primaryAccent.withValues(
+                      alpha: isDark ? 0.3 : 0.4,
+                    ),
                     width: 0.8,
                   ),
                 ),
@@ -450,10 +560,10 @@ class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen>
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF151D24) : const Color(0xFFF1F5F9),
+              color: isDark ? context.cardTop : context.cardBottom,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: isDark ? const Color(0xFF222D38) : const Color(0xFFE2E8F0),
+                color: isDark ? context.hairline : context.cardBorder,
                 width: 0.8,
               ),
             ),
@@ -464,7 +574,7 @@ class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen>
                 fontFamily: 'HafsFont',
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
-                color: isDark ? const Color(0xFFE2E8F0) : tp.primaryAccent,
+                color: isDark ? HomeDesign.goldText(isDark) : tp.primaryAccent,
               ),
             ),
           ),
@@ -492,7 +602,7 @@ class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen>
     return Container(
       height: 1.0,
       margin: const EdgeInsets.only(left: 68),
-      color: isDark ? const Color(0xFF222D38) : const Color(0xFFE2E8F0),
+      color: isDark ? context.hairline : context.cardBorder,
     );
   }
 
@@ -504,16 +614,16 @@ class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen>
     bool isMl,
     bool isDark,
   ) {
-    final title = isMl ? sub.title : (sub.titleEn.isNotEmpty ? sub.titleEn : sub.title);
+    final title = isMl
+        ? sub.title
+        : (sub.titleEn.isNotEmpty ? sub.titleEn : sub.title);
 
     return HeartbeatTap(
       onTap: () {
         HapticFeedback.selectionClick();
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => AdhkaarDuasScreen(sub: sub),
-          ),
+          MaterialPageRoute(builder: (context) => AdhkaarDuasScreen(sub: sub)),
         );
       },
       child: Container(
@@ -529,7 +639,9 @@ class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen>
                 color: tp.primaryAccent.withValues(alpha: isDark ? 0.12 : 0.14),
                 borderRadius: BorderRadius.circular(11),
                 border: Border.all(
-                  color: tp.primaryAccent.withValues(alpha: isDark ? 0.25 : 0.35),
+                  color: tp.primaryAccent.withValues(
+                    alpha: isDark ? 0.25 : 0.35,
+                  ),
                   width: 0.8,
                 ),
               ),
@@ -569,7 +681,9 @@ class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen>
                       style: TextStyle(
                         fontFamily: 'HafsFont',
                         fontSize: 13.5,
-                        color: isDark ? const Color(0xFFE2E8F0) : tp.primaryAccent,
+                        color: isDark
+                            ? HomeDesign.goldText(isDark)
+                            : tp.primaryAccent,
                       ),
                     ),
                   ],
@@ -585,11 +699,7 @@ class _AdhkaarSubcategoriesScreenState extends State<AdhkaarSubcategoriesScreen>
               ),
             ),
 
-            Icon(
-              Icons.chevron_right_rounded,
-              size: 20,
-              color: tp.textMuted,
-            ),
+            Icon(Icons.chevron_right_rounded, size: 20, color: tp.textMuted),
           ],
         ),
       ),

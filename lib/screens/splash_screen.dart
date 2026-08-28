@@ -9,6 +9,7 @@ import '../widgets/heartbeat_tap.dart';
 import '../widgets/splash/animated_crescent_emblem.dart';
 import 'home_screen.dart';
 import 'onboarding/onboarding_flow.dart';
+import '../theme/app_colors.dart';
 
 class SplashScreen extends StatefulWidget {
   final bool onboardingComplete;
@@ -87,7 +88,7 @@ class _SplashScreenState extends State<SplashScreen>
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
                   color: isForce
-                      ? const Color(0xFFEF4444).withValues(alpha: 0.6)
+                      ? context.danger.withValues(alpha: 0.6)
                       : tp.primaryAccent.withValues(alpha: 0.5),
                   width: 1.2,
                 ),
@@ -110,7 +111,7 @@ class _SplashScreenState extends State<SplashScreen>
                         height: 44,
                         decoration: BoxDecoration(
                           color: isForce
-                              ? const Color(0xFFEF4444).withValues(alpha: 0.15)
+                              ? context.danger.withValues(alpha: 0.15)
                               : tp.primaryAccent.withValues(alpha: 0.15),
                           shape: BoxShape.circle,
                         ),
@@ -118,9 +119,7 @@ class _SplashScreenState extends State<SplashScreen>
                           isForce
                               ? Icons.warning_amber_rounded
                               : Icons.system_update_rounded,
-                          color: isForce
-                              ? const Color(0xFFEF4444)
-                              : tp.primaryAccent,
+                          color: isForce ? context.danger : tp.primaryAccent,
                           size: 24,
                         ),
                       ),
@@ -257,6 +256,7 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    context.watchTheme();
     final tp = context.watch<ThemeProvider>();
     final isDark = tp.isDarkMode;
 
@@ -299,97 +299,105 @@ class _SplashScreenState extends State<SplashScreen>
           // Center Floating Splash Box
           Center(
             child: AnimatedBuilder(
-          animation: _controller,
-          builder: (context, child) {
-            return FadeTransition(
-              opacity: _fadeAnimation,
-              child: ScaleTransition(
-                scale: _scaleAnimation,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(28),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-                    child: Container(
-                      width: 290,
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
-                      decoration: BoxDecoration(
-                        color: (isDark ? const Color(0xFF161B22) : const Color(0xFFFFFFFF))
-                            .withValues(alpha: isDark ? 0.88 : 0.92),
-                        borderRadius: BorderRadius.circular(28),
-                        border: Border.all(
-                          color: tp.primaryAccent.withValues(alpha: 0.45),
-                          width: 1.2,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.35),
-                            blurRadius: 32,
-                            offset: const Offset(0, 12),
+              animation: _controller,
+              builder: (context, child) {
+                return FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: ScaleTransition(
+                    scale: _scaleAnimation,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(28),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+                        child: Container(
+                          width: 290,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 28,
                           ),
-                          BoxShadow(
-                            color: tp.primaryAccent.withValues(alpha: 0.20),
-                            blurRadius: 20,
-                            spreadRadius: 2,
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // Glowing Animated Crescent & Star Emblem
-                          AnimatedCrescentEmblem(
-                            size: 80,
-                            primaryColor: tp.primaryAccent,
-                          ),
-                          const SizedBox(height: 12),
-
-                          // Sacred Arabic Script
-                          Text(
-                            'نُصَلِّي لِلَّهِ',
-                            style: TextStyle(
-                              fontFamily: 'HafsFont',
-                              fontSize: 26,
-                              fontWeight: FontWeight.normal,
-                              color: tp.textPrimary,
-                              height: 1.2,
+                          decoration: BoxDecoration(
+                            color:
+                                (isDark
+                                        ? context.cardTop
+                                        : const Color(0xFFFFFFFF))
+                                    .withValues(alpha: isDark ? 0.88 : 0.92),
+                            borderRadius: BorderRadius.circular(28),
+                            border: Border.all(
+                              color: tp.primaryAccent.withValues(alpha: 0.45),
+                              width: 1.2,
                             ),
-                          ),
-                          const SizedBox(height: 4),
-
-                          // English Title
-                          Text(
-                            'NUSWALLY LILLAH',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 2.0,
-                              color: tp.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: 18),
-
-                          // Sleek Micro Progress Indicator
-                          SizedBox(
-                            width: 36,
-                            height: 3,
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(2),
-                              child: LinearProgressIndicator(
-                                backgroundColor: tp.borderColor,
-                                valueColor: AlwaysStoppedAnimation<Color>(tp.primaryAccent),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.35),
+                                blurRadius: 32,
+                                offset: const Offset(0, 12),
                               ),
-                            ),
+                              BoxShadow(
+                                color: tp.primaryAccent.withValues(alpha: 0.20),
+                                blurRadius: 20,
+                                spreadRadius: 2,
+                              ),
+                            ],
                           ),
-                        ],
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Glowing Animated Crescent & Star Emblem
+                              AnimatedCrescentEmblem(
+                                size: 80,
+                                primaryColor: tp.primaryAccent,
+                              ),
+                              const SizedBox(height: 12),
+
+                              // Sacred Arabic Script
+                              Text(
+                                'نُصَلِّي لِلَّهِ',
+                                style: TextStyle(
+                                  fontFamily: 'HafsFont',
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.normal,
+                                  color: tp.textPrimary,
+                                  height: 1.2,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+
+                              // English Title
+                              Text(
+                                'NUSWALLY LILLAH',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 2.0,
+                                  color: tp.textPrimary,
+                                ),
+                              ),
+                              const SizedBox(height: 18),
+
+                              // Sleek Micro Progress Indicator
+                              SizedBox(
+                                width: 36,
+                                height: 3,
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(2),
+                                  child: LinearProgressIndicator(
+                                    backgroundColor: tp.borderColor,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      tp.primaryAccent,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ),
-            );
-          },
-        ),
-      ),
+                );
+              },
+            ),
+          ),
         ],
       ),
     );

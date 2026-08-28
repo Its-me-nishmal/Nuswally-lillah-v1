@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/jira_theme.dart';
+import '../theme/app_colors.dart';
 
 class JiraCard extends StatelessWidget {
   final Widget child;
@@ -25,15 +26,11 @@ class JiraCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    context.watchTheme();
 
-    final defaultBg = selected
-        ? (isDark ? JiraTheme.darkContainer : JiraTheme.lightContainer)
-        : (isDark ? JiraTheme.darkSurface : JiraTheme.lightSurface);
+    final defaultBg = selected ? (context.cardBottom) : (context.cardTop);
 
-    final defaultBorder = selected
-        ? JiraTheme.primaryBlue
-        : (isDark ? JiraTheme.darkBorderSubtle : JiraTheme.lightBorderSubtle);
+    final defaultBorder = selected ? context.accent : (context.cardBorder);
 
     final effectiveBg = backgroundColor ?? defaultBg;
     final effectiveBorder = borderColor ?? defaultBorder;
@@ -43,19 +40,13 @@ class JiraCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: effectiveBg,
         borderRadius: BorderRadius.circular(borderRadius),
-        border: Border.all(
-          color: effectiveBorder,
-          width: selected ? 1.5 : 1.0,
-        ),
+        border: Border.all(color: effectiveBorder, width: selected ? 1.5 : 1.0),
       ),
       child: child,
     );
 
     if (margin != null) {
-      cardChild = Padding(
-        padding: margin!,
-        child: cardChild,
-      );
+      cardChild = Padding(padding: margin!, child: cardChild);
     }
 
     if (onTap != null) {

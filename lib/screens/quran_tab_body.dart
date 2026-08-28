@@ -7,12 +7,12 @@ import '../models/juz_model.dart';
 import '../models/quran_model.dart';
 import '../providers/quran_provider.dart';
 import '../providers/theme_provider.dart';
-import '../theme/jira_theme.dart';
 import '../widgets/heartbeat_tap.dart';
 import '../widgets/quran/juz_directory_card.dart';
 import '../widgets/quran/quran_filter_chips.dart';
 import '../widgets/quran/surah_directory_card.dart';
 import 'surah_detail_screen.dart';
+import '../theme/app_colors.dart';
 
 /// Quran list directory tab body used inside [HomeScreen].
 class QuranTabBody extends StatefulWidget {
@@ -39,13 +39,16 @@ class _QuranTabBodyState extends State<QuranTabBody> {
   List<JuzModel> _filterJuzs(List<JuzModel> juzs) {
     if (widget.searchQuery.isEmpty) return juzs;
     final q = widget.searchQuery.toLowerCase();
-    return juzs.where((j) =>
-      j.nameEn.toLowerCase().contains(q) ||
-      j.nameAr.contains(q) ||
-      j.startSurahName.toLowerCase().contains(q) ||
-      j.endSurahName.toLowerCase().contains(q) ||
-      j.id.toString() == q
-    ).toList();
+    return juzs
+        .where(
+          (j) =>
+              j.nameEn.toLowerCase().contains(q) ||
+              j.nameAr.contains(q) ||
+              j.startSurahName.toLowerCase().contains(q) ||
+              j.endSurahName.toLowerCase().contains(q) ||
+              j.id.toString() == q,
+        )
+        .toList();
   }
 
   List<Surah> _filterSurahs(List<Surah> surahs, QuranProvider provider) {
@@ -57,10 +60,14 @@ class _QuranTabBodyState extends State<QuranTabBody> {
         list = list.where((s) => provider.isBookmarked(s.number)).toList();
         break;
       case QuranFilterType.meccan:
-        list = list.where((s) => s.revelationType.toLowerCase() == 'meccan').toList();
+        list = list
+            .where((s) => s.revelationType.toLowerCase() == 'meccan')
+            .toList();
         break;
       case QuranFilterType.medinan:
-        list = list.where((s) => s.revelationType.toLowerCase() == 'medinan').toList();
+        list = list
+            .where((s) => s.revelationType.toLowerCase() == 'medinan')
+            .toList();
         break;
       case QuranFilterType.juz:
       case QuranFilterType.all:
@@ -70,14 +77,17 @@ class _QuranTabBodyState extends State<QuranTabBody> {
     // Apply Search Query
     if (widget.searchQuery.isNotEmpty) {
       final q = widget.searchQuery.toLowerCase();
-      list = list.where((s) =>
-        s.englishName.toLowerCase().contains(q) ||
-        s.name.contains(q) ||
-        s.malayalamName.toLowerCase().contains(q) ||
-        s.englishNameTranslation.toLowerCase().contains(q) ||
-        s.malayalamNameTranslation.toLowerCase().contains(q) ||
-        s.number.toString().contains(q)
-      ).toList();
+      list = list
+          .where(
+            (s) =>
+                s.englishName.toLowerCase().contains(q) ||
+                s.name.contains(q) ||
+                s.malayalamName.toLowerCase().contains(q) ||
+                s.englishNameTranslation.toLowerCase().contains(q) ||
+                s.malayalamNameTranslation.toLowerCase().contains(q) ||
+                s.number.toString().contains(q),
+          )
+          .toList();
     }
 
     return list;
@@ -103,21 +113,14 @@ class _QuranTabBodyState extends State<QuranTabBody> {
 
     final surahName = targetSurah.englishName;
     final ayahNumber = ayahIndex + 1;
-    final lineBorderColor = isDark
-        ? const Color(0xFF222D38)
-        : const Color(0xFFE2E8F0);
+    final lineBorderColor = isDark ? context.hairline : context.cardBorder;
 
     return Padding(
       padding: const EdgeInsets.only(top: 2, bottom: 12),
       child: Row(
         children: [
           // Left extending line
-          Expanded(
-            child: Container(
-              height: 1.0,
-              color: lineBorderColor,
-            ),
-          ),
+          Expanded(child: Container(height: 1.0, color: lineBorderColor)),
 
           // Center interactive Last Read Pill
           Padding(
@@ -136,14 +139,14 @@ class _QuranTabBodyState extends State<QuranTabBody> {
                 );
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4.5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4.5,
+                ),
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF151D24) : const Color(0xFFF1F5F9),
+                  color: isDark ? context.cardTop : context.cardBottom,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: lineBorderColor,
-                    width: 0.8,
-                  ),
+                  border: Border.all(color: lineBorderColor, width: 0.8),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -184,12 +187,7 @@ class _QuranTabBodyState extends State<QuranTabBody> {
           ),
 
           // Right extending line
-          Expanded(
-            child: Container(
-              height: 1.0,
-              color: lineBorderColor,
-            ),
-          ),
+          Expanded(child: Container(height: 1.0, color: lineBorderColor)),
         ],
       ),
     );
@@ -238,12 +236,15 @@ class _QuranTabBodyState extends State<QuranTabBody> {
                 );
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5.5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 11,
+                  vertical: 5.5,
+                ),
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF151D24) : const Color(0xFFF1F5F9),
+                  color: isDark ? context.cardTop : context.cardBottom,
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                    color: isDark ? const Color(0xFF222D38) : const Color(0xFFE2E8F0),
+                    color: isDark ? context.hairline : context.cardBorder,
                     width: 0.8,
                   ),
                 ),
@@ -251,7 +252,10 @@ class _QuranTabBodyState extends State<QuranTabBody> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 4.5, vertical: 1.5),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 4.5,
+                        vertical: 1.5,
+                      ),
                       decoration: BoxDecoration(
                         color: themeProvider.primaryAccent.withValues(
                           alpha: isDark ? 0.12 : 0.15,
@@ -288,6 +292,7 @@ class _QuranTabBodyState extends State<QuranTabBody> {
 
   @override
   Widget build(BuildContext context) {
+    context.watchTheme();
     final themeProvider = context.watch<ThemeProvider>();
     final isDark = themeProvider.isDarkMode;
 
@@ -295,7 +300,9 @@ class _QuranTabBodyState extends State<QuranTabBody> {
       builder: (context, provider, child) {
         if (provider.isLoadingSurahs) {
           return Center(
-            child: CircularProgressIndicator(color: themeProvider.primaryAccent),
+            child: CircularProgressIndicator(
+              color: themeProvider.primaryAccent,
+            ),
           );
         }
 
@@ -305,7 +312,9 @@ class _QuranTabBodyState extends State<QuranTabBody> {
 
         final filteredSurahs = _filterSurahs(provider.surahs, provider);
         final filteredJuzs = _filterJuzs(provider.juzs);
-        final bookmarkedCount = provider.surahs.where((s) => provider.isBookmarked(s.number)).length;
+        final bookmarkedCount = provider.surahs
+            .where((s) => provider.isBookmarked(s.number))
+            .length;
 
         return ListView(
           physics: const BouncingScrollPhysics(),
@@ -344,15 +353,14 @@ class _QuranTabBodyState extends State<QuranTabBody> {
               else
                 Container(
                   decoration: BoxDecoration(
-                    color: isDark ? JiraTheme.darkSurface : JiraTheme.lightSurface,
+                    color: context.cardTop,
                     borderRadius: BorderRadius.circular(18),
-                    border: Border.all(
-                      color: isDark ? JiraTheme.darkBorderSubtle : JiraTheme.lightBorderSubtle,
-                      width: 0.8,
-                    ),
+                    border: Border.all(color: context.cardBorder, width: 0.8),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.03),
+                        color: Colors.black.withValues(
+                          alpha: isDark ? 0.18 : 0.03,
+                        ),
                         blurRadius: 14,
                         offset: const Offset(0, 3),
                       ),
@@ -371,10 +379,13 @@ class _QuranTabBodyState extends State<QuranTabBody> {
                             JuzDirectoryCard(juz: juz),
                             if (!isLast)
                               Padding(
-                                padding: const EdgeInsets.only(left: 68, right: 16),
+                                padding: const EdgeInsets.only(
+                                  left: 68,
+                                  right: 16,
+                                ),
                                 child: Container(
                                   height: 1.0,
-                                  color: isDark ? const Color(0xFF222D38) : const Color(0xFFE5E9EE),
+                                  color: context.hairline,
                                 ),
                               ),
                           ],
@@ -389,15 +400,14 @@ class _QuranTabBodyState extends State<QuranTabBody> {
               else
                 Container(
                   decoration: BoxDecoration(
-                    color: isDark ? JiraTheme.darkSurface : JiraTheme.lightSurface,
+                    color: context.cardTop,
                     borderRadius: BorderRadius.circular(18),
-                    border: Border.all(
-                      color: isDark ? JiraTheme.darkBorderSubtle : JiraTheme.lightBorderSubtle,
-                      width: 0.8,
-                    ),
+                    border: Border.all(color: context.cardBorder, width: 0.8),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.03),
+                        color: Colors.black.withValues(
+                          alpha: isDark ? 0.18 : 0.03,
+                        ),
                         blurRadius: 14,
                         offset: const Offset(0, 3),
                       ),
@@ -416,14 +426,18 @@ class _QuranTabBodyState extends State<QuranTabBody> {
                             SurahDirectoryCard(
                               surah: surah,
                               isBookmarked: provider.isBookmarked(surah.number),
-                              onBookmarkToggle: () => provider.toggleBookmark(surah.number),
+                              onBookmarkToggle: () =>
+                                  provider.toggleBookmark(surah.number),
                             ),
                             if (!isLast)
                               Padding(
-                                padding: const EdgeInsets.only(left: 68, right: 16),
+                                padding: const EdgeInsets.only(
+                                  left: 68,
+                                  right: 16,
+                                ),
                                 child: Container(
                                   height: 1.0,
-                                  color: isDark ? const Color(0xFF222D38) : const Color(0xFFE5E9EE),
+                                  color: context.hairline,
                                 ),
                               ),
                           ],
@@ -434,7 +448,9 @@ class _QuranTabBodyState extends State<QuranTabBody> {
                 ),
             ],
 
-            SizedBox(height: 80 + MediaQuery.paddingOf(context).bottom), // Bottom clearance for attached bar
+            SizedBox(
+              height: 80 + MediaQuery.paddingOf(context).bottom,
+            ), // Bottom clearance for attached bar
           ],
         );
       },
@@ -472,12 +488,20 @@ class _QuranTabBodyState extends State<QuranTabBody> {
     );
   }
 
-  Widget _buildErrorView(BuildContext context, QuranProvider provider, ThemeProvider themeProvider) {
+  Widget _buildErrorView(
+    BuildContext context,
+    QuranProvider provider,
+    ThemeProvider themeProvider,
+  ) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.wifi_off_rounded, size: 48, color: themeProvider.textMuted),
+          Icon(
+            Icons.wifi_off_rounded,
+            size: 48,
+            color: themeProvider.textMuted,
+          ),
           const SizedBox(height: 12),
           Text(
             'Failed to load Quran data',
@@ -493,7 +517,9 @@ class _QuranTabBodyState extends State<QuranTabBody> {
             style: ElevatedButton.styleFrom(
               backgroundColor: themeProvider.primaryAccent,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             child: const Text('Retry'),
           ),
