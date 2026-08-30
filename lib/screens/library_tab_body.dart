@@ -9,7 +9,9 @@ import '../providers/theme_provider.dart';
 import '../widgets/heartbeat_tap.dart';
 import 'adhkaar_subcategories_screen.dart';
 import 'adhkaar_duas_screen.dart';
+import 'haddad_screen.dart';
 import 'dua_detail_screen.dart';
+import 'moulid_reader_screen.dart';
 import 'names_screen.dart';
 import 'quranic_duas_screen.dart';
 import '../theme/app_colors.dart';
@@ -337,6 +339,40 @@ class _LibraryTabBodyState extends State<LibraryTabBody> {
                     MaterialPageRoute(
                       builder: (context) => const QuranicDuasScreen(),
                     ),
+                  );
+                },
+              ),
+              _buildHairlineDivider(isDark),
+
+              _buildCategoryRowItem(
+                context: context,
+                icon: Icons.auto_awesome_rounded,
+                title: isMl ? 'മങ്കൂസ് മൗലിദ് (ടെക്സ്റ്റ് റീഡർ)' : 'Manqoos Moulid (Native Text)',
+                subtitle: isMl ? '14 ഫസലുകളും ബൈത്തുകളും ഖിയാമും മനോഹരമായ അറബിക് ഫോണ്ടിൽ' : 'All 14 Fasl, Baith & Qiyam in rich native typography',
+                tp: tp,
+                isDark: isDark,
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const MoulidReaderScreen()),
+                  );
+                },
+              ),
+              _buildHairlineDivider(isDark),
+
+              _buildCategoryRowItem(
+                context: context,
+                icon: Icons.menu_book_rounded,
+                title: isMl ? 'റാതീബുൽ ഹദ്ദാദ് (ടെക്സ്റ്റ് റീഡർ)' : 'Ratib al-Haddad (Native Text)',
+                subtitle: isMl ? 'ഇമാം ഹദ്ദാദ് (റ) തങ്ങളുടെ സമ്പൂർണ്ണ റാത്തീബും ദുആയും' : 'Complete litany & prayers of Imam al-Haddad in rich typography',
+                tp: tp,
+                isDark: isDark,
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const HaddadScreen()),
                   );
                 },
               ),

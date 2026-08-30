@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import '../models/quran_edition_model.dart';
+import 'json_asset_loader.dart';
 
 class AlQuranService {
   static List<QuranEdition>? _cachedEditions;
@@ -16,7 +16,7 @@ class AlQuranService {
   }) async {
     try {
       if (_cachedEditions == null) {
-        final String raw = await rootBundle.loadString('assets/quran/editions.json');
+        final String raw = await JsonAssetLoader.loadString('assets/quran/editions.json.gz');
         final List<dynamic> list = json.decode(raw) as List<dynamic>;
         _cachedEditions = list
             .map((e) => QuranEdition.fromJson(e as Map<String, dynamic>))
@@ -44,7 +44,7 @@ class AlQuranService {
   static Future<List<SajdaInfo>> fetchSajdas({String edition = 'quran-uthmani'}) async {
     try {
       if (_cachedSajdas == null) {
-        final String raw = await rootBundle.loadString('assets/quran/sajda.json');
+        final String raw = await JsonAssetLoader.loadString('assets/quran/sajda.json.gz');
         final List<dynamic> list = json.decode(raw) as List<dynamic>;
         _cachedSajdas = list
             .map((e) => SajdaInfo.fromJson(e as Map<String, dynamic>))
@@ -66,7 +66,7 @@ class AlQuranService {
     if (query.trim().isEmpty) return [];
     try {
       if (_cachedQuranJson == null) {
-        final String raw = await rootBundle.loadString('assets/quran/quran.json');
+        final String raw = await JsonAssetLoader.loadString('assets/quran/quran.json.gz');
         _cachedQuranJson = json.decode(raw) as List<dynamic>;
       }
 

@@ -56,6 +56,9 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
   double? _pinchFeedbackFontSize;
   Timer? _pinchFeedbackTimer;
 
+  // Reading progress tracking (zero-jank, isolated rebuild)
+  final ValueNotifier<double> _readingProgress = ValueNotifier<double>(0.0);
+
   @override
   void initState() {
     super.initState();
@@ -88,8 +91,14 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
   void _onScroll() {
     if (!_activeScrollController.hasClients) return;
     final offset = _activeScrollController.offset;
+    final maxScroll = _activeScrollController.position.maxScrollExtent;
     final delta = offset - _lastScrollOffset;
     _lastScrollOffset = offset;
+
+    // Update reading progress
+    if (maxScroll > 0) {
+      _readingProgress.value = (offset / maxScroll).clamp(0.0, 1.0);
+    }
 
     // Always reveal at the top of the Surah
     if (offset < 30) {
@@ -129,6 +138,7 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
     _pinchFeedbackTimer?.cancel();
     _studyScrollController.dispose();
     _mushafScrollController.dispose();
+    _readingProgress.dispose();
     super.dispose();
   }
 
@@ -204,7 +214,7 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
             child: Opacity(
               opacity: 0.035,
               child: Image.asset(
-                'assets/images/islamic_bg.png',
+                'assets/images/islamic_bg.webp',
                 repeat: ImageRepeat.repeat,
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) => const SizedBox.shrink(),
@@ -335,12 +345,6 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
                 child: Container(
-                  padding: EdgeInsets.fromLTRB(
-                    16,
-                    8,
-                    16,
-                    bottomInset > 0 ? bottomInset + 4 : 12,
-                  ),
                   decoration: BoxDecoration(
                     color: (isDark ? context.pageTop : Colors.white).withValues(
                       alpha: isDark ? 0.92 : 0.95,
@@ -354,181 +358,239 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
                       ),
                     ),
                   ),
-                  child: Consumer<QuranProvider>(
-                    builder: (context, provider, child) {
-                      final isScrollMode =
-                          _bottomBarMode == BottomBarMode.scroll;
-                      return Row(
-                        children: [
-                          // 1. Mode Switcher Capsule: [Speed / Font Size]
-                          Container(
-                            padding: const EdgeInsets.all(2.5),
-                            decoration: BoxDecoration(
-                              color: isDark
-                                  ? context.cardTop
-                                  : context.cardBottom,
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: themeProvider.borderColor.withValues(
-                                  alpha: 0.5,
-                                ),
-                                width: 0.8,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Reading Completion Progress Bar on top of bottom bar
+                      ValueListenableBuilder<double>(
+                        valueListenable: _readingProgress,
+                        builder: (context, progress, _) {
+                          return SizedBox(
+                            height: 2.5,
+                            child: LinearProgressIndicator(
+                              value: progress,
+                              backgroundColor: context.hairline.withValues(alpha: 0.35),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                themeProvider.primaryAccent,
                               ),
                             ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
+                          );
+                        },
+                      ),
+
+                      // Bottom Control Row
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          16,
+                          8,
+                          16,
+                          bottomInset > 0 ? bottomInset + 4 : 12,
+                        ),
+                        child: Consumer<QuranProvider>(
+                          builder: (context, provider, child) {
+                            final isScrollMode =
+                                _bottomBarMode == BottomBarMode.scroll;
+                            return Row(
                               children: [
-                                // Speed Icon Toggle
-                                HeartbeatTap(
-                                  onTap: () {
-                                    HapticFeedback.selectionClick();
-                                    setState(() {
-                                      _bottomBarMode = BottomBarMode.scroll;
-                                    });
-                                  },
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 9,
-                                      vertical: 5,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: isScrollMode
-                                          ? themeProvider.primaryAccent
-                                                .withValues(
-                                                  alpha: isDark ? 0.18 : 0.15,
-                                                )
-                                          : Colors.transparent,
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Icon(
-                                      Icons.speed_rounded,
-                                      size: 16,
-                                      color: isScrollMode
-                                          ? themeProvider.primaryAccent
-                                          : themeProvider.textSecondary,
-                                    ),
-                                  ),
-                                ),
-                                // Font Size Icon Toggle
-                                HeartbeatTap(
-                                  onTap: () {
-                                    HapticFeedback.selectionClick();
-                                    setState(() {
-                                      _bottomBarMode = BottomBarMode.fontSize;
-                                    });
-                                  },
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 9,
-                                      vertical: 5,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: !isScrollMode
-                                          ? themeProvider.primaryAccent
-                                                .withValues(
-                                                  alpha: isDark ? 0.18 : 0.15,
-                                                )
-                                          : Colors.transparent,
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Icon(
-                                      Icons.format_size_rounded,
-                                      size: 16,
-                                      color: !isScrollMode
-                                          ? themeProvider.primaryAccent
-                                          : themeProvider.textSecondary,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-
-                          // 2. Active Mode Label & Value
-                          SizedBox(
-                            width: 48,
-                            child: Text(
-                              isScrollMode
-                                  ? (_autoScrollSpeed == 0
-                                        ? 'OFF'
-                                        : '${_autoScrollSpeed.toStringAsFixed(1)}x')
-                                  : '${provider.fontSize.toInt()}px',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.w700,
-                                color: isScrollMode
-                                    ? (_autoScrollSpeed > 0
-                                          ? themeProvider.primaryAccent
-                                          : themeProvider.textSecondary)
-                                    : themeProvider.primaryAccent,
-                              ),
-                            ),
-                          ),
-
-                          // 3. Smooth Slider (Speed 0..5 or Font Size 20..44)
-                          Expanded(
-                            child: SliderTheme(
-                              data: SliderTheme.of(context).copyWith(
-                                trackHeight: 3.5,
-                                activeTrackColor: themeProvider.primaryAccent,
-                                inactiveTrackColor: isDark
-                                    ? context.hairline
-                                    : context.cardBorder,
-                                thumbColor: themeProvider.primaryAccent,
-                                overlayColor: themeProvider.primaryAccent
-                                    .withValues(alpha: 0.2),
-                                thumbShape: const RoundSliderThumbShape(
-                                  enabledThumbRadius: 6.5,
-                                ),
-                                overlayShape: const RoundSliderOverlayShape(
-                                  overlayRadius: 13.0,
-                                ),
-                              ),
-                              child: isScrollMode
-                                  ? Slider(
-                                      value: _autoScrollSpeed.clamp(0.0, 5.0),
-                                      min: 0.0,
-                                      max: 5.0,
-                                      divisions: 10,
-                                      onChanged: (val) {
-                                        _updateAutoScroll(val);
-                                      },
-                                    )
-                                  : Slider(
-                                      value: provider.fontSize.clamp(
-                                        20.0,
-                                        44.0,
+                                // 1. Mode Switcher Capsule: [Speed / Font Size]
+                                Container(
+                                  padding: const EdgeInsets.all(2.5),
+                                  decoration: BoxDecoration(
+                                    color: isDark
+                                        ? context.cardTop
+                                        : context.cardBottom,
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: themeProvider.borderColor.withValues(
+                                        alpha: 0.5,
                                       ),
-                                      min: 20.0,
-                                      max: 44.0,
-                                      divisions: 12,
-                                      onChanged: (val) {
-                                        provider.updateFontSize(val);
-                                      },
+                                      width: 0.8,
                                     ),
-                            ),
-                          ),
-
-                          // 4. Quick Reset / Stop to 0 (for scroll mode)
-                          if (isScrollMode && _autoScrollSpeed > 0)
-                            HeartbeatTap(
-                              onTap: () {
-                                HapticFeedback.selectionClick();
-                                _updateAutoScroll(0.0);
-                              },
-                              child: Padding(
-                                padding: const EdgeInsets.only(left: 4),
-                                child: Icon(
-                                  Icons.close_rounded,
-                                  size: 17,
-                                  color: themeProvider.textSecondary,
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      // Speed Icon Toggle
+                                      HeartbeatTap(
+                                        onTap: () {
+                                          HapticFeedback.selectionClick();
+                                          setState(() {
+                                            _bottomBarMode = BottomBarMode.scroll;
+                                          });
+                                        },
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 9,
+                                            vertical: 5,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: isScrollMode
+                                                ? themeProvider.primaryAccent
+                                                      .withValues(
+                                                        alpha: isDark ? 0.18 : 0.15,
+                                                      )
+                                                : Colors.transparent,
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child: Icon(
+                                            Icons.speed_rounded,
+                                            size: 16,
+                                            color: isScrollMode
+                                                ? themeProvider.primaryAccent
+                                                : themeProvider.textSecondary,
+                                          ),
+                                        ),
+                                      ),
+                                      // Font Size Icon Toggle
+                                      HeartbeatTap(
+                                        onTap: () {
+                                          HapticFeedback.selectionClick();
+                                          setState(() {
+                                            _bottomBarMode = BottomBarMode.fontSize;
+                                          });
+                                        },
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 9,
+                                            vertical: 5,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: !isScrollMode
+                                                ? themeProvider.primaryAccent
+                                                      .withValues(
+                                                        alpha: isDark ? 0.18 : 0.15,
+                                                      )
+                                                : Colors.transparent,
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child: Icon(
+                                            Icons.format_size_rounded,
+                                            size: 16,
+                                            color: !isScrollMode
+                                                ? themeProvider.primaryAccent
+                                                : themeProvider.textSecondary,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            ),
-                        ],
-                      );
-                    },
+                                const SizedBox(width: 10),
+
+                                // 2. Active Mode Label & Value
+                                SizedBox(
+                                  width: 48,
+                                  child: Text(
+                                    isScrollMode
+                                        ? (_autoScrollSpeed == 0
+                                              ? 'OFF'
+                                              : '${_autoScrollSpeed.toStringAsFixed(1)}x')
+                                        : '${provider.fontSize.toInt()}px',
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.w700,
+                                      color: isScrollMode
+                                          ? (_autoScrollSpeed > 0
+                                                ? themeProvider.primaryAccent
+                                                : themeProvider.textSecondary)
+                                          : themeProvider.primaryAccent,
+                                    ),
+                                  ),
+                                ),
+
+                                // 3. Smooth Slider (Speed 0..5 or Font Size 20..44)
+                                Expanded(
+                                  child: SliderTheme(
+                                    data: SliderTheme.of(context).copyWith(
+                                      trackHeight: 3.5,
+                                      activeTrackColor: themeProvider.primaryAccent,
+                                      inactiveTrackColor: isDark
+                                          ? context.hairline
+                                          : context.cardBorder,
+                                      thumbColor: themeProvider.primaryAccent,
+                                      overlayColor: themeProvider.primaryAccent
+                                          .withValues(alpha: 0.2),
+                                      thumbShape: const RoundSliderThumbShape(
+                                        enabledThumbRadius: 6.5,
+                                      ),
+                                      overlayShape: const RoundSliderOverlayShape(
+                                        overlayRadius: 13.0,
+                                      ),
+                                    ),
+                                    child: isScrollMode
+                                        ? Slider(
+                                            value: _autoScrollSpeed.clamp(0.0, 5.0),
+                                            min: 0.0,
+                                            max: 5.0,
+                                            divisions: 10,
+                                            onChanged: (val) {
+                                              _updateAutoScroll(val);
+                                            },
+                                          )
+                                        : Slider(
+                                            value: provider.fontSize.clamp(
+                                              20.0,
+                                              44.0,
+                                            ),
+                                            min: 20.0,
+                                            max: 44.0,
+                                            divisions: 12,
+                                            onChanged: (val) {
+                                              provider.updateFontSize(val);
+                                            },
+                                          ),
+                                  ),
+                                ),
+
+                                // 4. Wide Tactile Stop Button (Much wider touch area during auto-scroll)
+                                if (isScrollMode && _autoScrollSpeed > 0)
+                                  HeartbeatTap(
+                                    onTap: () {
+                                      HapticFeedback.selectionClick();
+                                      _updateAutoScroll(0.0);
+                                    },
+                                    child: Container(
+                                      margin: const EdgeInsets.only(left: 8),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: context.danger.withValues(alpha: 0.14),
+                                        borderRadius: BorderRadius.circular(14),
+                                        border: Border.all(
+                                          color: context.danger.withValues(alpha: 0.45),
+                                          width: 0.9,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.stop_circle_rounded,
+                                            size: 16,
+                                            color: context.danger,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            'STOP',
+                                            style: GoogleFonts.plusJakartaSans(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w800,
+                                              color: context.danger,
+                                              letterSpacing: 0.5,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),

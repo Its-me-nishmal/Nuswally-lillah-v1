@@ -160,7 +160,7 @@ class _HomeScreenState extends State<HomeScreen> {
           // the saveLayer an Opacity widget would force every frame.
           Positioned.fill(
             child: Image.asset(
-              'assets/images/islamic_bg.png',
+              'assets/images/islamic_bg.webp',
               fit: BoxFit.cover,
               opacity: const AlwaysStoppedAnimation(0.035),
             ),

@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'json_asset_loader.dart';
 
 class AppUpdateInfo {
   final int versionCode;
@@ -72,8 +72,8 @@ class AppUpdateService {
   static const String _spCachedUpdateKey = 'cached_app_update_json';
 
   /// Current installed version of the app
-  static const int currentVersionCode = 202;
-  static const String currentVersionName = '2.0.1';
+  static const int currentVersionCode = 300;
+  static const String currentVersionName = '3.0.0';
 
   /// Remote API/Gist endpoint for checking app updates (hash-free for live sync)
   static String? apiUrl =
@@ -142,8 +142,7 @@ class AppUpdateService {
 
     // 3. Fallback to bundled asset
     try {
-      final raw = await rootBundle.loadString(_localAssetPath);
-      final decoded = json.decode(raw) as Map<String, dynamic>;
+      final decoded = await JsonAssetLoader.loadJsonObject(_localAssetPath);
       final info = AppUpdateInfo.fromJson(decoded);
       _cachedInfo = info;
       return info;

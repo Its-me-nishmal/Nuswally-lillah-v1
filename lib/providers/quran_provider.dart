@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/juz_model.dart';
@@ -10,6 +9,7 @@ import '../models/qari_model.dart';
 import '../models/quran_edition_model.dart';
 import '../models/quran_model.dart';
 import '../services/alquran_service.dart';
+import '../services/json_asset_loader.dart';
 import '../services/notification_service.dart';
 import '../services/quran_audio_cache_service.dart';
 import '../services/quran_page_helper.dart';
@@ -159,7 +159,7 @@ class QuranProvider with ChangeNotifier {
 
   Future<void> fetchQaris() async {
     try {
-      final String raw = await rootBundle.loadString('assets/quran/qaris.json');
+      final String raw = await JsonAssetLoader.loadString('assets/quran/qaris.json.gz');
       final List<dynamic> list = json.decode(raw) as List<dynamic>;
       _qaris = list.map((e) => Qari.fromJson(e as Map<String, dynamic>)).toList();
     } catch (e) {
@@ -345,7 +345,7 @@ class QuranProvider with ChangeNotifier {
 
     try {
       if (_cachedFullQuran == null) {
-        final String response = await rootBundle.loadString('assets/quran/quran.json');
+        final String response = await JsonAssetLoader.loadString('assets/quran/quran.json.gz');
         _cachedFullQuran = json.decode(response) as List<dynamic>;
       }
       
@@ -355,7 +355,7 @@ class QuranProvider with ChangeNotifier {
 
       if (_juzs.isEmpty) {
         try {
-          final String juzRaw = await rootBundle.loadString('assets/quran/juzs.json');
+          final String juzRaw = await JsonAssetLoader.loadString('assets/quran/juzs.json.gz');
           final List<dynamic> jList = json.decode(juzRaw) as List<dynamic>;
           _juzs = jList.map((j) => JuzModel.fromJson(j as Map<dynamic, dynamic>)).toList();
         } catch (_) {}
@@ -423,7 +423,7 @@ class QuranProvider with ChangeNotifier {
 
     try {
       if (_cachedFullQuran == null) {
-        final String response = await rootBundle.loadString('assets/quran/quran.json');
+        final String response = await JsonAssetLoader.loadString('assets/quran/quran.json.gz');
         _cachedFullQuran = await compute(_decodeJson, response);
       }
       

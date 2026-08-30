@@ -12,6 +12,7 @@ import '../models/allah_name.dart';
 import '../models/quran_model.dart';
 import '../providers/quran_provider.dart';
 import '../providers/theme_provider.dart';
+import '../services/json_asset_loader.dart';
 import '../widgets/heartbeat_tap.dart';
 import 'surah_detail_screen.dart';
 import '../theme/app_colors.dart';
@@ -125,8 +126,8 @@ class _NamesScreenState extends State<NamesScreen> {
           .whereType<int>()
           .toSet();
 
-      final jsonString = await rootBundle.loadString(
-        'assets/data/99_names_of_allah.json',
+      final jsonString = await JsonAssetLoader.loadString(
+        'assets/data/99_names_of_allah.json.gz',
       );
       final Map<String, dynamic> jsonMap = json.decode(jsonString);
       final List<dynamic> list = jsonMap['data'] as List<dynamic>? ?? [];

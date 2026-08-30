@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import '../models/adhkaar.dart';
 import '../models/allah_name.dart';
+import '../services/json_asset_loader.dart';
 
 class AdhkaarProvider extends ChangeNotifier {
   AdhkaarBundle? _bundle;
@@ -24,11 +24,11 @@ class AdhkaarProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
-      final raw = await rootBundle.loadString('assets/data/adhkaar.json');
+      final raw = await JsonAssetLoader.loadString('assets/data/adhkaar.json.gz');
       _bundle = AdhkaarBundle.fromRaw(raw);
 
       // Load 99 Names of Allah from dedicated dataset
-      final namesJsonRaw = await rootBundle.loadString('assets/data/99_names_of_allah.json');
+      final namesJsonRaw = await JsonAssetLoader.loadString('assets/data/99_names_of_allah.json.gz');
       final Map<String, dynamic> namesMap = json.decode(namesJsonRaw);
       final List<dynamic> namesList = namesMap['data'] as List<dynamic>? ?? [];
       _allahNames = namesList.map((e) => AllahName.fromJson(e as Map<String, dynamic>)).toList();

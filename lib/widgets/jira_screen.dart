@@ -55,7 +55,7 @@ class JiraScreen extends StatelessWidget {
             child: Opacity(
               opacity: 0.035,
               child: Image.asset(
-                'assets/images/islamic_bg.png',
+                'assets/images/islamic_bg.webp',
                 fit: BoxFit.cover,
               ),
             ),

@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'json_asset_loader.dart';
 
 class VideoChapter {
   final String title;
@@ -341,9 +341,8 @@ class SocialLinksService {
     }
 
     // Baseline from bundled assets
-    final String raw = await rootBundle.loadString(_localAssetPath);
     final Map<String, dynamic> assetData =
-        json.decode(raw) as Map<String, dynamic>;
+        await JsonAssetLoader.loadJsonObject(_localAssetPath);
     _currentVersion = (assetData['version'] as num?)?.toInt() ?? 1;
     return assetData;
   }

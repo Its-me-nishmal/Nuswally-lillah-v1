@@ -174,7 +174,7 @@ class _AdhkaarSubcategoriesScreenState
             child: Opacity(
               opacity: 0.035,
               child: Image.asset(
-                'assets/images/islamic_bg.png',
+                'assets/images/islamic_bg.webp',
                 repeat: ImageRepeat.repeat,
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) => const SizedBox.shrink(),
