@@ -36,11 +36,13 @@ void main() async {
     }
   };
 
-  // Lock orientation to portrait
+  // Allow auto-rotation across the app
   try {
     await SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
     ]);
   } catch (_) {}
 

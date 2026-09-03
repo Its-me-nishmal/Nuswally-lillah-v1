@@ -77,7 +77,7 @@ class ObPage1Welcome extends StatelessWidget {
                           'NUSWALLY LILLAH',
                           style: GoogleFonts.outfit(
                             fontSize: 16,
-                            fontWeight: FontWeight.w900,
+                            fontWeight: FontWeight.w800,
                             letterSpacing: 3.5,
                             color: context.textPrimary,
                           ),

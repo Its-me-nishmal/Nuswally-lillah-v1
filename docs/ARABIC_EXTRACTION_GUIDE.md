@@ -140,7 +140,38 @@ To extract and decode a new Moulid, Ratheeb, or Awraad PDF (e.g. *Badr Moulid*, 
 
 | Metric | PDF Source | Decoded JSON |
 | :--- | :--- | :--- |
-| **Size** | 540 KB | **62 KB (88.4% reduction)** |
+| **Size** | 540 KB – 605 KB | **9 KB – 62 KB (88% – 98.3% reduction)** |
 | **Rendering** | Rasterized bitmap | **Crisp vector typography (`HafsFont`, `AdobeArabic`)** |
 | **Customization** | Fixed page zoom | **Live pinch zoom, themes, auto-scroll, alternating couplets** |
 | **Accuracy** | Prone to OCR bugs | **100% verified, zero diacritic loss** |
+
+---
+
+## 5. Critical Agent Learnings & Golden Rules (Majlisunnoor Case Study)
+
+1. **Zero-Script Native PDF Visual Inspection**:
+   - The agent does NOT need to write Python scripts (`fitz`, `pdfplumber`, etc.) to inspect PDFs.
+   - Calling `view_file` directly on any PDF renders high-resolution page screenshots and OCR layers directly into the multimodal visual context. Always use `view_file` first to inspect the physical manuscript.
+
+2. **Strict 1-to-1 Page-by-Page JSON Modeling**:
+   - Every physical page in the manuscript MUST map directly to a single `MoulidSection` with a matching `page: N` integer.
+   - Never lump an entire 10-page poem into a single monolithic section. Breaking it down page-by-page ensures table-of-contents accuracy, exact physical book parity, and consistent page separators in the continuous reader.
+
+3. **Arabi-Malayalam Script Preservation**:
+   - Traditional Malabar litanies (such as Majlisunnoor) often feature historical Arabi-Malayalam refrains (e.g. on Pages 8, 10, 12).
+   - In the physical book, these are printed in **classical Arabic script** (e.g. `دَبَّمْ وَبَاوُسُورِيُمْ مَرْضَّ دِينَمْ آدْنَكُلَّمْ`).
+   - **CRITICAL**: Never replace these with Malayalam script in `refrain` or `couplets`. The reader applies Arabic typography and styling to `refrain`, so putting raw Malayalam text in `refrain` leaks massive Malayalam characters into the Arabic book view even when the app language is set to English.
+
+4. **Tanzil Quran Corpus Cross-Verification**:
+   - Never rely on OCR or text extraction for Quranic chapters (such as Surah Yaseen, Al-Fatihah, or the Mu'awwidhat).
+   - Always extract these directly from `assets/quran/quran.json.gz` to ensure 100% certified Tanzil Hafs Uthmanic orthography, exact stop markers (`۝`), and zero corrupted characters.
+
+5. **Page Boundary Integrity & Trailing Surahs**:
+   - Check where text crosses page turns (e.g. `إِنَّكَ مُجِيبٌ` at the bottom of Page 21 and `سَامِعٌ` at the top of Page 22).
+   - Verify trailing surahs at chapter endings (e.g. Page 20 features the conclusion of Surah Yaseen followed immediately by the Three Quls: Al-Ikhlas 3x, Al-Falaq, and An-Nas).
+
+6. **Right-to-Left Column Hemistich Pairing (Sadr & Ajjuz)**:
+   - In classical Arabic dual-column manuscripts, the first hemistich (*Sadr* / الصدر) is the **RIGHT** column box.
+   - The second hemistich (*Ajjuz* / العجز) is the **LEFT** column box.
+   - **CRITICAL**: Never extract Left-to-Right. In the JSON schema, `hemistich1` MUST store the RIGHT column, and `hemistich2` MUST store the LEFT column. If swapped, the rhyme and recitation sequence are inverted (e.g. Page 13: `وَالْعَاصِمُ الْعَامِرُوا` is line 1, and `قِدُنَا وَزَيْدٌ عَبْدُ اللهِ` is line 2).
+

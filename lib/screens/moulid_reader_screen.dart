@@ -42,6 +42,7 @@ class _MoulidReaderScreenState extends State<MoulidReaderScreen> {
   double _fontSize = 28.0;
   String _fontFamily = 'HafsFont';
   bool _showSectionTitles = false;
+  String _poetryLayout = 'auto'; // 'auto', 'dual', 'stacked'
 
   final ScrollController _scrollController = ScrollController();
   final Map<int, GlobalKey> _sectionKeys = {};
@@ -73,6 +74,13 @@ class _MoulidReaderScreenState extends State<MoulidReaderScreen> {
   @override
   void initState() {
     super.initState();
+    // Allow rotation (Portrait & Landscape) during active reading
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
     // Enable immersive distraction-free reading
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
@@ -82,7 +90,25 @@ class _MoulidReaderScreenState extends State<MoulidReaderScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
+  }
+
+  @override
   void dispose() {
+    // Restore default orientation lock when exiting reader
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+
     _autoScrollTimer?.cancel();
     _pinchFeedbackTimer?.cancel();
     _scrollController.removeListener(_onScroll);
@@ -140,6 +166,7 @@ class _MoulidReaderScreenState extends State<MoulidReaderScreen> {
       _fontSize = prefs.getDouble('moulid_font_size') ?? 28.0;
       _fontFamily = prefs.getString('moulid_font_family') ?? 'HafsFont';
       _showSectionTitles = prefs.getBool('moulid_show_titles') ?? false;
+      _poetryLayout = prefs.getString('moulid_poetry_layout') ?? 'auto';
     });
   }
 
@@ -148,6 +175,21 @@ class _MoulidReaderScreenState extends State<MoulidReaderScreen> {
     await prefs.setDouble('moulid_font_size', _fontSize);
     await prefs.setString('moulid_font_family', _fontFamily);
     await prefs.setBool('moulid_show_titles', _showSectionTitles);
+    await prefs.setString('moulid_poetry_layout', _poetryLayout);
+  }
+
+  /// Responsive logic determining if dual-column side-by-side or stacked layout is active
+  bool _isDualColumnActive(double screenWidth, Orientation orientation) {
+    if (_poetryLayout == 'dual') return true;
+    if (_poetryLayout == 'stacked') return false;
+    // 'auto' mode:
+    // Wide screens / Landscape always have enough room for 2 columns:
+    if (orientation == Orientation.landscape || screenWidth > 540) {
+      return true;
+    }
+    // In portrait, if font size is standard (<= 24.5px), dual-column book view fits cleanly.
+    // If the user increases font size (> 24.5px), seamlessly adapt to stacked full-width view!
+    return _fontSize <= 24.5;
   }
 
   Future<void> _loadDocument() async {
@@ -408,6 +450,33 @@ class _MoulidReaderScreenState extends State<MoulidReaderScreen> {
                   ),
                   const SizedBox(height: 18),
 
+                  // ── Poetry Layout Mode (Dual Column vs Large Text)
+                  Row(
+                    children: [
+                      Icon(Icons.view_column_rounded, size: 16, color: context.textSecondary),
+                      const SizedBox(width: 8),
+                      Text(
+                        isMl ? 'ബൈത്ത് ശൈലി' : 'Poetry Layout Style',
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: context.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      _layoutChip('auto', isMl ? 'ഓട്ടോ' : 'Auto', Icons.auto_awesome_rounded, tp, setSheet),
+                      const SizedBox(width: 8),
+                      _layoutChip('dual', isMl ? 'കിതാബ് (2 നിര)' : 'Book (2 Col)', Icons.view_column_rounded, tp, setSheet),
+                      const SizedBox(width: 8),
+                      _layoutChip('stacked', isMl ? 'വലിയ അക്ഷരം' : 'Large Text', Icons.view_agenda_rounded, tp, setSheet),
+                    ],
+                  ),
+                  const SizedBox(height: 18),
+
                   // ── Show Section Titles Toggle
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -448,6 +517,54 @@ class _MoulidReaderScreenState extends State<MoulidReaderScreen> {
           },
         );
       },
+    );
+  }
+
+  Widget _layoutChip(String key, String label, IconData icon, ThemeProvider tp, StateSetter setSheet) {
+    final selected = _poetryLayout == key;
+    final isDark = tp.isDarkMode;
+
+    return Expanded(
+      child: HeartbeatTap(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          setState(() => _poetryLayout = key);
+          setSheet(() {});
+          _savePreferences();
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: selected ? context.accent : (isDark ? context.cardBottom : HomeDesign.inset(isDark)),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: selected ? context.accent : context.cardBorder,
+              width: selected ? 1.5 : 0.8,
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 15,
+                color: selected ? Colors.white : context.textSecondary,
+              ),
+              const SizedBox(height: 3),
+              Text(
+                label,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 10.5,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  color: selected ? Colors.white : context.textPrimary,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -901,10 +1018,60 @@ class _MoulidReaderScreenState extends State<MoulidReaderScreen> {
                                 ),
                               ),
 
-                              // Table of Contents & Settings Icons
+                              // Screen Rotation, Table of Contents & Settings Icons
                               Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
+                                  // Manual 1-Tap Rotation Button (Switches Portrait <-> Landscape instantly)
+                                  HeartbeatTap(
+                                    onTap: () {
+                                      HapticFeedback.selectionClick();
+                                      final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
+                                      if (isLandscape) {
+                                        SystemChrome.setPreferredOrientations([
+                                          DeviceOrientation.portraitUp,
+                                          DeviceOrientation.portraitDown,
+                                        ]);
+                                      } else {
+                                        SystemChrome.setPreferredOrientations([
+                                          DeviceOrientation.landscapeLeft,
+                                          DeviceOrientation.landscapeRight,
+                                        ]);
+                                      }
+                                      // Release lock after 1.5s so device accelerometer works freely
+                                      Future.delayed(const Duration(milliseconds: 1500), () {
+                                        if (mounted) {
+                                          SystemChrome.setPreferredOrientations([
+                                            DeviceOrientation.portraitUp,
+                                            DeviceOrientation.portraitDown,
+                                            DeviceOrientation.landscapeLeft,
+                                            DeviceOrientation.landscapeRight,
+                                          ]);
+                                        }
+                                      });
+                                    },
+                                    child: Container(
+                                      width: 36,
+                                      height: 36,
+                                      decoration: BoxDecoration(
+                                        color: (isDark ? context.cardBottom : HomeDesign.inset(isDark))
+                                            .withValues(alpha: 0.90),
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: context.cardBorder,
+                                          width: 0.8,
+                                        ),
+                                      ),
+                                      child: Center(
+                                        child: Icon(
+                                          Icons.screen_rotation_rounded,
+                                          size: 15,
+                                          color: context.textPrimary,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
                                   HeartbeatTap(
                                     onTap: () => _showTableOfContents(tp, isMl),
                                     child: Container(
@@ -1063,6 +1230,42 @@ class _MoulidReaderScreenState extends State<MoulidReaderScreen> {
                                         Icons.format_size_rounded,
                                         size: 16,
                                         color: _bottomBarMode == MoulidBottomBarMode.fontSize
+                                            ? context.accent
+                                            : context.textSecondary,
+                                      ),
+                                    ),
+                                  ),
+                                  // Quick Poetry Layout Toggle [Auto ⚡ / Dual ☷ / Large ☰]
+                                  HeartbeatTap(
+                                    onTap: () {
+                                      HapticFeedback.selectionClick();
+                                      setState(() {
+                                        if (_poetryLayout == 'auto') {
+                                          _poetryLayout = 'dual';
+                                        } else if (_poetryLayout == 'dual') {
+                                          _poetryLayout = 'stacked';
+                                        } else {
+                                          _poetryLayout = 'auto';
+                                        }
+                                      });
+                                      _savePreferences();
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                                      decoration: BoxDecoration(
+                                        color: _poetryLayout != 'auto'
+                                            ? context.accentSoft
+                                            : Colors.transparent,
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Icon(
+                                        _poetryLayout == 'dual'
+                                            ? Icons.view_column_rounded
+                                            : _poetryLayout == 'stacked'
+                                                ? Icons.view_agenda_rounded
+                                                : Icons.auto_awesome_rounded,
+                                        size: 16,
+                                        color: _poetryLayout != 'auto'
                                             ? context.accent
                                             : context.textSecondary,
                                       ),
@@ -1298,71 +1501,191 @@ class _MoulidReaderScreenState extends State<MoulidReaderScreen> {
         // ── Section Separator (Matching Quran MushafContinuousView page divider)
         _buildSectionSeparator(section, tp, isDark, accent, isMl),
 
-        // ── Refrain (for Baith / Qiyam)
+        // ── Refrain (for Baith / Qiyam) — Two Distinct Lines (Never Broken Continuously)
         if (section.refrain != null) ...[
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-            color: accent.withValues(alpha: isDark ? 0.08 : 0.05),
-            child: _buildRichArabicText(
-              text: section.refrain!,
-              fontSize: _fontSize + 1,
-              weight: FontWeight.w700,
-              accentColor: accent,
-              textAlign: TextAlign.center,
-              context: context,
-              isDark: isDark,
-            ),
+          Builder(
+            builder: (context) {
+              final raw = section.refrain!;
+              final parts = raw.contains('۝')
+                  ? raw.split('۝').map((s) => s.trim()).where((s) => s.isNotEmpty).toList()
+                  : raw.contains('\n')
+                      ? raw.split('\n').map((s) => s.trim()).where((s) => s.isNotEmpty).toList()
+                      : [raw];
+
+              return Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                color: accent.withValues(alpha: isDark ? 0.08 : 0.05),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (int pIdx = 0; pIdx < parts.length; pIdx++) ...[
+                      if (pIdx > 0) const SizedBox(height: 5),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.center,
+                        child: _buildRichArabicText(
+                          text: parts[pIdx],
+                          fontSize: _fontSize + 1,
+                          weight: FontWeight.w700,
+                          accentColor: accent,
+                          textAlign: TextAlign.center,
+                          context: context,
+                          isDark: isDark,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              );
+            },
           ),
           Container(height: 1, color: context.hairline),
         ],
 
-        // ── Couplets (Poetry) — Alternating Subtle Emerald/Gold Tints
-        if (section.couplets.isNotEmpty)
-          ...List.generate(section.couplets.length, (i) {
-            final couplet = section.couplets[i];
-            final isOdd = i.isOdd;
+        // ── Couplets (Poetry) — Responsive Dual-Column or Staggered Stacked
+        if (section.couplets.isNotEmpty) ...[
+          Builder(
+            builder: (context) {
+              final size = MediaQuery.of(context).size;
+              final orientation = MediaQuery.of(context).orientation;
+              final isDual = _isDualColumnActive(size.width, orientation);
 
-            final oddBg = isDark
-                ? context.accent.withValues(alpha: 0.06)
-                : context.accent.withValues(alpha: 0.035);
-            final evenBg = isDark
-                ? HomeDesign.gold.withValues(alpha: 0.05)
-                : HomeDesign.gold.withValues(alpha: 0.03);
+              return Column(
+                children: List.generate(section.couplets.length, (i) {
+                  final couplet = section.couplets[i];
+                  final isOdd = i.isOdd;
 
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Container(
-                  width: double.infinity,
-                  color: isOdd ? oddBg : evenBg,
-                  padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-                  child: Column(
+                  final oddBg = isDark
+                      ? context.accent.withValues(alpha: 0.06)
+                      : context.accent.withValues(alpha: 0.035);
+                  final evenBg = isDark
+                      ? HomeDesign.gold.withValues(alpha: 0.05)
+                      : HomeDesign.gold.withValues(alpha: 0.03);
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      _buildRichArabicText(
-                        text: couplet.hemistich1,
-                        fontSize: _fontSize,
-                        weight: FontWeight.w500,
-                        textAlign: TextAlign.center,
-                        context: context,
-                        isDark: isDark,
+                      Container(
+                        width: double.infinity,
+                        color: isOdd ? oddBg : evenBg,
+                        padding: EdgeInsets.symmetric(
+                          vertical: isDual ? 8 : 10,
+                          horizontal: isDual ? 8 : 16,
+                        ),
+                        child: isDual
+                            ? Directionality(
+                                textDirection: TextDirection.rtl,
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    // Right Column: First Hemistich (Sadr)
+                                    Expanded(
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                                        child: FittedBox(
+                                          fit: BoxFit.scaleDown,
+                                          alignment: Alignment.center,
+                                          child: _buildRichArabicText(
+                                            text: couplet.hemistich1,
+                                            fontSize: _fontSize,
+                                            weight: FontWeight.w600,
+                                            textAlign: TextAlign.center,
+                                            context: context,
+                                            isDark: isDark,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+
+                                    // Center Ornate Divider
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 3),
+                                      child: SizedBox(
+                                        height: 28,
+                                        child: VerticalDivider(
+                                          width: 1,
+                                          thickness: 0.8,
+                                          color: context.hairline.withValues(alpha: 0.8),
+                                        ),
+                                      ),
+                                    ),
+
+                                    // Left Column: Second Hemistich (Ajjuz)
+                                    Expanded(
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                                        child: FittedBox(
+                                          fit: BoxFit.scaleDown,
+                                          alignment: Alignment.center,
+                                          child: _buildRichArabicText(
+                                            text: couplet.hemistich2,
+                                            fontSize: _fontSize,
+                                            weight: FontWeight.w600,
+                                            textAlign: TextAlign.center,
+                                            context: context,
+                                            isDark: isDark,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  // Sadr: Aligned Right
+                                  Align(
+                                    alignment: Alignment.centerRight,
+                                    child: _buildRichArabicText(
+                                      text: couplet.hemistich1,
+                                      fontSize: _fontSize,
+                                      weight: FontWeight.w600,
+                                      textAlign: TextAlign.right,
+                                      context: context,
+                                      isDark: isDark,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 3),
+                                  // Ajjuz: Staggered with gold ✦ ornament
+                                  Row(
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.only(left: 4),
+                                        child: Text(
+                                          '✦',
+                                          style: TextStyle(
+                                            fontSize: 9,
+                                            color: HomeDesign.goldText(isDark).withValues(alpha: 0.7),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: _buildRichArabicText(
+                                          text: couplet.hemistich2,
+                                          fontSize: _fontSize,
+                                          weight: FontWeight.w600,
+                                          textAlign: TextAlign.left,
+                                          context: context,
+                                          isDark: isDark,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
                       ),
-                      const SizedBox(height: 3),
-                      _buildRichArabicText(
-                        text: couplet.hemistich2,
-                        fontSize: _fontSize,
-                        weight: FontWeight.w500,
-                        textAlign: TextAlign.center,
-                        context: context,
-                        isDark: isDark,
-                      ),
+                      Container(height: 1, color: context.hairline),
                     ],
-                  ),
-                ),
-                Container(height: 1, color: context.hairline),
-              ],
-            );
-          })
+                  );
+                }),
+              );
+            },
+          ),
+        ]
 
         // ── Prose Paragraphs & Adhkar — Hybrid Alignment (Center for short Dhikr / Right for long narrative)
         else
